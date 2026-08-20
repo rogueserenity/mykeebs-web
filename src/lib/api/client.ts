@@ -1,0 +1,21 @@
+import {
+	Configuration,
+	BuildsApi,
+	KeyboardsApi,
+	KeycapSetsApi,
+	LookupsApi,
+	SwitchesApi
+} from '@rogueserenity/kbdb-api-client';
+import { PUBLIC_KBDB_API_BASE_PATH } from '$env/static/public';
+import { getAccessToken } from '$lib/auth/auth.svelte';
+
+const configuration = new Configuration({
+	basePath: PUBLIC_KBDB_API_BASE_PATH,
+	accessToken: getAccessToken
+});
+
+export const buildsApi = new BuildsApi(configuration);
+export const keyboardsApi = new KeyboardsApi(configuration);
+export const keycapSetsApi = new KeycapSetsApi(configuration);
+export const lookupsApi = new LookupsApi(configuration);
+export const switchesApi = new SwitchesApi(configuration);
