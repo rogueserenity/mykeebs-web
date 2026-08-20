@@ -1,42 +1,48 @@
-# sv
+# mykeebs-web
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A read-only browsing UI for [kbdb](https://github.com/rogueserenity/kbdb) — a personal mechanical
+keyboard collection tracker (keyboards, switches, keycap sets, and the builds that combine them).
 
-## Creating a project
+Built with SvelteKit as a static SPA, authenticated via WorkOS AuthKit against the same identity
+kbdb's REST API already trusts, and styled with Skeleton UI. See [`DESIGN.md`](./DESIGN.md) for the
+reasoning behind these choices.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Prerequisites
+
+- [mise](https://mise.jdx.dev/) (manages the Node version; see `mise.toml`)
+- [gh CLI](https://cli.github.com/), authenticated, with the `read:packages` scope (needed to
+  install `@rogueserenity/kbdb-api-client` from GitHub Packages):
+
+  ```sh
+  gh auth refresh -h github.com -s read:packages
+  mise set GITHUB_PACKAGES_TOKEN=$(gh auth token) --file mise.local.toml
+  ```
+
+## Setup
 
 ```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.17.0 create --template minimal --types ts --add prettier eslint vitest="usages:unit,component" tailwindcss="plugins:none" sveltekit-adapter="adapter:static" --no-download-check --install npm .
+cp .env.example .env   # fill in PUBLIC_WORKOS_CLIENT_ID / PUBLIC_KBDB_API_BASE_PATH
+eval "$(mise env)"
+npm install
 ```
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
 ```sh
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+# or: npm run dev -- --open
 ```
 
 ## Building
-
-To create a production version of your app:
 
 ```sh
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+Produces a static build in `/build` (adapter-static). Preview it with `npm run preview`. Deploys to
+Cloudflare Pages; `PUBLIC_WORKOS_CLIENT_ID` is set per-environment (Production vs. Preview) in the
+Cloudflare Pages dashboard rather than committed.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Contributing
+
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the day-to-day workflow (lint, typecheck, tests).
