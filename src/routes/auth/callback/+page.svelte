@@ -2,14 +2,28 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { initAuth } from '$lib/auth/auth.svelte';
+	import { page } from '$app/state';
+	import { exchangeCodeForToken } from '$lib/auth/auth.svelte';
 
-	// AuthKit's client processes the ?code=... redirect during initAuth()
-	// (called from the root layout); once the shared init promise resolves
-	// here too, the user is signed in and we can leave this page.
+	let error = $state<string | null>(null);
+
 	onMount(() => {
-		initAuth().then(() => goto(resolve('/')));
+		const code = page.url.searchParams.get('code');
+		if (!code) {
+			error = 'No authorization code in the redirect URL.';
+			return;
+		}
+
+		exchangeCodeForToken(code)
+			.then(() => goto(resolve('/')))
+			.catch(() => {
+				error = 'Sign-in failed. Please try again.';
+			});
 	});
 </script>
 
-<p>Signing you in&hellip;</p>
+{#if error}
+	<p class="text-error-500">{error}</p>
+{:else}
+	<p>Signing you in&hellip;</p>
+{/if}

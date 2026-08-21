@@ -3,9 +3,8 @@
 A read-only browsing UI for [kbdb](https://github.com/rogueserenity/kbdb) — a personal mechanical
 keyboard collection tracker (keyboards, switches, keycap sets, and the builds that combine them).
 
-Built with SvelteKit as a static SPA, authenticated via WorkOS AuthKit against the same identity
-kbdb's REST API already trusts, and styled with Skeleton UI. See [`DESIGN.md`](./DESIGN.md) for the
-reasoning behind these choices.
+Built with SvelteKit as a static SPA, authenticated via Stytch Connected Apps against the same
+identity kbdb's REST API already trusts, and styled with Skeleton UI.
 
 ## Prerequisites
 
@@ -21,7 +20,7 @@ reasoning behind these choices.
 ## Setup
 
 ```sh
-cp .env.example .env   # fill in PUBLIC_WORKOS_CLIENT_ID / PUBLIC_KBDB_API_BASE_PATH
+cp .env.example .env   # fill in PUBLIC_STYTCH_PUBLIC_TOKEN / PUBLIC_STYTCH_CLIENT_ID / PUBLIC_KBDB_API_BASE_PATH
 eval "$(mise env)"
 npm install
 ```
@@ -40,8 +39,8 @@ npm run build
 ```
 
 Produces a static build in `/build` (adapter-static). Preview it with `npm run preview`. Deploys to
-Cloudflare Pages; `PUBLIC_WORKOS_CLIENT_ID` is set per-environment (Production vs. Preview) in the
-Cloudflare Pages dashboard rather than committed.
+Cloudflare Pages; `PUBLIC_STYTCH_PUBLIC_TOKEN` and `PUBLIC_STYTCH_CLIENT_ID` are set per-environment
+(Production vs. Preview) in the Cloudflare Pages dashboard rather than committed.
 
 ## Contributing
 

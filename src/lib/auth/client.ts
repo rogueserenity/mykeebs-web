@@ -1,20 +1,17 @@
-import { createClient } from '@workos-inc/authkit-js';
-import { PUBLIC_WORKOS_CLIENT_ID } from '$env/static/public';
+import { StytchClient } from '@stytch/vanilla-js';
+import { PUBLIC_STYTCH_PUBLIC_TOKEN } from '$env/static/public';
 
-type AuthClient = Awaited<ReturnType<typeof createClient>>;
-
-let clientPromise: Promise<AuthClient> | undefined;
+let client: StytchClient | undefined;
 
 /**
- * Lazily creates a single shared AuthKit client for the app. AuthKit's
- * `createClient` does its own redirect-callback handling on load, so this
- * must only ever run once per page load.
+ * Lazily creates a single shared Stytch client for the app. Cheap to
+ * construct (unlike AuthKit's createClient, this doesn't do any
+ * redirect-callback handling itself), but kept as a singleton for
+ * consistency with the rest of the auth module's async accessor shape.
  */
-export function getAuthClient(): Promise<AuthClient> {
-	if (!clientPromise) {
-		clientPromise = createClient(PUBLIC_WORKOS_CLIENT_ID, {
-			redirectUri: `${window.location.origin}/auth/callback`
-		});
+export function getAuthClient(): StytchClient {
+	if (!client) {
+		client = new StytchClient(PUBLIC_STYTCH_PUBLIC_TOKEN);
 	}
-	return clientPromise;
+	return client;
 }

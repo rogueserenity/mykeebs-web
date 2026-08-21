@@ -44,6 +44,6 @@
 	},
 	"dependencies": {
 		"@rogueserenity/kbdb-api-client": "^1.2.4",
-		"@workos-inc/authkit-js": "^0.20.2"
+		"@stytch/vanilla-js": "^6.2.0"
 	}
 }
