@@ -40,10 +40,21 @@
 		}
 	}
 
+	function valueMatchesFilter(value: unknown, needle: string): boolean {
+		if (typeof value === 'string') {
+			return value.toLowerCase().includes(needle);
+		}
+		if (value != null && typeof value === 'object' && !(value instanceof Date)) {
+			return Object.values(value).some(
+				(nested) => typeof nested === 'string' && nested.toLowerCase().includes(needle)
+			);
+		}
+		return false;
+	}
+
 	function matchesFilter(item: T, needle: string): boolean {
 		return Object.entries(item as Record<string, unknown>).some(
-			([key, value]) =>
-				key !== 'id' && typeof value === 'string' && value.toLowerCase().includes(needle)
+			([key, value]) => key !== 'id' && valueMatchesFilter(value, needle)
 		);
 	}
 

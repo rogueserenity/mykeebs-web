@@ -1,3 +1,12 @@
+export type PurchaseLike = {
+	vendor?: string;
+	price?: number;
+	quantity?: number;
+	orderDate?: Date;
+	deliveryDate?: Date;
+	orderStatus?: string;
+};
+
 const orderStatusColors: Record<string, string> = {
 	ordered: 'preset-filled-warning-500',
 	shipped: 'preset-filled-tertiary-500',

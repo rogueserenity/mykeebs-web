@@ -16,7 +16,8 @@
 	const navItems = [
 		{ href: resolve('/keyboards'), label: 'Keyboards' },
 		{ href: resolve('/switches'), label: 'Switches' },
-		{ href: resolve('/keycap-sets'), label: 'Keycap Sets' }
+		{ href: resolve('/keycap-sets'), label: 'Keycap Sets' },
+		{ href: resolve('/builds'), label: 'Builds' }
 	];
 </script>
 

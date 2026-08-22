@@ -7,7 +7,7 @@
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
-	import PurchaseDetails from '$lib/components/PurchaseDetails.svelte';
+	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
 
 	let selectedSet = $state<KeycapSet | null>(null);
 	let detailError = $state<string | null>(null);
@@ -164,33 +164,14 @@
 				</button>
 			</div>
 		{/if}
-		<div class="grid grid-cols-1 gap-6 pr-8 sm:grid-cols-2">
-			{#if kit.image?.url && !imageFailed}
-				<button
-					type="button"
-					class="cursor-zoom-in"
-					aria-label="View full size image"
-					onclick={() => (viewerOpen = true)}
-				>
-					<img
-						src={kit.image.url}
-						alt={kit.name}
-						class="max-h-[70vh] w-full rounded bg-white object-contain"
-						onerror={() => failedImages.add(kit.kitId)}
-					/>
-				</button>
-			{:else}
-				<div
-					class="flex aspect-square w-full items-center justify-center rounded bg-surface-500/10 text-sm opacity-50"
-				>
-					No image
-				</div>
-			{/if}
-			<div>
-				<h2 class="text-2xl font-bold">{kit.name}</h2>
-				<PurchaseDetails purchase={kit.purchase} />
-			</div>
-		</div>
+		<KeycapKitDetails
+			name={kit.name}
+			imageUrl={kit.image?.url}
+			{imageFailed}
+			onImageError={() => failedImages.add(kit.kitId)}
+			onImageClick={() => (viewerOpen = true)}
+			purchase={kit.purchase}
+		/>
 	{/if}
 </Modal>
 

@@ -1,20 +1,7 @@
 <script lang="ts">
-	import { formatDate, formatPrice, orderStatusClass } from '$lib/format';
+	import { formatDate, formatPrice, orderStatusClass, type PurchaseLike } from '$lib/format';
 
-	let {
-		purchase
-	}: {
-		purchase:
-			| {
-					vendor?: string;
-					price?: number;
-					quantity?: number;
-					orderDate?: Date;
-					deliveryDate?: Date;
-					orderStatus?: string;
-			  }
-			| undefined;
-	} = $props();
+	let { purchase }: { purchase: PurchaseLike | undefined } = $props();
 </script>
 
 {#if purchase}
