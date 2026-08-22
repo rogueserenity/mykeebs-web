@@ -299,10 +299,13 @@
 			{/if}
 
 			{#if build.keycapKits && build.keycapKits.length > 0}
+				{@const sortedKeycapKits = [...build.keycapKits].sort((a, b) =>
+					(a.keycapSet?.name ?? '').localeCompare(b.keycapSet?.name ?? '')
+				)}
 				<div>
 					<h3 class="font-semibold">Keycap kits</h3>
 					<ul class="mt-2 space-y-2 text-sm">
-						{#each build.keycapKits as entry, index (entry.keycapSet ? `${entry.keycapSet.id}-${entry.kitId}` : index)}
+						{#each sortedKeycapKits as entry, index (entry.keycapSet ? `${entry.keycapSet.id}-${entry.kitId}` : index)}
 							<li>
 								{#if entry.keycapSet && entry.kitName}
 									<button
@@ -310,7 +313,7 @@
 										class="text-left hover:underline"
 										onclick={() => openKitDetail(entry.keycapSet!.id, entry.kitId)}
 									>
-										{entry.kitName} &mdash; {entry.keycapSet.name}
+										{entry.keycapSet.name} &mdash; {entry.kitName}
 									</button>
 								{:else}
 									<span class="opacity-50">Deleted keycap kit</span>
