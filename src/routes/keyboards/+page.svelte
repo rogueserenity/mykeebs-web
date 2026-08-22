@@ -39,6 +39,12 @@
 		keyboardsApi.listKeyboards({ userId, cursor })}
 	itemKey={(keyboard) => keyboard.id ?? ''}
 	emptyMessage="No keyboards yet."
+	getName={(keyboard) => keyboard.name}
+	sortOptions={[
+		{ label: 'Name', getValue: (keyboard) => keyboard.name },
+		{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
+		{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus }
+	]}
 >
 	{#snippet card(keyboard)}
 		<button

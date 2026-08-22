@@ -38,6 +38,11 @@
 		switchesApi.listSwitches({ userId, cursor })}
 	itemKey={(sw) => sw.id ?? ''}
 	emptyMessage="No switches yet."
+	getName={(sw) => sw.name}
+	sortOptions={[
+		{ label: 'Name', getValue: (sw) => sw.name },
+		{ label: 'Brand', getValue: (sw) => sw.brand }
+	]}
 >
 	{#snippet card(sw)}
 		<button

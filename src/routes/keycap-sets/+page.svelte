@@ -61,6 +61,11 @@
 		keycapSetsApi.listKeycapSets({ userId, cursor })}
 	itemKey={(set) => set.id ?? ''}
 	emptyMessage="No keycap sets yet."
+	getName={(set) => set.name}
+	sortOptions={[
+		{ label: 'Name', getValue: (set) => set.name },
+		{ label: 'Brand', getValue: (set) => set.brand }
+	]}
 >
 	{#snippet card(set)}
 		<button

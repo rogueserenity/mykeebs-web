@@ -3,16 +3,21 @@
 	import type { Snippet } from 'svelte';
 
 	type Page = { items?: T[]; nextCursor?: string | null };
+	type SortOption = { label: string; getValue: (item: T) => string | number | undefined };
 
 	let {
 		fetchPage,
 		itemKey,
 		emptyMessage,
+		sortOptions,
+		getName,
 		card
 	}: {
 		fetchPage: (userId: string, cursor: string | undefined) => Promise<Page>;
 		itemKey: (item: T) => string;
 		emptyMessage: string;
+		sortOptions: SortOption[];
+		getName: (item: T) => string | undefined;
 		card: Snippet<[T]>;
 	} = $props();
 
@@ -64,6 +69,27 @@
 		return items.filter((item) => matchesFilter(item, needle));
 	});
 
+	let sortIndex = $state(0);
+	let sortDescending = $state(false);
+
+	function compareValues(a: string | number | undefined, b: string | number | undefined): number {
+		if (a == null && b == null) return 0;
+		if (a == null) return 1;
+		if (b == null) return -1;
+		if (typeof a === 'number' && typeof b === 'number') return a - b;
+		return String(a).localeCompare(String(b));
+	}
+
+	let sortedItems = $derived.by(() => {
+		const option = sortOptions[sortIndex];
+		if (!option) return filteredItems;
+		return [...filteredItems].sort((a, b) => {
+			const primary = compareValues(option.getValue(a), option.getValue(b));
+			if (primary !== 0) return sortDescending ? -primary : primary;
+			return compareValues(getName(a), getName(b));
+		});
+	});
+
 	$effect(() => {
 		const userId = auth.user?.id;
 		if (!userId) return;
@@ -106,7 +132,22 @@
 		<p class="text-xl font-semibold opacity-75">{emptyMessage}</p>
 	</div>
 {:else}
-	<div class="flex justify-end p-4 pb-0">
+	<div class="flex items-center justify-end gap-2 p-4 pb-0">
+		{#if sortOptions.length > 0}
+			<select class="select w-auto" bind:value={sortIndex}>
+				{#each sortOptions as option, index (option.label)}
+					<option value={index}>Sort: {option.label}</option>
+				{/each}
+			</select>
+			<button
+				type="button"
+				class="btn-icon preset-tonal"
+				aria-label={sortDescending ? 'Sort ascending' : 'Sort descending'}
+				onclick={() => (sortDescending = !sortDescending)}
+			>
+				{sortDescending ? '↓' : '↑'}
+			</button>
+		{/if}
 		{#if filterExpanded}
 			<input
 				bind:this={filterInput}
@@ -140,13 +181,13 @@
 			</button>
 		{/if}
 	</div>
-	{#if filteredItems.length === 0}
+	{#if sortedItems.length === 0}
 		<div class="flex items-center justify-center p-16">
 			<p class="text-xl font-semibold opacity-75">No matches.</p>
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each filteredItems as item (itemKey(item))}
+			{#each sortedItems as item (itemKey(item))}
 				{@render card(item)}
 			{/each}
 		</div>

@@ -152,6 +152,11 @@
 		buildsApi.listBuilds({ userId, cursor })}
 	itemKey={(build) => build.id ?? ''}
 	emptyMessage="No builds yet."
+	getName={(build) => build.keyboard?.name}
+	sortOptions={[
+		{ label: 'Name', getValue: (build) => build.keyboard?.name },
+		{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() }
+	]}
 >
 	{#snippet card(build)}
 		{@const imageFailed = build.id != null && failedImages.has(build.id)}
