@@ -19,6 +19,10 @@ const TOKEN_ENDPOINT = 'https://auth.jay.mykeebs.dev/v1/oauth2/token';
 
 const CODE_VERIFIER_KEY = 'stytch_pkce_code_verifier';
 const ACCESS_TOKEN_KEY = 'stytch_access_token';
+const REFRESH_TOKEN_KEY = 'stytch_refresh_token';
+
+// Refresh this many seconds before actual expiry, to cover request latency.
+const REFRESH_SKEW_SECONDS = 60;
 
 type User = { id: string; email: string | null };
 type AuthState =
@@ -27,8 +31,12 @@ type AuthState =
 let state = $state<AuthState>({ status: 'loading' });
 let initPromise: Promise<void> | undefined;
 
+function decodeAccessTokenPayload(token: string): { sub: string; email?: string; exp: number } {
+	return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+}
+
 function decodeAccessToken(token: string): User {
-	const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+	const payload = decodeAccessTokenPayload(token);
 	return { id: payload.sub, email: payload.email ?? null };
 }
 
@@ -65,7 +73,7 @@ export async function signIn(): Promise<void> {
 		client_id: PUBLIC_STYTCH_CLIENT_ID,
 		redirect_uri: redirectUri,
 		response_type: 'code',
-		scope: 'openid email profile',
+		scope: 'openid email profile offline_access',
 		code_challenge: challenge,
 		code_challenge_method: 'S256'
 	});
@@ -102,9 +110,56 @@ export async function exchangeCodeForToken(code: string): Promise<void> {
 		throw new Error(`Token exchange failed: ${response.status} ${await response.text()}`);
 	}
 
-	const { access_token } = (await response.json()) as { access_token: string };
+	const { access_token, refresh_token } = (await response.json()) as {
+		access_token: string;
+		refresh_token?: string;
+	};
 	localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
+	if (refresh_token) {
+		localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
+	}
 	syncFromStoredToken();
+}
+
+/**
+ * Exchanges the stored refresh token for a new access token (and, since
+ * this is a public PKCE client, a rotated refresh token that must replace
+ * the old one). Throws if there's no refresh token or the exchange fails -
+ * callers should fall back to signIn() in that case.
+ */
+async function refreshAccessToken(): Promise<string> {
+	const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+	if (!refreshToken) {
+		throw new Error('No refresh token available');
+	}
+
+	const response = await fetch(TOKEN_ENDPOINT, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+		body: new SvelteURLSearchParams({
+			grant_type: 'refresh_token',
+			client_id: PUBLIC_STYTCH_CLIENT_ID,
+			refresh_token: refreshToken
+		})
+	});
+
+	if (!response.ok) {
+		localStorage.removeItem(ACCESS_TOKEN_KEY);
+		localStorage.removeItem(REFRESH_TOKEN_KEY);
+		syncFromStoredToken();
+		throw new Error(`Token refresh failed: ${response.status} ${await response.text()}`);
+	}
+
+	const { access_token, refresh_token } = (await response.json()) as {
+		access_token: string;
+		refresh_token?: string;
+	};
+	localStorage.setItem(ACCESS_TOKEN_KEY, access_token);
+	if (refresh_token) {
+		localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
+	}
+	syncFromStoredToken();
+	return access_token;
 }
 
 export const auth = {
@@ -118,6 +173,7 @@ export const auth = {
 
 export async function signOut(): Promise<void> {
 	localStorage.removeItem(ACCESS_TOKEN_KEY);
+	localStorage.removeItem(REFRESH_TOKEN_KEY);
 	syncFromStoredToken();
 	// Revokes the underlying Stytch session, if one exists (e.g. from the
 	// magic-link login used on kbdb's consent page) - best-effort, since
@@ -129,15 +185,30 @@ export async function signOut(): Promise<void> {
 }
 
 /**
- * Access token for the generated API client's `accessToken` config. No
- * refresh handling yet - Connected Apps access tokens are short-lived
- * (1hr default); a 401 from kbdb should prompt re-signIn() until refresh
- * is added.
+ * Access token for the generated API client's `accessToken` config -
+ * called per-request, so this is where transparent refresh happens.
+ * Refreshes ahead of expiry using the stored refresh token (requested via
+ * the offline_access scope in signIn()); if that fails (or there's no
+ * refresh token, e.g. a session from before this was added), the caller
+ * gets whatever's stored and a subsequent 401 should prompt re-signIn().
  */
 export async function getAccessToken(): Promise<string> {
 	const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 	if (!token) {
 		throw new Error('Not signed in');
 	}
-	return token;
+
+	const { exp } = decodeAccessTokenPayload(token);
+	const expiresInSeconds = exp - Date.now() / 1000;
+	if (expiresInSeconds > REFRESH_SKEW_SECONDS) {
+		return token;
+	}
+
+	if (!localStorage.getItem(REFRESH_TOKEN_KEY)) {
+		// No refresh token (e.g. a session from before this was added) -
+		// fall back to the stale token; a 401 should prompt re-signIn().
+		return token;
+	}
+
+	return await refreshAccessToken();
 }
