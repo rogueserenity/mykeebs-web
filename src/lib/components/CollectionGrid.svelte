@@ -186,7 +186,7 @@
 			<p class="text-xl font-semibold opacity-75">No matches.</p>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+		<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 			{#each sortedItems as item (itemKey(item))}
 				{@render card(item)}
 			{/each}

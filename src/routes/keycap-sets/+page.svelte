@@ -68,16 +68,27 @@
 	]}
 >
 	{#snippet card(set)}
+		{@const imageFailed = failedImages.has(set.id ?? '')}
 		<button
 			type="button"
-			class="w-full card preset-tonal p-4 text-left"
+			class="flex w-full items-center gap-3 overflow-hidden card preset-tonal p-3 text-left"
 			onclick={() => openSet(set.id ?? '')}
 		>
-			<h2 class="text-lg font-bold">{set.name}</h2>
-			<p class="text-sm opacity-75">{set.brand}</p>
-			{#if set.profile}
-				<p class="text-sm">{set.profile}</p>
+			{#if set.primaryKitImage?.url && !imageFailed}
+				<img
+					src={set.primaryKitImage.url}
+					alt={set.name}
+					class="h-16 w-16 shrink-0 rounded object-contain"
+					onerror={() => failedImages.add(set.id ?? '')}
+				/>
 			{/if}
+			<div>
+				<h2 class="text-lg font-bold">{set.name}</h2>
+				<p class="text-sm opacity-75">{set.brand}</p>
+				{#if set.profile}
+					<p class="text-sm">{set.profile}</p>
+				{/if}
+			</div>
 		</button>
 	{/snippet}
 </CollectionGrid>
