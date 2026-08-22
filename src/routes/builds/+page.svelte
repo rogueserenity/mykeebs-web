@@ -3,7 +3,7 @@
 	import type { Build, Keyboard, Switch as SwitchModel } from '@rogueserenity/kbdb-api-client';
 	import { auth } from '$lib/auth/auth.svelte';
 	import { buildsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
-	import { formatDate, type PurchaseLike } from '$lib/format';
+	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -202,8 +202,10 @@
 			{:else}
 				<h2 class="text-2xl font-bold opacity-50">Deleted keyboard</h2>
 			{/if}
-			{#if formatDate(build.buildDate)}
-				<p class="mt-1 text-sm">{formatDate(build.buildDate)}</p>
+			{#if formatDate(build.buildDate) || formatPrice(build.totalCost)}
+				<p class="mt-1 text-sm">
+					{[formatDate(build.buildDate), formatPrice(build.totalCost)].filter(Boolean).join(' · ')}
+				</p>
 			{/if}
 			{#if build.notes}
 				<p class="mt-2 text-sm opacity-75">{build.notes}</p>
