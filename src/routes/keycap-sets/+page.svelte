@@ -64,16 +64,22 @@
 	getName={(set) => set.name}
 	sortOptions={[
 		{ label: 'Name', getValue: (set) => set.name },
-		{ label: 'Brand', getValue: (set) => set.brand }
+		{ label: 'Brand', getValue: (set) => set.brand },
+		{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined }
 	]}
 >
 	{#snippet card(set)}
 		{@const imageFailed = failedImages.has(set.id ?? '')}
 		<button
 			type="button"
-			class="flex w-full items-center gap-3 overflow-hidden card preset-tonal p-3 text-left"
+			class="relative flex w-full items-center gap-3 overflow-hidden card preset-tonal p-3 text-left"
 			onclick={() => openSet(set.id ?? '')}
 		>
+			{#if set.orderStatus}
+				<span class="absolute top-3 right-3 badge {orderStatusClass(set.orderStatus)}">
+					{set.orderStatus}
+				</span>
+			{/if}
 			{#if set.primaryKitImage?.url && !imageFailed}
 				<img
 					src={set.primaryKitImage.url}
@@ -82,7 +88,7 @@
 					onerror={() => failedImages.add(set.id ?? '')}
 				/>
 			{/if}
-			<div>
+			<div class="pr-4">
 				<h2 class="text-lg font-bold">{set.name}</h2>
 				<p class="text-sm opacity-75">{set.brand}</p>
 				{#if set.profile}
