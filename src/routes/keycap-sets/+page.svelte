@@ -3,20 +3,11 @@
 	import type { KeycapKit, KeycapSet } from '@rogueserenity/kbdb-api-client';
 	import { auth } from '$lib/auth/auth.svelte';
 	import { keycapSetsApi } from '$lib/api/client';
+	import { orderStatusClass } from '$lib/format';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
-
-	const orderStatusColors: Record<string, string> = {
-		ordered: 'preset-filled-warning-500',
-		shipped: 'preset-filled-tertiary-500',
-		delivered: 'preset-filled-success-500',
-		sold: 'preset-filled-surface-500'
-	};
-
-	function orderStatusClass(status: string) {
-		return orderStatusColors[status.toLowerCase()] ?? 'preset-filled-primary-500';
-	}
+	import PurchaseDetails from '$lib/components/PurchaseDetails.svelte';
 
 	let selectedSet = $state<KeycapSet | null>(null);
 	let detailError = $state<string | null>(null);
@@ -24,20 +15,6 @@
 	let failedImages = new SvelteSet<string>();
 	let selectedKit = $state<KeycapKit | null>(null);
 	let viewerOpen = $state(false);
-
-	const dateFormatter = new Intl.DateTimeFormat('en-US', {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric'
-	});
-
-	function formatDate(date: Date | undefined): string | undefined {
-		return date ? dateFormatter.format(date) : undefined;
-	}
-
-	function formatPrice(price: number | undefined): string | undefined {
-		return price != null ? `$${price.toFixed(2)}` : undefined;
-	}
 
 	async function openSet(keycapSetId: string) {
 		const userId = auth.user?.id;
@@ -211,37 +188,7 @@
 			{/if}
 			<div>
 				<h2 class="text-2xl font-bold">{kit.name}</h2>
-				{#if kit.purchase?.orderStatus}
-					<span class="mt-2 badge {orderStatusClass(kit.purchase.orderStatus)}">
-						{kit.purchase.orderStatus}
-					</span>
-				{/if}
-				<dl class="mt-4 space-y-2 text-sm">
-					{#if kit.purchase?.vendor}
-						<div class="flex justify-between gap-4">
-							<dt class="opacity-75">Vendor</dt>
-							<dd>{kit.purchase.vendor}</dd>
-						</div>
-					{/if}
-					{#if formatPrice(kit.purchase?.price)}
-						<div class="flex justify-between gap-4">
-							<dt class="opacity-75">Price</dt>
-							<dd>{formatPrice(kit.purchase?.price)}</dd>
-						</div>
-					{/if}
-					{#if formatDate(kit.purchase?.orderDate)}
-						<div class="flex justify-between gap-4">
-							<dt class="opacity-75">Ordered</dt>
-							<dd>{formatDate(kit.purchase?.orderDate)}</dd>
-						</div>
-					{/if}
-					{#if formatDate(kit.purchase?.deliveryDate)}
-						<div class="flex justify-between gap-4">
-							<dt class="opacity-75">Delivered</dt>
-							<dd>{formatDate(kit.purchase?.deliveryDate)}</dd>
-						</div>
-					{/if}
-				</dl>
+				<PurchaseDetails purchase={kit.purchase} />
 			</div>
 		</div>
 	{/if}
