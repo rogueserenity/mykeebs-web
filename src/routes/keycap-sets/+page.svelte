@@ -54,7 +54,7 @@
 	}
 </script>
 
-<svelte:window onkeydown={selectedKit ? handleKitNavKeydown : undefined} />
+<svelte:window onkeydown={selectedKit && !viewerOpen ? handleKitNavKeydown : undefined} />
 
 <CollectionGrid
 	fetchPage={(userId: string, cursor: string | undefined) =>
