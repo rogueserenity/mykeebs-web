@@ -43,7 +43,7 @@
 		"vitest-browser-svelte": "^2.1.1"
 	},
 	"dependencies": {
-		"@rogueserenity/kbdb-api-client": "^1.7.0",
+		"@rogueserenity/kbdb-api-client": "^1.10.0",
 		"@stytch/vanilla-js": "^6.2.0"
 	}
 }

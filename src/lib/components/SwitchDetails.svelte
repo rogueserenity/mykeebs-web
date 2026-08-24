@@ -2,18 +2,37 @@
 	import type { Switch as SwitchModel } from '@rogueserenity/kbdb-api-client';
 	import PurchaseDetails from '$lib/components/PurchaseDetails.svelte';
 
-	let { sw }: { sw: SwitchModel } = $props();
+	let { sw, onImageClick }: { sw: SwitchModel; onImageClick: () => void } = $props();
+
+	let imageFailed = $state(false);
 </script>
 
-<div class="pr-8">
-	<h2 class="text-2xl font-bold">{sw.name}</h2>
-	<p class="opacity-75">{[sw.brand, sw.manufacturer].filter(Boolean).join(' · ')}</p>
-	<p class="mt-1 text-sm">
-		{[sw.type, sw.factoryLubed ? 'Factory lubed' : undefined].filter(Boolean).join(' · ')}
-	</p>
-	{#if sw.notes}
-		<p class="mt-2 text-sm opacity-75">{sw.notes}</p>
+<div class="flex items-start gap-4 pr-8">
+	{#if sw.image?.url && !imageFailed}
+		<button
+			type="button"
+			class="shrink-0 cursor-zoom-in"
+			aria-label="View full size image"
+			onclick={onImageClick}
+		>
+			<img
+				src={sw.image.url}
+				alt={sw.name}
+				class="h-24 w-24 rounded object-contain"
+				onerror={() => (imageFailed = true)}
+			/>
+		</button>
 	{/if}
+	<div>
+		<h2 class="text-2xl font-bold">{sw.name}</h2>
+		<p class="opacity-75">{[sw.brand, sw.manufacturer].filter(Boolean).join(' · ')}</p>
+		<p class="mt-1 text-sm">
+			{[sw.type, sw.factoryLubed ? 'Factory lubed' : undefined].filter(Boolean).join(' · ')}
+		</p>
+		{#if sw.notes}
+			<p class="mt-2 text-sm opacity-75">{sw.notes}</p>
+		{/if}
+	</div>
 </div>
 
 <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">

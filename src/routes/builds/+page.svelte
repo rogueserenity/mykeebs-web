@@ -26,6 +26,7 @@
 	let switchDetail = $state<SwitchModel | null>(null);
 	let switchDetailError = $state<string | null>(null);
 	let switchDetailLoading = $state(false);
+	let switchViewerOpen = $state(false);
 
 	let kitDetail = $state<{
 		name: string;
@@ -102,6 +103,7 @@
 		switchDetail = null;
 		switchDetailError = null;
 		switchDetailLoading = false;
+		switchViewerOpen = false;
 	}
 
 	async function openKitDetail(keycapSetId: string, kitId: string) {
@@ -360,15 +362,25 @@
 <Modal
 	open={switchDetailLoading || switchDetailError !== null || switchDetail !== null}
 	onClose={closeSwitchDetail}
+	obscured={switchViewerOpen}
 >
 	{#if switchDetailLoading}
 		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
 	{:else if switchDetailError}
 		<p class="p-8 text-center text-lg text-error-500">{switchDetailError}</p>
 	{:else if switchDetail}
-		<SwitchDetails sw={switchDetail} />
+		<SwitchDetails sw={switchDetail} onImageClick={() => (switchViewerOpen = true)} />
 	{/if}
 </Modal>
+
+{#if switchDetail?.image?.url}
+	<ImageViewer
+		open={switchViewerOpen}
+		src={switchDetail.image.url}
+		alt={switchDetail.name}
+		onClose={() => (switchViewerOpen = false)}
+	/>
+{/if}
 
 <Modal
 	open={kitDetailLoading || kitDetailError !== null || kitDetail !== null}
