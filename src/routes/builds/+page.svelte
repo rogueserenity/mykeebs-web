@@ -175,7 +175,7 @@
 				<img
 					src={build.image.url}
 					alt={build.keyboard?.name ?? 'Build'}
-					class="mb-3 aspect-square w-full rounded bg-white object-contain"
+					class="mb-3 aspect-square w-full rounded object-contain"
 					onerror={() => build.id && failedImages.add(build.id)}
 				/>
 			{/if}
@@ -211,7 +211,7 @@
 						<img
 							src={build.keyboard.imageUrl}
 							alt={build.keyboard.name}
-							class="h-16 w-16 shrink-0 rounded bg-white object-contain"
+							class="h-16 w-16 shrink-0 rounded object-contain"
 						/>
 					{/if}
 					<div>
@@ -239,7 +239,7 @@
 					{#each build.images as image, index (image.imageId)}
 						<button
 							type="button"
-							class="h-20 w-20 shrink-0 overflow-hidden rounded bg-white"
+							class="h-20 w-20 shrink-0 overflow-hidden rounded"
 							aria-label="View full size image"
 							onclick={() => {
 								galleryIndex = index;
@@ -306,7 +306,7 @@
 											<img
 												src={entry._switch.imageUrl}
 												alt={entry._switch.name}
-												class="h-8 w-8 shrink-0 rounded bg-white object-contain"
+												class="h-8 w-8 shrink-0 rounded object-contain"
 											/>
 										{/if}
 										<span>{entry.count}x {entry._switch.name} ({entry._switch.brand})</span>
@@ -339,7 +339,7 @@
 											<img
 												src={entry.kitImageUrl}
 												alt={entry.kitName}
-												class="h-8 w-8 shrink-0 rounded bg-white object-contain"
+												class="h-8 w-8 shrink-0 rounded object-contain"
 											/>
 										{/if}
 										<span>{entry.keycapSet.name} &mdash; {entry.kitName}</span>

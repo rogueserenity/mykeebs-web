@@ -30,7 +30,7 @@
 			{#each keyboard.images as image, index (image.imageId)}
 				<button
 					type="button"
-					class="h-20 w-20 shrink-0 overflow-hidden rounded bg-white"
+					class="h-20 w-20 shrink-0 overflow-hidden rounded"
 					aria-label="View full size image"
 					onclick={() => onImageClick(index)}
 				>

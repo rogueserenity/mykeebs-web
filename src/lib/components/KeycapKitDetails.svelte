@@ -30,7 +30,7 @@
 			<img
 				src={imageUrl}
 				alt={name}
-				class="max-h-[70vh] w-full rounded bg-white object-contain"
+				class="max-h-[70vh] w-full rounded object-contain"
 				onerror={onImageError}
 			/>
 		</button>

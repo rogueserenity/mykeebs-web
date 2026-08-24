@@ -140,7 +140,7 @@
 							<img
 								src={kit.image.url}
 								alt={kit.name}
-								class="aspect-square w-full rounded bg-white object-contain"
+								class="aspect-square w-full rounded object-contain"
 								onerror={() => failedImages.add(kit.kitId)}
 							/>
 						{:else}

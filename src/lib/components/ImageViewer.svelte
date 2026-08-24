@@ -181,7 +181,7 @@
 			<img
 				{src}
 				{alt}
-				class="max-h-[90vh] max-w-[90vw] rounded bg-white select-none"
+				class="max-h-[90vh] max-w-[90vw] rounded select-none"
 				style="transform: translate({offsetX}px, {offsetY}px) scale({scale}); transition: {dragging
 					? 'none'
 					: 'transform 0.15s ease-out'};"
