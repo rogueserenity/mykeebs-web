@@ -175,7 +175,7 @@
 				<img
 					src={build.image.url}
 					alt={build.keyboard?.name ?? 'Build'}
-					class="mb-3 aspect-square w-full rounded object-contain"
+					class="mb-3 w-full rounded object-contain"
 					onerror={() => build.id && failedImages.add(build.id)}
 				/>
 			{/if}
