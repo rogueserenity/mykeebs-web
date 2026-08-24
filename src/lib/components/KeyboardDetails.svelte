@@ -2,7 +2,8 @@
 	import type { Keyboard } from '@rogueserenity/kbdb-api-client';
 	import PurchaseDetails from '$lib/components/PurchaseDetails.svelte';
 
-	let { keyboard }: { keyboard: Keyboard } = $props();
+	let { keyboard, onImageClick }: { keyboard: Keyboard; onImageClick: (index: number) => void } =
+		$props();
 
 	function materialColorText(part: { material?: string; color?: string } | undefined) {
 		return part ? [part.color, part.material].filter(Boolean).join(' ') : undefined;
@@ -21,6 +22,24 @@
 		<p class="mt-2 text-sm opacity-75">{keyboard.notes}</p>
 	{/if}
 </div>
+
+{#if keyboard.images && keyboard.images.length > 0}
+	<div class="mt-6">
+		<h3 class="font-semibold">Images</h3>
+		<div class="mt-2 flex flex-wrap gap-3">
+			{#each keyboard.images as image, index (image.imageId)}
+				<button
+					type="button"
+					class="h-20 w-20 shrink-0 overflow-hidden rounded bg-white"
+					aria-label="View full size image"
+					onclick={() => onImageClick(index)}
+				>
+					<img src={image.url} alt={keyboard.name} class="h-full w-full object-contain" />
+				</button>
+			{/each}
+		</div>
+	</div>
+{/if}
 
 <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
 	{#if keyboard.design}

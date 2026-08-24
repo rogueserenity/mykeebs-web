@@ -94,6 +94,8 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') onClose();
+		else if (event.key === 'ArrowLeft') onPrev?.();
+		else if (event.key === 'ArrowRight') onNext?.();
 	}
 </script>
 

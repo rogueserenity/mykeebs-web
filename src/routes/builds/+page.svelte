@@ -22,6 +22,8 @@
 	let keyboardDetail = $state<Keyboard | null>(null);
 	let keyboardDetailError = $state<string | null>(null);
 	let keyboardDetailLoading = $state(false);
+	let keyboardGalleryViewerOpen = $state(false);
+	let keyboardGalleryIndex = $state(0);
 
 	let switchDetail = $state<SwitchModel | null>(null);
 	let switchDetailError = $state<string | null>(null);
@@ -81,6 +83,8 @@
 		keyboardDetail = null;
 		keyboardDetailError = null;
 		keyboardDetailLoading = false;
+		keyboardGalleryViewerOpen = false;
+		keyboardGalleryIndex = 0;
 	}
 
 	async function openSwitchDetail(switchId: string) {
@@ -200,11 +204,20 @@
 			{#if build.keyboard}
 				<button
 					type="button"
-					class="text-left"
+					class="flex items-center gap-3 text-left"
 					onclick={() => openKeyboardDetail(build.keyboard!.id)}
 				>
-					<h2 class="text-2xl font-bold hover:underline">{build.keyboard.name}</h2>
-					<p class="opacity-75">{build.keyboard.brand}</p>
+					{#if build.keyboard.imageUrl}
+						<img
+							src={build.keyboard.imageUrl}
+							alt={build.keyboard.name}
+							class="h-16 w-16 shrink-0 rounded bg-white object-contain"
+						/>
+					{/if}
+					<div>
+						<h2 class="text-2xl font-bold hover:underline">{build.keyboard.name}</h2>
+						<p class="opacity-75">{build.keyboard.brand}</p>
+					</div>
 				</button>
 			{:else}
 				<h2 class="text-2xl font-bold opacity-50">Deleted keyboard</h2>
@@ -286,10 +299,17 @@
 								{#if entry._switch}
 									<button
 										type="button"
-										class="text-left hover:underline"
+										class="flex items-center gap-2 text-left hover:underline"
 										onclick={() => openSwitchDetail(entry._switch!.id)}
 									>
-										{entry.count}x {entry._switch.name} ({entry._switch.brand})
+										{#if entry._switch.imageUrl}
+											<img
+												src={entry._switch.imageUrl}
+												alt={entry._switch.name}
+												class="h-8 w-8 shrink-0 rounded bg-white object-contain"
+											/>
+										{/if}
+										<span>{entry.count}x {entry._switch.name} ({entry._switch.brand})</span>
 									</button>
 								{:else}
 									<span class="opacity-50">{entry.count}x Deleted switch</span>
@@ -312,10 +332,17 @@
 								{#if entry.keycapSet && entry.kitName}
 									<button
 										type="button"
-										class="text-left hover:underline"
+										class="flex items-center gap-2 text-left hover:underline"
 										onclick={() => openKitDetail(entry.keycapSet!.id, entry.kitId)}
 									>
-										{entry.keycapSet.name} &mdash; {entry.kitName}
+										{#if entry.kitImageUrl}
+											<img
+												src={entry.kitImageUrl}
+												alt={entry.kitName}
+												class="h-8 w-8 shrink-0 rounded bg-white object-contain"
+											/>
+										{/if}
+										<span>{entry.keycapSet.name} &mdash; {entry.kitName}</span>
 									</button>
 								{:else}
 									<span class="opacity-50">Deleted keycap kit</span>
@@ -349,15 +376,40 @@
 <Modal
 	open={keyboardDetailLoading || keyboardDetailError !== null || keyboardDetail !== null}
 	onClose={closeKeyboardDetail}
+	obscured={keyboardGalleryViewerOpen}
 >
 	{#if keyboardDetailLoading}
 		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
 	{:else if keyboardDetailError}
 		<p class="p-8 text-center text-lg text-error-500">{keyboardDetailError}</p>
 	{:else if keyboardDetail}
-		<KeyboardDetails keyboard={keyboardDetail} />
+		<KeyboardDetails
+			keyboard={keyboardDetail}
+			onImageClick={(index) => {
+				keyboardGalleryIndex = index;
+				keyboardGalleryViewerOpen = true;
+			}}
+		/>
 	{/if}
 </Modal>
+
+{#if keyboardDetail?.images && keyboardDetail.images.length > 0}
+	<ImageViewer
+		open={keyboardGalleryViewerOpen}
+		src={keyboardDetail.images[keyboardGalleryIndex].url}
+		alt={keyboardDetail.name}
+		onClose={() => (keyboardGalleryViewerOpen = false)}
+		onPrev={keyboardDetail.images.length > 1
+			? () =>
+					(keyboardGalleryIndex =
+						(keyboardGalleryIndex - 1 + keyboardDetail!.images!.length) %
+						keyboardDetail!.images!.length)
+			: undefined}
+		onNext={keyboardDetail.images.length > 1
+			? () => (keyboardGalleryIndex = (keyboardGalleryIndex + 1) % keyboardDetail!.images!.length)
+			: undefined}
+	/>
+{/if}
 
 <Modal
 	open={switchDetailLoading || switchDetailError !== null || switchDetail !== null}
