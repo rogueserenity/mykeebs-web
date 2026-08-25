@@ -168,22 +168,24 @@
 		{@const imageFailed = build.id != null && failedImages.has(build.id)}
 		<button
 			type="button"
-			class="w-full overflow-hidden card preset-tonal p-4 text-left"
+			class="flex w-full items-center gap-3 overflow-hidden card preset-tonal p-3 text-left"
 			onclick={() => openBuild(build.id ?? '')}
 		>
 			{#if build.image?.url && !imageFailed}
 				<img
 					src={build.image.url}
 					alt={build.keyboard?.name ?? 'Build'}
-					class="mb-3 w-full rounded object-contain"
+					class="h-24 w-24 shrink-0 rounded object-contain"
 					onerror={() => build.id && failedImages.add(build.id)}
 				/>
 			{/if}
-			<h2 class="text-lg font-bold">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
-			<p class="text-sm opacity-75">{build.keyboard?.brand}</p>
-			{#if formatDate(build.buildDate)}
-				<p class="text-sm">{formatDate(build.buildDate)}</p>
-			{/if}
+			<div class="pr-4">
+				<h2 class="text-lg font-bold">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
+				<p class="text-sm opacity-75">{build.keyboard?.brand}</p>
+				{#if formatDate(build.buildDate)}
+					<p class="text-sm">{formatDate(build.buildDate)}</p>
+				{/if}
+			</div>
 		</button>
 	{/snippet}
 </CollectionGrid>
