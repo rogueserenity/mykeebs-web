@@ -117,31 +117,31 @@
 
 {#if auth.status === 'loading' || loading}
 	<div class="flex items-center justify-center p-16">
-		<p class="text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted font-mono text-sm tracking-wide">Loading&hellip;</p>
 	</div>
 {:else if auth.status === 'signed-out'}
 	<div class="flex items-center justify-center p-16">
-		<p class="text-lg opacity-75">Sign in to see your collection.</p>
+		<p class="text-muted text-lg">Sign in to see your collection.</p>
 	</div>
 {:else if loadError}
 	<div class="flex items-center justify-center p-16">
-		<p class="text-lg text-error-500">{loadError}</p>
+		<p class="text-lg" style="color: var(--danger)">{loadError}</p>
 	</div>
 {:else if items.length === 0}
 	<div class="flex items-center justify-center p-16">
-		<p class="text-xl font-semibold opacity-75">{emptyMessage}</p>
+		<p class="text-muted text-xl font-semibold">{emptyMessage}</p>
 	</div>
 {:else}
 	<div class="flex items-center justify-end gap-2 p-4 pb-0">
 		{#if sortOptions.length > 0}
-			<select class="select w-auto" bind:value={sortIndex}>
+			<select class="field-select w-auto" bind:value={sortIndex}>
 				{#each sortOptions as option, index (option.label)}
 					<option value={index}>Sort: {option.label}</option>
 				{/each}
 			</select>
 			<button
 				type="button"
-				class="btn-icon preset-tonal"
+				class="btn-icon"
 				aria-label={sortDescending ? 'Sort ascending' : 'Sort descending'}
 				onclick={() => (sortDescending = !sortDescending)}
 			>
@@ -152,19 +152,14 @@
 			<input
 				bind:this={filterInput}
 				type="search"
-				class="input w-64"
+				class="field-input w-64"
 				placeholder="Filter…"
 				bind:value={filterText}
 				onblur={collapseFilterIfEmpty}
 				onkeydown={handleFilterKeydown}
 			/>
 		{:else}
-			<button
-				type="button"
-				class="btn-icon preset-tonal"
-				aria-label="Filter"
-				onclick={expandFilter}
-			>
+			<button type="button" class="btn-icon" aria-label="Filter" onclick={expandFilter}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 24 24"
@@ -183,7 +178,7 @@
 	</div>
 	{#if sortedItems.length === 0}
 		<div class="flex items-center justify-center p-16">
-			<p class="text-xl font-semibold opacity-75">No matches.</p>
+			<p class="text-muted text-xl font-semibold">No matches.</p>
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

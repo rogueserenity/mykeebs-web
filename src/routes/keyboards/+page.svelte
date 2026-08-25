@@ -57,11 +57,11 @@
 		{@const imageFailed = failedImages.has(keyboard.id ?? '')}
 		<button
 			type="button"
-			class="relative flex w-full items-center gap-3 card preset-tonal p-4 text-left"
+			class="kc-card relative flex w-full items-center gap-3 p-4 text-left"
 			onclick={() => openKeyboard(keyboard.id ?? '')}
 		>
 			{#if keyboard.orderStatus}
-				<span class="absolute top-4 right-4 badge {orderStatusClass(keyboard.orderStatus)}">
+				<span class="status-badge absolute top-4 right-4 {orderStatusClass(keyboard.orderStatus)}">
 					{keyboard.orderStatus}
 				</span>
 			{/if}
@@ -69,15 +69,17 @@
 				<img
 					src={keyboard.image.url}
 					alt={keyboard.name}
-					class="h-16 w-16 shrink-0 rounded object-contain"
+					class="kc-thumb h-16 w-16 shrink-0 object-contain"
 					onerror={() => failedImages.add(keyboard.id ?? '')}
 				/>
 			{/if}
 			<div class="pr-4">
-				<h2 class="text-lg font-bold">{keyboard.name}</h2>
-				<p class="text-sm opacity-75">{keyboard.brand}</p>
+				<h2 class="heading-lg text-lg">{keyboard.name}</h2>
+				<p class="text-muted text-sm">{keyboard.brand}</p>
 				{#if keyboard.size || keyboard.layout}
-					<p class="text-sm">{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}</p>
+					<p class="text-faint font-mono text-xs">
+						{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
+					</p>
 				{/if}
 			</div>
 		</button>
@@ -90,9 +92,9 @@
 	obscured={galleryViewerOpen}
 >
 	{#if detailLoading}
-		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if detailError}
-		<p class="p-8 text-center text-lg text-error-500">{detailError}</p>
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{detailError}</p>
 	{:else if selectedKeyboard}
 		<KeyboardDetails
 			keyboard={selectedKeyboard}

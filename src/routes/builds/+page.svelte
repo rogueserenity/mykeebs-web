@@ -168,22 +168,22 @@
 		{@const imageFailed = build.id != null && failedImages.has(build.id)}
 		<button
 			type="button"
-			class="flex w-full items-center gap-3 overflow-hidden card preset-tonal p-3 text-left"
+			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
 			onclick={() => openBuild(build.id ?? '')}
 		>
 			{#if build.image?.url && !imageFailed}
 				<img
 					src={build.image.url}
 					alt={build.keyboard?.name ?? 'Build'}
-					class="h-24 w-24 shrink-0 rounded object-contain"
+					class="kc-thumb h-24 w-24 shrink-0 object-contain"
 					onerror={() => build.id && failedImages.add(build.id)}
 				/>
 			{/if}
 			<div class="pr-4">
-				<h2 class="text-lg font-bold">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
-				<p class="text-sm opacity-75">{build.keyboard?.brand}</p>
+				<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
+				<p class="text-muted text-sm">{build.keyboard?.brand}</p>
 				{#if formatDate(build.buildDate)}
-					<p class="text-sm">{formatDate(build.buildDate)}</p>
+					<p class="text-faint font-mono text-xs">{formatDate(build.buildDate)}</p>
 				{/if}
 			</div>
 		</button>
@@ -197,9 +197,9 @@
 	obscured={anyNestedOpen}
 >
 	{#if detailLoading}
-		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if detailError}
-		<p class="p-8 text-center text-lg text-error-500">{detailError}</p>
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{detailError}</p>
 	{:else if selectedBuild}
 		{@const build = selectedBuild}
 		<div class="pr-8">
@@ -213,35 +213,35 @@
 						<img
 							src={build.keyboard.imageUrl}
 							alt={build.keyboard.name}
-							class="h-16 w-16 shrink-0 rounded object-contain"
+							class="kc-thumb h-16 w-16 shrink-0 object-contain"
 						/>
 					{/if}
 					<div>
-						<h2 class="text-2xl font-bold hover:underline">{build.keyboard.name}</h2>
-						<p class="opacity-75">{build.keyboard.brand}</p>
+						<h2 class="heading-lg text-2xl hover:underline">{build.keyboard.name}</h2>
+						<p class="text-muted">{build.keyboard.brand}</p>
 					</div>
 				</button>
 			{:else}
-				<h2 class="text-2xl font-bold opacity-50">Deleted keyboard</h2>
+				<h2 class="heading-lg text-faint text-2xl">Deleted keyboard</h2>
 			{/if}
 			{#if formatDate(build.buildDate) || formatPrice(build.totalCost)}
-				<p class="mt-1 text-sm">
+				<p class="text-faint mt-1 font-mono text-sm">
 					{[formatDate(build.buildDate), formatPrice(build.totalCost)].filter(Boolean).join(' · ')}
 				</p>
 			{/if}
 			{#if build.notes}
-				<p class="mt-2 text-sm opacity-75">{build.notes}</p>
+				<p class="text-muted mt-2 text-sm">{build.notes}</p>
 			{/if}
 		</div>
 
 		{#if build.images && build.images.length > 0}
 			<div class="mt-6">
-				<h3 class="font-semibold">Images</h3>
-				<div class="mt-2 flex flex-wrap gap-3">
+				<h3 class="section-label">Images</h3>
+				<div class="flex flex-wrap gap-3">
 					{#each build.images as image, index (image.imageId)}
 						<button
 							type="button"
-							class="h-20 w-20 shrink-0 overflow-hidden rounded"
+							class="kc-thumb h-20 w-20 shrink-0 overflow-hidden"
 							aria-label="View full size image"
 							onclick={() => {
 								galleryIndex = index;
@@ -258,17 +258,19 @@
 		<div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
 			{#if build.plate || build.caseMountType || build.stabs || build.foam != null}
 				<div>
-					<h3 class="font-semibold">Build details</h3>
-					<dl class="mt-2 space-y-2 text-sm">
+					<h3 class="section-label">Build details</h3>
+					<dl class="spec-list">
 						{#if build.plate}
-							<div class="flex justify-between gap-4">
-								<dt class="opacity-75">Plate</dt>
+							<div class="spec-row">
+								<dt>Plate</dt>
+								<span class="spec-leader"></span>
 								<dd>{build.plate}</dd>
 							</div>
 						{/if}
 						{#if build.caseMountType?.type}
-							<div class="flex justify-between gap-4">
-								<dt class="opacity-75">Mount type</dt>
+							<div class="spec-row">
+								<dt>Mount type</dt>
+								<span class="spec-leader"></span>
 								<dd>
 									{[build.caseMountType.type, build.caseMountType.durometer]
 										.filter(Boolean)
@@ -277,14 +279,16 @@
 							</div>
 						{/if}
 						{#if build.stabs?.name}
-							<div class="flex justify-between gap-4">
-								<dt class="opacity-75">Stabs</dt>
+							<div class="spec-row">
+								<dt>Stabs</dt>
+								<span class="spec-leader"></span>
 								<dd>{[build.stabs.name, build.stabs.mountType].filter(Boolean).join(' · ')}</dd>
 							</div>
 						{/if}
 						{#if build.foam != null}
-							<div class="flex justify-between gap-4">
-								<dt class="opacity-75">Foam</dt>
+							<div class="spec-row">
+								<dt>Foam</dt>
+								<span class="spec-leader"></span>
 								<dd>{build.foam ? 'Yes' : 'No'}</dd>
 							</div>
 						{/if}
@@ -294,8 +298,8 @@
 
 			{#if build.switches && build.switches.length > 0}
 				<div>
-					<h3 class="font-semibold">Switches</h3>
-					<ul class="mt-2 space-y-2 text-sm">
+					<h3 class="section-label">Switches</h3>
+					<ul class="space-y-2 text-sm">
 						{#each build.switches as entry, index (index)}
 							<li>
 								{#if entry._switch}
@@ -308,13 +312,15 @@
 											<img
 												src={entry._switch.imageUrl}
 												alt={entry._switch.name}
-												class="h-8 w-8 shrink-0 rounded object-contain"
+												class="kc-thumb h-8 w-8 shrink-0 object-contain"
 											/>
 										{/if}
-										<span>{entry.count}x {entry._switch.name} ({entry._switch.brand})</span>
+										<span class="font-mono"
+											>{entry.count}x {entry._switch.name} ({entry._switch.brand})</span
+										>
 									</button>
 								{:else}
-									<span class="opacity-50">{entry.count}x Deleted switch</span>
+									<span class="text-faint">{entry.count}x Deleted switch</span>
 								{/if}
 							</li>
 						{/each}
@@ -327,8 +333,8 @@
 					(a.keycapSet?.name ?? '').localeCompare(b.keycapSet?.name ?? '')
 				)}
 				<div>
-					<h3 class="font-semibold">Keycap kits</h3>
-					<ul class="mt-2 space-y-2 text-sm">
+					<h3 class="section-label">Keycap kits</h3>
+					<ul class="space-y-2 text-sm">
 						{#each sortedKeycapKits as entry, index (entry.keycapSet ? `${entry.keycapSet.id}-${entry.kitId}` : index)}
 							<li>
 								{#if entry.keycapSet && entry.kitName}
@@ -341,13 +347,13 @@
 											<img
 												src={entry.kitImageUrl}
 												alt={entry.kitName}
-												class="h-8 w-8 shrink-0 rounded object-contain"
+												class="kc-thumb h-8 w-8 shrink-0 object-contain"
 											/>
 										{/if}
-										<span>{entry.keycapSet.name} &mdash; {entry.kitName}</span>
+										<span class="font-mono">{entry.keycapSet.name} &mdash; {entry.kitName}</span>
 									</button>
 								{:else}
-									<span class="opacity-50">Deleted keycap kit</span>
+									<span class="text-faint">Deleted keycap kit</span>
 								{/if}
 							</li>
 						{/each}
@@ -381,9 +387,9 @@
 	obscured={keyboardGalleryViewerOpen}
 >
 	{#if keyboardDetailLoading}
-		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if keyboardDetailError}
-		<p class="p-8 text-center text-lg text-error-500">{keyboardDetailError}</p>
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{keyboardDetailError}</p>
 	{:else if keyboardDetail}
 		<KeyboardDetails
 			keyboard={keyboardDetail}
@@ -419,9 +425,9 @@
 	obscured={switchViewerOpen}
 >
 	{#if switchDetailLoading}
-		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if switchDetailError}
-		<p class="p-8 text-center text-lg text-error-500">{switchDetailError}</p>
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{switchDetailError}</p>
 	{:else if switchDetail}
 		<SwitchDetails sw={switchDetail} onImageClick={() => (switchViewerOpen = true)} />
 	{/if}
@@ -442,9 +448,9 @@
 	obscured={kitViewerOpen}
 >
 	{#if kitDetailLoading}
-		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if kitDetailError}
-		<p class="p-8 text-center text-lg text-error-500">{kitDetailError}</p>
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{kitDetailError}</p>
 	{:else if kitDetail}
 		{@const kit = kitDetail}
 		<KeycapKitDetails

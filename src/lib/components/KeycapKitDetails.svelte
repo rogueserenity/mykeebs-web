@@ -30,19 +30,17 @@
 			<img
 				src={imageUrl}
 				alt={name}
-				class="max-h-[70vh] w-full rounded object-contain"
+				class="kc-thumb max-h-[70vh] w-full object-contain"
 				onerror={onImageError}
 			/>
 		</button>
 	{:else}
-		<div
-			class="flex aspect-square w-full items-center justify-center rounded bg-surface-500/10 text-sm opacity-50"
-		>
+		<div class="kc-thumb text-faint flex aspect-square w-full items-center justify-center text-sm">
 			No image
 		</div>
 	{/if}
 	<div>
-		<h2 class="text-2xl font-bold">{name}</h2>
+		<h2 class="heading-lg text-2xl">{name}</h2>
 		<PurchaseDetails {purchase} />
 	</div>
 </div>

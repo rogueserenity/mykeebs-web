@@ -106,7 +106,7 @@
 		<button
 			type="button"
 			aria-label="Close"
-			class="absolute top-4 right-4 z-10 btn-icon bg-black/70 text-white hover:bg-black/90"
+			class="btn-icon absolute top-4 right-4 z-10 bg-black/70 text-white hover:bg-black/90"
 			onclick={onClose}
 		>
 			✕
@@ -148,7 +148,7 @@
 			<button
 				type="button"
 				aria-label="Previous kit"
-				class="absolute top-1/2 left-4 z-10 btn-icon -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
+				class="btn-icon absolute top-1/2 left-4 z-10 -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
 				onclick={onPrev}
 			>
 				←
@@ -158,7 +158,7 @@
 			<button
 				type="button"
 				aria-label="Next kit"
-				class="absolute top-1/2 right-4 z-10 btn-icon -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
+				class="btn-icon absolute top-1/2 right-4 z-10 -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
 				onclick={onNext}
 			>
 				→

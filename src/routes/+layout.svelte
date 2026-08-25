@@ -22,14 +22,16 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-<header class="flex items-center justify-between p-4">
-	<nav class="flex gap-2">
+<header class="app-header">
+	<div class="app-brand">
+		<span class="app-brand-key">⌨</span>
+		mykeebs
+	</div>
+	<nav class="app-nav">
 		{#each navItems as item (item.href)}
 			<a
 				href={item.href}
-				class="btn {page.url.pathname.startsWith(item.href)
-					? 'preset-filled-primary-500'
-					: 'preset-tonal'}"
+				class="nav-key {page.url.pathname.startsWith(item.href) ? 'is-active' : ''}"
 			>
 				{item.label}
 			</a>

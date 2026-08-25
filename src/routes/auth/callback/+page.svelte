@@ -22,8 +22,10 @@
 	});
 </script>
 
-{#if error}
-	<p class="text-error-500">{error}</p>
-{:else}
-	<p>Signing you in&hellip;</p>
-{/if}
+<div class="flex min-h-[60vh] items-center justify-center">
+	{#if error}
+		<p style="color: var(--danger)">{error}</p>
+	{:else}
+		<p class="text-muted font-mono text-sm tracking-wide">Signing you in&hellip;</p>
+	{/if}
+</div>

@@ -6,12 +6,14 @@
 		onClose,
 		wide = false,
 		obscured = false,
+		headerExtra,
 		children
 	}: {
 		open: boolean;
 		onClose: () => void;
 		wide?: boolean;
 		obscured?: boolean;
+		headerExtra?: Snippet;
 		children: Snippet;
 	} = $props();
 
@@ -24,21 +26,23 @@
 
 {#if open}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-		<button type="button" aria-label="Close" class="absolute inset-0 bg-black/60" onclick={onClose}
+		<button
+			type="button"
+			aria-label="Close"
+			class="kc-modal-backdrop absolute inset-0"
+			onclick={onClose}
 		></button>
 		<div
-			class="relative max-h-[90vh] w-full card bg-surface-100-900 {wide
+			class="kc-modal-panel max-h-[90vh] w-full {wide
 				? 'max-w-5xl'
-				: 'max-w-3xl'} overflow-y-auto p-6 shadow-xl"
+				: 'max-w-3xl'} overflow-y-auto p-6"
 		>
-			<button
-				type="button"
-				class="absolute top-4 right-4 btn-icon preset-tonal"
-				aria-label="Close"
-				onclick={onClose}
-			>
-				✕
-			</button>
+			<div class="absolute top-4 right-4 flex items-center gap-2">
+				{#if headerExtra}
+					{@render headerExtra()}
+				{/if}
+				<button type="button" class="btn-icon" aria-label="Close" onclick={onClose}> ✕ </button>
+			</div>
 			{@render children()}
 		</div>
 	</div>

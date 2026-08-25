@@ -53,22 +53,22 @@
 		{@const imageFailed = failedImages.has(sw.id ?? '')}
 		<button
 			type="button"
-			class="flex w-full items-center gap-3 card preset-tonal p-4 text-left"
+			class="kc-card flex w-full items-center gap-3 p-4 text-left"
 			onclick={() => openSwitch(sw.id ?? '')}
 		>
 			{#if sw.image?.url && !imageFailed}
 				<img
 					src={sw.image.url}
 					alt={sw.name}
-					class="h-16 w-16 shrink-0 rounded object-contain"
+					class="kc-thumb h-16 w-16 shrink-0 object-contain"
 					onerror={() => failedImages.add(sw.id ?? '')}
 				/>
 			{/if}
 			<div>
-				<h2 class="text-lg font-bold">{sw.name}</h2>
-				<p class="text-sm opacity-75">{sw.brand}</p>
+				<h2 class="heading-lg text-lg">{sw.name}</h2>
+				<p class="text-muted text-sm">{sw.brand}</p>
 				{#if sw.type}
-					<p class="text-sm">{sw.type}</p>
+					<p class="text-faint font-mono text-xs">{sw.type}</p>
 				{/if}
 			</div>
 		</button>
@@ -81,9 +81,9 @@
 	obscured={viewerOpen}
 >
 	{#if detailLoading}
-		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if detailError}
-		<p class="p-8 text-center text-lg text-error-500">{detailError}</p>
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{detailError}</p>
 	{:else if selectedSwitch}
 		<SwitchDetails sw={selectedSwitch} onImageClick={() => (viewerOpen = true)} />
 	{/if}

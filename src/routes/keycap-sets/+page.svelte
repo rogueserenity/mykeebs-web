@@ -52,6 +52,8 @@
 		if (event.key === 'ArrowLeft') stepKit(-1);
 		else if (event.key === 'ArrowRight') stepKit(1);
 	}
+
+	let hasMultipleKits = $derived((selectedSet?.kits?.length ?? 0) > 1);
 </script>
 
 <svelte:window onkeydown={selectedKit && !viewerOpen ? handleKitNavKeydown : undefined} />
@@ -72,11 +74,11 @@
 		{@const imageFailed = failedImages.has(set.id ?? '')}
 		<button
 			type="button"
-			class="relative flex w-full items-center gap-3 overflow-hidden card preset-tonal p-3 text-left"
+			class="kc-card relative flex w-full items-center gap-3 overflow-hidden p-3 text-left"
 			onclick={() => openSet(set.id ?? '')}
 		>
 			{#if set.orderStatus}
-				<span class="absolute top-3 right-3 badge {orderStatusClass(set.orderStatus)}">
+				<span class="status-badge absolute top-3 right-3 {orderStatusClass(set.orderStatus)}">
 					{set.orderStatus}
 				</span>
 			{/if}
@@ -84,15 +86,15 @@
 				<img
 					src={set.primaryKitImage.url}
 					alt={set.name}
-					class="h-16 w-16 shrink-0 rounded object-contain"
+					class="kc-thumb h-16 w-16 shrink-0 object-contain"
 					onerror={() => failedImages.add(set.id ?? '')}
 				/>
 			{/if}
 			<div class="pr-4">
-				<h2 class="text-lg font-bold">{set.name}</h2>
-				<p class="text-sm opacity-75">{set.brand}</p>
+				<h2 class="heading-lg text-lg">{set.name}</h2>
+				<p class="text-muted text-sm">{set.brand}</p>
 				{#if set.profile}
-					<p class="text-sm">{set.profile}</p>
+					<p class="text-faint font-mono text-xs">{set.profile}</p>
 				{/if}
 			</div>
 		</button>
@@ -105,18 +107,18 @@
 	obscured={selectedKit !== null}
 >
 	{#if detailLoading}
-		<p class="p-8 text-center text-lg opacity-75">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if detailError}
-		<p class="p-8 text-center text-lg text-error-500">{detailError}</p>
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{detailError}</p>
 	{:else if selectedSet}
 		<div class="pr-8">
-			<h2 class="text-2xl font-bold">{selectedSet.name}</h2>
-			<p class="opacity-75">{selectedSet.brand}</p>
-			<p class="mt-1 text-sm">
+			<h2 class="heading-lg text-2xl">{selectedSet.name}</h2>
+			<p class="text-muted">{selectedSet.brand}</p>
+			<p class="text-faint mt-1 font-mono text-sm">
 				{[selectedSet.profile, selectedSet.material].filter(Boolean).join(' · ')}
 			</p>
 			{#if selectedSet.notes}
-				<p class="mt-2 text-sm opacity-75">{selectedSet.notes}</p>
+				<p class="text-muted mt-2 text-sm">{selectedSet.notes}</p>
 			{/if}
 		</div>
 
@@ -126,66 +128,54 @@
 					{@const imageFailed = failedImages.has(kit.kitId)}
 					<button
 						type="button"
-						class="relative w-full overflow-hidden card preset-tonal p-3 text-left"
+						class="kc-card w-full overflow-hidden p-3 text-left"
 						onclick={() => (selectedKit = kit)}
 					>
-						{#if kit.purchase?.orderStatus}
-							<span
-								class="absolute top-3 right-3 badge {orderStatusClass(kit.purchase.orderStatus)}"
-							>
-								{kit.purchase.orderStatus}
-							</span>
-						{/if}
 						{#if kit.image?.url && !imageFailed}
 							<img
 								src={kit.image.url}
 								alt={kit.name}
-								class="aspect-square w-full rounded object-contain"
+								class="kc-thumb-tile aspect-square w-full object-contain"
 								onerror={() => failedImages.add(kit.kitId)}
 							/>
 						{:else}
 							<div
-								class="flex aspect-square w-full items-center justify-center rounded bg-surface-500/10 text-sm opacity-50"
+								class="kc-thumb-tile text-faint flex aspect-square w-full items-center justify-center text-sm"
 							>
 								No image
 							</div>
 						{/if}
-						<h3 class="mt-2 pr-4 font-semibold">{kit.name}</h3>
+						<div class="mt-2 flex items-center justify-between gap-2 pr-1">
+							<h3 class="font-semibold">{kit.name}</h3>
+							{#if kit.purchase?.orderStatus}
+								<span class="status-badge shrink-0 {orderStatusClass(kit.purchase.orderStatus)}">
+									{kit.purchase.orderStatus}
+								</span>
+							{/if}
+						</div>
 					</button>
 				{/each}
 			</div>
 		{:else}
-			<p class="mt-6 text-sm opacity-75">No kits recorded for this set.</p>
+			<p class="text-muted mt-6 text-sm">No kits recorded for this set.</p>
 		{/if}
 	{/if}
 </Modal>
 
 <Modal open={selectedKit !== null} onClose={() => (selectedKit = null)} wide obscured={viewerOpen}>
+	{#snippet headerExtra()}
+		{#if hasMultipleKits}
+			<button type="button" class="btn-icon" aria-label="Previous kit" onclick={() => stepKit(-1)}>
+				←
+			</button>
+			<button type="button" class="btn-icon" aria-label="Next kit" onclick={() => stepKit(1)}>
+				→
+			</button>
+		{/if}
+	{/snippet}
 	{#if selectedKit}
 		{@const kit = selectedKit}
 		{@const imageFailed = failedImages.has(kit.kitId)}
-		{@const hasMultipleKits = (selectedSet?.kits?.length ?? 0) > 1}
-		{#if hasMultipleKits}
-			<div class="mb-4 flex items-center justify-between pr-8">
-				<button
-					type="button"
-					class="btn-icon preset-tonal"
-					aria-label="Previous kit"
-					onclick={() => stepKit(-1)}
-				>
-					←
-				</button>
-				<span class="text-sm opacity-75">{kit.name}</span>
-				<button
-					type="button"
-					class="btn-icon preset-tonal"
-					aria-label="Next kit"
-					onclick={() => stepKit(1)}
-				>
-					→
-				</button>
-			</div>
-		{/if}
 		<KeycapKitDetails
 			name={kit.name}
 			imageUrl={kit.image?.url}

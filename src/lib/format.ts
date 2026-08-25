@@ -8,14 +8,14 @@ export type PurchaseLike = {
 };
 
 const orderStatusColors: Record<string, string> = {
-	ordered: 'preset-filled-warning-500',
-	shipped: 'preset-filled-tertiary-500',
-	delivered: 'preset-filled-success-500',
-	sold: 'preset-filled-surface-500'
+	ordered: 'status-ordered',
+	shipped: 'status-shipped',
+	delivered: 'status-delivered',
+	sold: 'status-sold'
 };
 
 export function orderStatusClass(status: string): string {
-	return orderStatusColors[status.toLowerCase()] ?? 'preset-filled-primary-500';
+	return orderStatusColors[status.toLowerCase()] ?? 'status-default';
 }
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', {

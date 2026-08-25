@@ -6,38 +6,43 @@
 
 {#if purchase}
 	{#if purchase.orderStatus}
-		<span class="mt-2 badge {orderStatusClass(purchase.orderStatus)}">
+		<span class="status-badge mt-2 {orderStatusClass(purchase.orderStatus)}">
 			{purchase.orderStatus}
 		</span>
 	{/if}
-	<dl class="mt-4 space-y-2 text-sm">
+	<dl class="spec-list mt-4">
 		{#if purchase.vendor}
-			<div class="flex justify-between gap-4">
-				<dt class="opacity-75">Vendor</dt>
+			<div class="spec-row">
+				<dt>Vendor</dt>
+				<span class="spec-leader"></span>
 				<dd>{purchase.vendor}</dd>
 			</div>
 		{/if}
 		{#if purchase.quantity != null}
-			<div class="flex justify-between gap-4">
-				<dt class="opacity-75">Quantity</dt>
+			<div class="spec-row">
+				<dt>Quantity</dt>
+				<span class="spec-leader"></span>
 				<dd>{purchase.quantity}</dd>
 			</div>
 		{/if}
 		{#if formatPrice(purchase.price)}
-			<div class="flex justify-between gap-4">
-				<dt class="opacity-75">Price</dt>
+			<div class="spec-row">
+				<dt>Price</dt>
+				<span class="spec-leader"></span>
 				<dd>{formatPrice(purchase.price)}</dd>
 			</div>
 		{/if}
 		{#if formatDate(purchase.orderDate)}
-			<div class="flex justify-between gap-4">
-				<dt class="opacity-75">Ordered</dt>
+			<div class="spec-row">
+				<dt>Ordered</dt>
+				<span class="spec-leader"></span>
 				<dd>{formatDate(purchase.orderDate)}</dd>
 			</div>
 		{/if}
 		{#if formatDate(purchase.deliveryDate)}
-			<div class="flex justify-between gap-4">
-				<dt class="opacity-75">Delivered</dt>
+			<div class="spec-row">
+				<dt>Delivered</dt>
+				<span class="spec-leader"></span>
 				<dd>{formatDate(purchase.deliveryDate)}</dd>
 			</div>
 		{/if}
