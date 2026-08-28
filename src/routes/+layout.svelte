@@ -5,19 +5,22 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { initAuth } from '$lib/auth/auth.svelte';
+	import { initProfile } from '$lib/profile/profile.svelte';
 	import AuthControl from '$lib/auth/AuthControl.svelte';
 
 	let { children } = $props();
 
 	onMount(() => {
 		initAuth();
+		initProfile();
 	});
 
 	const navItems = [
 		{ href: resolve('/keyboards'), label: 'Keyboards' },
 		{ href: resolve('/switches'), label: 'Switches' },
 		{ href: resolve('/keycap-sets'), label: 'Keycap Sets' },
-		{ href: resolve('/builds'), label: 'Builds' }
+		{ href: resolve('/builds'), label: 'Builds' },
+		{ href: resolve('/discover'), label: 'Discover' }
 	];
 </script>
 

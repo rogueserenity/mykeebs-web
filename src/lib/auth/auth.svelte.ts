@@ -1,6 +1,5 @@
 import { SvelteURLSearchParams } from 'svelte/reactivity';
 import { PUBLIC_STYTCH_CLIENT_ID } from '$env/static/public';
-import { getAuthClient } from './client';
 import { generateCodeChallenge, generateCodeVerifier } from './pkce';
 
 // Discovered once via
@@ -15,6 +14,7 @@ import { generateCodeChallenge, generateCodeVerifier } from './pkce';
 // login domain the way WorkOS's AuthKit provided), so kbdb's dashboard
 // "Authorization URL" setting points there instead of at Stytch itself.
 const AUTHORIZE_ENDPOINT = 'https://api.jay.mykeebs.dev/authorize';
+const LOGOUT_ENDPOINT = 'https://api.jay.mykeebs.dev/logout';
 const TOKEN_ENDPOINT = 'https://auth.jay.mykeebs.dev/v1/oauth2/token';
 
 const CODE_VERIFIER_KEY = 'stytch_pkce_code_verifier';
@@ -171,17 +171,19 @@ export const auth = {
 	}
 };
 
-export async function signOut(): Promise<void> {
+/**
+ * The Stytch session lives on kbdb's origin, not this one (it was created
+ * there, on kbdb's own consent page) - revoking it has to happen there too,
+ * so this navigates through kbdb's /logout rather than calling
+ * session.revoke() on a client that was never actually signed in.
+ */
+export function signOut(): void {
 	localStorage.removeItem(ACCESS_TOKEN_KEY);
 	localStorage.removeItem(REFRESH_TOKEN_KEY);
 	syncFromStoredToken();
-	// Revokes the underlying Stytch session, if one exists (e.g. from the
-	// magic-link login used on kbdb's consent page) - best-effort, since
-	// signing out of mykeebs-web should succeed even if there's no active
-	// Stytch session to revoke.
-	await getAuthClient()
-		.session.revoke()
-		.catch(() => {});
+
+	const params = new SvelteURLSearchParams({ return_to: window.location.origin });
+	window.location.assign(`${LOGOUT_ENDPOINT}?${params.toString()}`);
 }
 
 /**

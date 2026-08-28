@@ -4,6 +4,7 @@ import {
 	KeyboardsApi,
 	KeycapSetsApi,
 	LookupsApi,
+	ProfilesApi,
 	SwitchesApi
 } from '@rogueserenity/kbdb-api-client';
 import { PUBLIC_KBDB_API_BASE_PATH } from '$env/static/public';
@@ -18,4 +19,5 @@ export const buildsApi = new BuildsApi(configuration);
 export const keyboardsApi = new KeyboardsApi(configuration);
 export const keycapSetsApi = new KeycapSetsApi(configuration);
 export const lookupsApi = new LookupsApi(configuration);
+export const profilesApi = new ProfilesApi(configuration);
 export const switchesApi = new SwitchesApi(configuration);
