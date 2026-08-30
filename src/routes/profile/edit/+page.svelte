@@ -8,7 +8,9 @@
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
 
-	const USERNAME_PATTERN = /^[a-z0-9_-]{3,20}$/;
+	// Lowercase letters, digits, hyphen, period, underscore; 3-32 chars; no
+	// leading/trailing separator; no consecutive periods. Mirrors ProfileInput.username.
+	const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$/;
 	const MAX_LINKS = 5;
 
 	// Seeded from the store once it resolves. Editing an existing profile
@@ -42,7 +44,7 @@
 	let usernameError = $state<string | null>(null);
 
 	let usernameLooksValid = $derived(
-		USERNAME_PATTERN.test(username) && !username.startsWith('user-')
+		USERNAME_PATTERN.test(username) && !username.includes('..') && !username.startsWith('user-')
 	);
 
 	function addLink() {
@@ -60,7 +62,7 @@
 
 		if (!usernameLooksValid) {
 			usernameError =
-				'3–20 chars: lowercase letters, digits, hyphen, underscore. Cannot start with "user-".';
+				'3–32 chars: lowercase letters, digits, hyphen, period, underscore. No leading/trailing or consecutive periods/hyphens/underscores. Cannot start with "user-".';
 			return;
 		}
 
@@ -204,7 +206,13 @@
 		<form class="mt-8 flex flex-col gap-5" onsubmit={handleSubmit}>
 			<label class="flex flex-col gap-1.5">
 				<span class="section-label mb-0">Username</span>
-				<input type="text" class="field-input font-mono" bind:value={username} autocomplete="off" />
+				<input
+					type="text"
+					class="field-input font-mono"
+					maxlength="32"
+					bind:value={username}
+					autocomplete="off"
+				/>
 				<span class="text-faint text-xs">
 					Your profile will be at /u/{usernameLooksValid ? username : 'username'}
 				</span>
