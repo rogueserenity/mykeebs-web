@@ -1,11 +1,11 @@
 <script lang="ts" generics="T">
-	import { auth } from '$lib/auth/auth.svelte';
 	import type { Snippet } from 'svelte';
 
 	type Page = { items?: T[]; nextCursor?: string | null };
 	type SortOption = { label: string; getValue: (item: T) => string | number | undefined };
 
 	let {
+		userId,
 		fetchPage,
 		itemKey,
 		emptyMessage,
@@ -13,6 +13,7 @@
 		getName,
 		card
 	}: {
+		userId: string;
 		fetchPage: (userId: string, cursor: string | undefined) => Promise<Page>;
 		itemKey: (item: T) => string;
 		emptyMessage: string;
@@ -91,7 +92,6 @@
 	});
 
 	$effect(() => {
-		const userId = auth.user?.id;
 		if (!userId) return;
 
 		loadError = null;
@@ -107,7 +107,7 @@
 			items = allItems;
 		})()
 			.catch(() => {
-				loadError = 'Could not load your collection.';
+				loadError = 'Could not load this collection.';
 			})
 			.finally(() => {
 				loading = false;
@@ -115,13 +115,9 @@
 	});
 </script>
 
-{#if auth.status === 'loading' || loading}
+{#if loading}
 	<div class="flex items-center justify-center p-16">
 		<p class="text-muted font-mono text-sm tracking-wide">Loading&hellip;</p>
-	</div>
-{:else if auth.status === 'signed-out'}
-	<div class="flex items-center justify-center p-16">
-		<p class="text-muted text-lg">Sign in to see your collection.</p>
 	</div>
 {:else if loadError}
 	<div class="flex items-center justify-center p-16">
@@ -181,7 +177,7 @@
 			<p class="text-muted text-xl font-semibold">No matches.</p>
 		</div>
 	{:else}
-		<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+		<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
 			{#each sortedItems as item (itemKey(item))}
 				{@render card(item)}
 			{/each}

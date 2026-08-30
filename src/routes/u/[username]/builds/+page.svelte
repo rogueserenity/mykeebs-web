@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Build, Keyboard, Switch as SwitchModel } from '@rogueserenity/kbdb-api-client';
-	import { auth } from '$lib/auth/auth.svelte';
 	import { buildsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
 	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
+	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import SwitchDetails from '$lib/components/SwitchDetails.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
+
+	const userContext = getUserContext();
 
 	let selectedBuild = $state<Build | null>(null);
 	let detailError = $state<string | null>(null);
@@ -40,7 +42,7 @@
 	let kitViewerOpen = $state(false);
 
 	async function openBuild(buildId: string) {
-		const userId = auth.user?.id;
+		const userId = userContext.userId;
 		if (!userId) return;
 
 		detailError = null;
@@ -64,7 +66,7 @@
 	}
 
 	async function openKeyboardDetail(keyboardId: string) {
-		const userId = auth.user?.id;
+		const userId = userContext.userId;
 		if (!userId) return;
 
 		keyboardDetailError = null;
@@ -88,7 +90,7 @@
 	}
 
 	async function openSwitchDetail(switchId: string) {
-		const userId = auth.user?.id;
+		const userId = userContext.userId;
 		if (!userId) return;
 
 		switchDetailError = null;
@@ -111,7 +113,7 @@
 	}
 
 	async function openKitDetail(keycapSetId: string, kitId: string) {
-		const userId = auth.user?.id;
+		const userId = userContext.userId;
 		if (!userId) return;
 
 		kitDetailError = null;
@@ -154,6 +156,7 @@
 </script>
 
 <CollectionGrid
+	userId={userContext.userId}
 	fetchPage={(userId: string, cursor: string | undefined) =>
 		buildsApi.listBuilds({ userId, cursor })}
 	itemKey={(build) => build.id ?? ''}

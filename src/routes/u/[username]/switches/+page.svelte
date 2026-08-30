@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Switch as SwitchModel } from '@rogueserenity/kbdb-api-client';
-	import { auth } from '$lib/auth/auth.svelte';
 	import { switchesApi } from '$lib/api/client';
+	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import SwitchDetails from '$lib/components/SwitchDetails.svelte';
+
+	const userContext = getUserContext();
 
 	let selectedSwitch = $state<SwitchModel | null>(null);
 	let detailError = $state<string | null>(null);
@@ -15,7 +17,7 @@
 	let viewerOpen = $state(false);
 
 	async function openSwitch(switchId: string) {
-		const userId = auth.user?.id;
+		const userId = userContext.userId;
 		if (!userId) return;
 
 		detailError = null;
@@ -39,6 +41,7 @@
 </script>
 
 <CollectionGrid
+	userId={userContext.userId}
 	fetchPage={(userId: string, cursor: string | undefined) =>
 		switchesApi.listSwitches({ userId, cursor })}
 	itemKey={(sw) => sw.id ?? ''}

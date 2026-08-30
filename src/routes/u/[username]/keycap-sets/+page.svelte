@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { KeycapKit, KeycapSet } from '@rogueserenity/kbdb-api-client';
-	import { auth } from '$lib/auth/auth.svelte';
 	import { keycapSetsApi } from '$lib/api/client';
 	import { orderStatusClass } from '$lib/format';
+	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
+
+	const userContext = getUserContext();
 
 	let selectedSet = $state<KeycapSet | null>(null);
 	let detailError = $state<string | null>(null);
@@ -17,7 +19,7 @@
 	let viewerOpen = $state(false);
 
 	async function openSet(keycapSetId: string) {
-		const userId = auth.user?.id;
+		const userId = userContext.userId;
 		if (!userId) return;
 
 		detailError = null;
@@ -59,6 +61,7 @@
 <svelte:window onkeydown={selectedKit && !viewerOpen ? handleKitNavKeydown : undefined} />
 
 <CollectionGrid
+	userId={userContext.userId}
 	fetchPage={(userId: string, cursor: string | undefined) =>
 		keycapSetsApi.listKeycapSets({ userId, cursor })}
 	itemKey={(set) => set.id ?? ''}
@@ -74,14 +77,9 @@
 		{@const imageFailed = failedImages.has(set.id ?? '')}
 		<button
 			type="button"
-			class="kc-card relative flex w-full items-center gap-3 overflow-hidden p-3 text-left"
+			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
 			onclick={() => openSet(set.id ?? '')}
 		>
-			{#if set.orderStatus}
-				<span class="status-badge absolute top-3 right-3 {orderStatusClass(set.orderStatus)}">
-					{set.orderStatus}
-				</span>
-			{/if}
 			{#if set.primaryKitImage?.url && !imageFailed}
 				<img
 					src={set.primaryKitImage.url}
@@ -90,11 +88,18 @@
 					onerror={() => failedImages.add(set.id ?? '')}
 				/>
 			{/if}
-			<div class="pr-4">
-				<h2 class="heading-lg text-lg">{set.name}</h2>
-				<p class="text-muted text-sm">{set.brand}</p>
-				{#if set.profile}
-					<p class="text-faint font-mono text-xs">{set.profile}</p>
+			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+				<div class="min-w-0">
+					<h2 class="heading-lg truncate text-lg">{set.name}</h2>
+					<p class="text-muted truncate text-sm">{set.brand}</p>
+					{#if set.profile}
+						<p class="text-faint font-mono text-xs">{set.profile}</p>
+					{/if}
+				</div>
+				{#if set.orderStatus}
+					<span class="status-badge shrink-0 {orderStatusClass(set.orderStatus)}">
+						{set.orderStatus}
+					</span>
 				{/if}
 			</div>
 		</button>

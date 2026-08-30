@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Keyboard } from '@rogueserenity/kbdb-api-client';
-	import { auth } from '$lib/auth/auth.svelte';
 	import { keyboardsApi } from '$lib/api/client';
 	import { orderStatusClass } from '$lib/format';
+	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
+
+	const userContext = getUserContext();
 
 	let selectedKeyboard = $state<Keyboard | null>(null);
 	let detailError = $state<string | null>(null);
@@ -17,7 +19,7 @@
 	let galleryIndex = $state(0);
 
 	async function openKeyboard(keyboardId: string) {
-		const userId = auth.user?.id;
+		const userId = userContext.userId;
 		if (!userId) return;
 
 		detailError = null;
@@ -42,6 +44,7 @@
 </script>
 
 <CollectionGrid
+	userId={userContext.userId}
 	fetchPage={(userId: string, cursor: string | undefined) =>
 		keyboardsApi.listKeyboards({ userId, cursor })}
 	itemKey={(keyboard) => keyboard.id ?? ''}
@@ -57,14 +60,9 @@
 		{@const imageFailed = failedImages.has(keyboard.id ?? '')}
 		<button
 			type="button"
-			class="kc-card relative flex w-full items-center gap-3 p-4 text-left"
+			class="kc-card flex w-full items-center gap-3 p-4 text-left"
 			onclick={() => openKeyboard(keyboard.id ?? '')}
 		>
-			{#if keyboard.orderStatus}
-				<span class="status-badge absolute top-4 right-4 {orderStatusClass(keyboard.orderStatus)}">
-					{keyboard.orderStatus}
-				</span>
-			{/if}
 			{#if keyboard.image?.url && !imageFailed}
 				<img
 					src={keyboard.image.url}
@@ -73,13 +71,20 @@
 					onerror={() => failedImages.add(keyboard.id ?? '')}
 				/>
 			{/if}
-			<div class="pr-4">
-				<h2 class="heading-lg text-lg">{keyboard.name}</h2>
-				<p class="text-muted text-sm">{keyboard.brand}</p>
-				{#if keyboard.size || keyboard.layout}
-					<p class="text-faint font-mono text-xs">
-						{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
-					</p>
+			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+				<div class="min-w-0">
+					<h2 class="heading-lg truncate text-lg">{keyboard.name}</h2>
+					<p class="text-muted truncate text-sm">{keyboard.brand}</p>
+					{#if keyboard.size || keyboard.layout}
+						<p class="text-faint font-mono text-xs">
+							{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
+						</p>
+					{/if}
+				</div>
+				{#if keyboard.orderStatus}
+					<span class="status-badge shrink-0 {orderStatusClass(keyboard.orderStatus)}">
+						{keyboard.orderStatus}
+					</span>
 				{/if}
 			</div>
 		</button>

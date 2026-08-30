@@ -193,11 +193,17 @@ export function signOut(): void {
  * the offline_access scope in signIn()); if that fails (or there's no
  * refresh token, e.g. a session from before this was added), the caller
  * gets whatever's stored and a subsequent 401 should prompt re-signIn().
+ *
+ * Returns '' when signed out rather than throwing - the generated client
+ * only sets the Authorization header when this resolves truthy, so an
+ * empty string lets anonymous-allowed endpoints (e.g. GET profile,
+ * GET /profiles) still fire their request instead of failing before the
+ * fetch ever goes out.
  */
 export async function getAccessToken(): Promise<string> {
 	const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 	if (!token) {
-		throw new Error('Not signed in');
+		return '';
 	}
 
 	const { exp } = decodeAccessTokenPayload(token);

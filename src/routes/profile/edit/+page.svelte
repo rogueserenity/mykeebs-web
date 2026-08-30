@@ -162,10 +162,10 @@
 			Could not load your profile.
 		</p>
 	{:else}
-		<h1 class="heading-lg text-2xl">{isNew ? 'Set up your profile' : 'Edit profile'}</h1>
+		<h1 class="heading-lg text-2xl">{isNew ? "Let's set up your profile" : 'Edit profile'}</h1>
 		<p class="text-muted mt-1 text-sm">
 			{isNew
-				? 'Claim a username so others can find you in Discover.'
+				? "Pick a username to get started - that's the only thing you need right now."
 				: 'Update how you appear to other collectors.'}
 		</p>
 
@@ -205,7 +205,7 @@
 
 		<form class="mt-8 flex flex-col gap-5" onsubmit={handleSubmit}>
 			<label class="flex flex-col gap-1.5">
-				<span class="section-label mb-0">Username</span>
+				<span class="section-label mb-0">Username <span style="color: var(--danger)">*</span></span>
 				<input
 					type="text"
 					class="field-input font-mono"

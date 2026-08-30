@@ -50,19 +50,8 @@
 					{/if}
 				</div>
 			</div>
-			<div class="profile-menu-divider"></div>
-			{#if hasProfile}
-				<a
-					href={resolve('/u/[username]', { username: profile.data!.username })}
-					class="profile-menu-item"
-					role="menuitem"
-				>
-					View profile
-				</a>
-				<a href={resolve('/profile/edit')} class="profile-menu-item" role="menuitem">
-					Edit profile
-				</a>
-			{:else}
+			{#if !hasProfile}
+				<div class="profile-menu-divider"></div>
 				<a href={resolve('/profile/edit')} class="profile-menu-item" role="menuitem">
 					Set up your profile
 				</a>
