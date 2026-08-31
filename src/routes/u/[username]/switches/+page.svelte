@@ -2,6 +2,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Switch as SwitchModel } from '@rogueserenity/kbdb-api-client';
 	import { switchesApi } from '$lib/api/client';
+	import { orderStatusClass } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
@@ -49,7 +50,8 @@
 	getName={(sw) => sw.name}
 	sortOptions={[
 		{ label: 'Name', getValue: (sw) => sw.name },
-		{ label: 'Brand', getValue: (sw) => sw.brand }
+		{ label: 'Brand', getValue: (sw) => sw.brand },
+		{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined }
 	]}
 >
 	{#snippet card(sw)}
@@ -67,11 +69,18 @@
 					onerror={() => failedImages.add(sw.id ?? '')}
 				/>
 			{/if}
-			<div>
-				<h2 class="heading-lg text-lg">{sw.name}</h2>
-				<p class="text-muted text-sm">{sw.brand}</p>
-				{#if sw.type}
-					<p class="text-faint font-mono text-xs">{sw.type}</p>
+			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+				<div class="min-w-0">
+					<h2 class="heading-lg truncate text-lg">{sw.name}</h2>
+					<p class="text-muted truncate text-sm">{sw.brand}</p>
+					{#if sw.type}
+						<p class="text-faint font-mono text-xs">{sw.type}</p>
+					{/if}
+				</div>
+				{#if sw.orderStatus}
+					<span class="status-badge shrink-0 {orderStatusClass(sw.orderStatus)}">
+						{sw.orderStatus}
+					</span>
 				{/if}
 			</div>
 		</button>
