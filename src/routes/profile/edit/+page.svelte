@@ -271,7 +271,7 @@
 			</div>
 
 			<label class="flex items-center gap-2">
-				<input type="checkbox" bind:checked={discoverable} />
+				<input type="checkbox" class="field-checkbox" bind:checked={discoverable} />
 				<span class="text-sm">Make my profile discoverable</span>
 			</label>
 			<p class="text-faint -mt-3 text-xs">

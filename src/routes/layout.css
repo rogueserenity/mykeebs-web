@@ -201,11 +201,43 @@ select:focus-visible {
 .field-select {
 	font-family: var(--font-body);
 	font-size: 0.875rem;
+	line-height: 1.25rem;
 	padding: 0.5rem 0.75rem;
 	border-radius: 0.375rem;
 	border: 1px solid var(--border-strong);
 	background: var(--bg-raised);
 	color: var(--text);
+	box-sizing: border-box;
+	height: 2.375rem;
+}
+
+.field-input {
+	width: 100%;
+}
+
+/* Safari renders <select> with its own intrinsic chrome that ignores the
+   shared height/line-height above unless native appearance is turned off;
+   the arrow is then redrawn by hand so the control keeps looking native. */
+.field-select {
+	appearance: none;
+	padding-right: 2rem;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b656b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.6rem center;
+	background-size: 1rem;
+}
+
+.field-checkbox {
+	width: 1rem;
+	height: 1rem;
+	accent-color: var(--accent);
+}
+
+.field-label {
+	font-family: var(--font-body);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: var(--text-muted);
 }
 
 .field-input::placeholder {
@@ -215,6 +247,77 @@ select:focus-visible {
 .field-input:focus,
 .field-select:focus {
 	border-color: var(--accent);
+}
+
+.field-input:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Number inputs: the browser's default spinner UI clashes with the dark
+   theme and eats horizontal space, so it's hidden in favor of plain
+   scroll-wheel/keyboard increment, which still works without it. */
+.field-input[type='number']::-webkit-outer-spin-button,
+.field-input[type='number']::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.field-input[type='number'] {
+	appearance: textfield;
+}
+
+.field-input[type='date']::-webkit-calendar-picker-indicator {
+	filter: invert(1) opacity(0.6);
+}
+
+/* Collapsible field groups (form sections) -- one <details> per group so a
+   section with data can default open while empty ones stay out of the way. */
+
+.field-group {
+	border-top: 1px solid var(--border);
+	padding-top: 1rem;
+}
+
+.field-group > summary {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	cursor: pointer;
+	list-style: none;
+	font-family: var(--font-display);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+
+.field-group > summary::-webkit-details-marker {
+	display: none;
+}
+
+.field-group > summary::before {
+	content: '▸';
+	display: inline-block;
+	font-size: 0.6875rem;
+	transition: transform 120ms ease;
+}
+
+.field-group[open] > summary::before {
+	transform: rotate(90deg);
+}
+
+.field-group > summary .field-group-hint {
+	text-transform: none;
+	letter-spacing: normal;
+	font-family: var(--font-body);
+	font-weight: 400;
+	color: var(--text-faint);
+}
+
+.field-group > .field-group-body {
+	margin-top: 1rem;
 }
 
 /* Cards -- keycap-inspired: stepped top edge, sculpted feel */
