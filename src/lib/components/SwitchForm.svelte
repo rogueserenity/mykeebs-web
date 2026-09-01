@@ -44,8 +44,14 @@
 	let notes = $state(initial?.notes ?? '');
 	let visibility = $state<Visibility>(initial?.visibility ?? Visibility.Private);
 
+	let showOrderDate = $derived(
+		orderStatus.trim() !== '' && orderStatus.trim().toLowerCase() !== 'planned'
+	);
 	let isDelivered = $derived(orderStatus.trim().toLowerCase() === 'delivered');
 
+	$effect(() => {
+		if (!showOrderDate) orderDate = '';
+	});
 	$effect(() => {
 		if (!isDelivered) deliveryDate = '';
 	});
@@ -451,23 +457,18 @@
 				<span class="field-label">Quantity</span>
 				<input type="number" class="field-input" min="0" step="1" bind:value={quantity} />
 			</label>
-			<label class="flex flex-col gap-1.5">
-				<span class="field-label">Order date</span>
-				<input type="date" class="field-input" bind:value={orderDate} />
-			</label>
-			<label class="flex flex-col gap-1.5">
-				<span class="field-label">Delivery date</span>
-				{#if isDelivered}
+			{#if showOrderDate}
+				<label class="flex flex-col gap-1.5">
+					<span class="field-label">Order date</span>
+					<input type="date" class="field-input" bind:value={orderDate} />
+				</label>
+			{/if}
+			{#if isDelivered}
+				<label class="flex flex-col gap-1.5">
+					<span class="field-label">Delivery date</span>
 					<input type="date" class="field-input" bind:value={deliveryDate} />
-				{:else}
-					<span
-						class="field-input text-faint flex items-center text-xs"
-						style="cursor: not-allowed"
-					>
-						Set order status to "delivered" first
-					</span>
-				{/if}
-			</label>
+				</label>
+			{/if}
 		</div>
 	</details>
 
