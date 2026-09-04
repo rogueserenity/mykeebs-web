@@ -8,9 +8,11 @@ export type PurchaseLike = {
 };
 
 const orderStatusColors: Record<string, string> = {
+	planned: 'status-planned',
 	ordered: 'status-ordered',
 	shipped: 'status-shipped',
 	delivered: 'status-delivered',
+	cancelled: 'status-cancelled',
 	sold: 'status-sold'
 };
 

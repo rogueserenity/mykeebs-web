@@ -5,40 +5,70 @@
 
 	const userContext = getUserContext();
 
-	type Counts = { keyboards: number; switches: number; keycapSets: number; builds: number };
-	let counts = $state<Counts | null>(null);
+	type ItemCounts = { keyboards: number; switches: number; keycapSets: number; builds: number };
+
+	const STATUS_FILTERS = [
+		'all',
+		'planned',
+		'ordered',
+		'shipped',
+		'delivered',
+		'cancelled'
+	] as const;
+	type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+	let statusFilter = $state<StatusFilter>('all');
+
+	let itemStatuses = $state<{
+		keyboards: string[];
+		switches: string[];
+		keycapSets: string[];
+		builds: number;
+	} | null>(null);
 	let countsLoading = $state(false);
 
-	async function countAll<T>(
+	async function fetchAll<T>(
 		fetchPage: (cursor: string | undefined) => Promise<{
 			items?: T[];
 			nextCursor?: string | null;
 		}>
-	): Promise<number> {
-		let total = 0;
+	): Promise<T[]> {
+		const all: T[] = [];
 		let cursor: string | undefined;
 		do {
 			const pageResult = await fetchPage(cursor);
-			total += pageResult.items?.length ?? 0;
+			all.push(...(pageResult.items ?? []));
 			cursor = pageResult.nextCursor ?? undefined;
 		} while (cursor);
-		return total;
+		return all;
 	}
 
 	// The API scopes each of these to what the viewer is allowed to see: the
 	// owner gets everything, anyone else gets only items shared with them.
+	// Builds carry no order status, so only their total count is tracked.
 	async function loadCounts(userId: string) {
 		countsLoading = true;
 		try {
 			const [keyboards, switches, keycapSets, builds] = await Promise.all([
-				countAll((cursor) => keyboardsApi.listKeyboards({ userId, cursor })),
-				countAll((cursor) => switchesApi.listSwitches({ userId, cursor })),
-				countAll((cursor) => keycapSetsApi.listKeycapSets({ userId, cursor })),
-				countAll((cursor) => buildsApi.listBuilds({ userId, cursor }))
+				fetchAll<{ orderStatus?: string }>((cursor) =>
+					keyboardsApi.listKeyboards({ userId, cursor })
+				),
+				fetchAll<{ orderStatus?: string }>((cursor) =>
+					switchesApi.listSwitches({ userId, cursor })
+				),
+				fetchAll<{ orderStatus?: string | null }>((cursor) =>
+					keycapSetsApi.listKeycapSets({ userId, cursor })
+				),
+				fetchAll((cursor) => buildsApi.listBuilds({ userId, cursor }))
 			]);
-			counts = { keyboards, switches, keycapSets, builds };
+			itemStatuses = {
+				keyboards: keyboards.map((k) => k.orderStatus ?? ''),
+				switches: switches.map((s) => s.orderStatus ?? ''),
+				keycapSets: keycapSets.map((k) => k.orderStatus ?? ''),
+				builds: builds.length
+			};
 		} catch {
-			counts = null;
+			itemStatuses = null;
 		} finally {
 			countsLoading = false;
 		}
@@ -49,6 +79,22 @@
 	});
 
 	const profile = $derived(userContext.profile);
+
+	function countFor(statuses: string[], filter: StatusFilter): number {
+		if (filter === 'all') return statuses.length;
+		return statuses.filter((s) => s.toLowerCase() === filter).length;
+	}
+
+	const counts = $derived<ItemCounts | null>(
+		itemStatuses
+			? {
+					keyboards: countFor(itemStatuses.keyboards, statusFilter),
+					switches: countFor(itemStatuses.switches, statusFilter),
+					keycapSets: countFor(itemStatuses.keycapSets, statusFilter),
+					builds: statusFilter === 'all' ? itemStatuses.builds : 0
+				}
+			: null
+	);
 
 	const statTiles = $derived(
 		counts
@@ -114,6 +160,21 @@
 {/if}
 
 <div>
+	<div class="mb-4 flex justify-center">
+		<div class="segmented-control" role="group" aria-label="Filter by order status">
+			{#each STATUS_FILTERS as filter (filter)}
+				<button
+					type="button"
+					class="segmented-control-btn"
+					class:segmented-control-btn-active={statusFilter === filter}
+					aria-pressed={statusFilter === filter}
+					onclick={() => (statusFilter = filter)}
+				>
+					{filter}
+				</button>
+			{/each}
+		</div>
+	</div>
 	{#if countsLoading && !counts}
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
 			{#each [0, 1, 2, 3] as i (i)}
