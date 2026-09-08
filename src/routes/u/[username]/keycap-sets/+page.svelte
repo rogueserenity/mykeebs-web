@@ -1,53 +1,83 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { KeycapKit, KeycapSet } from '@rogueserenity/kbdb-api-client';
-	import { keycapSetsApi } from '$lib/api/client';
-	import { orderStatusClass } from '$lib/format';
+	import type {
+		KeycapKit,
+		KeycapKitInput,
+		KeycapSet,
+		KeycapSetInput
+	} from '@rogueserenity/kbdb-api-client';
+	import { ResponseError } from '@rogueserenity/kbdb-api-client';
+	import { keycapSetsApi, buildsApi } from '$lib/api/client';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
+	import KeycapSetDetails from '$lib/components/KeycapSetDetails.svelte';
+	import KeycapSetForm from '$lib/components/KeycapSetForm.svelte';
+	import KeycapKitForm from '$lib/components/KeycapKitForm.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
+	import { orderStatusClass } from '$lib/format';
 
 	const userContext = getUserContext();
 
-	let selectedSet = $state<KeycapSet | null>(null);
-	let detailError = $state<string | null>(null);
-	let detailLoading = $state(false);
+	// 'view' shows KeycapSetDetails for an existing set (with its kits);
+	// 'create'/'edit' show KeycapSetForm for the set's own fields. Kits are
+	// managed from within 'view' via the kit sub-modal below, since a kit
+	// can't exist without an already-created set. Reloading the grid after
+	// a mutation is handled by bumping gridKey, which remounts CollectionGrid
+	// (it only fetches on mount/userId change).
+	type ModalState =
+		| { mode: 'view'; set: KeycapSet }
+		| { mode: 'create' }
+		| { mode: 'edit'; set: KeycapSet }
+		| { mode: 'loading' }
+		| { mode: 'error'; message: string }
+		| { mode: 'closed' };
+
+	// Sub-modal, only reachable from a 'view' set. 'view'/'edit' name the kit
+	// by kitId (looked up fresh from the current set on each render, so it
+	// stays in sync after a save); 'create' has no kit yet.
+	type KitModalState =
+		| { mode: 'view'; kitId: string }
+		| { mode: 'create' }
+		| { mode: 'edit'; kitId: string }
+		| { mode: 'closed' };
+
+	let modal = $state<ModalState>({ mode: 'closed' });
+	let kitModal = $state<KitModalState>({ mode: 'closed' });
 	let failedImages = new SvelteSet<string>();
-	let selectedKit = $state<KeycapKit | null>(null);
-	let viewerOpen = $state(false);
+	let kitImageViewerOpen = $state(false);
+	let gridKey = $state(0);
+	let saving = $state(false);
+	let saveError = $state<string | null>(null);
+	let deleting = $state(false);
+	let deleteError = $state<string | null>(null);
+	let blockingBuilds = $state<string[] | null>(null);
+	let confirmingDelete = $state(false);
+	let kitSaving = $state(false);
+	let kitSaveError = $state<string | null>(null);
+	let kitDeleting = $state(false);
+	let kitDeleteError = $state<string | null>(null);
+	let kitBlockingBuilds = $state<string[] | null>(null);
+	let confirmingKitDelete = $state<string | null>(null);
 
-	async function openSet(keycapSetId: string) {
-		const userId = userContext.userId;
-		if (!userId) return;
-
-		detailError = null;
-		detailLoading = true;
-		selectedSet = null;
-		try {
-			selectedSet = await keycapSetsApi.getKeycapSet({ userId, keycapSetId });
-		} catch {
-			detailError = 'Could not load this keycap set.';
-		} finally {
-			detailLoading = false;
-		}
-	}
-
-	function closeModal() {
-		selectedSet = null;
-		detailError = null;
-		detailLoading = false;
-		selectedKit = null;
-		viewerOpen = false;
-	}
+	let activeKitId = $derived(
+		kitModal.mode === 'view' || kitModal.mode === 'edit' ? kitModal.kitId : null
+	);
+	let activeKit = $derived(
+		modal.mode === 'view' && activeKitId
+			? (modal.set.kits?.find((kit) => kit.kitId === activeKitId) ?? null)
+			: null
+	);
 
 	function stepKit(delta: 1 | -1) {
-		const kits = selectedSet?.kits;
-		if (!kits || kits.length < 2 || !selectedKit) return;
-		const index = kits.findIndex((kit) => kit.kitId === selectedKit?.kitId);
+		if (modal.mode !== 'view' || kitModal.mode !== 'view') return;
+		const kits = modal.set.kits;
+		const currentKitId = kitModal.kitId;
+		if (!kits || kits.length < 2) return;
+		const index = kits.findIndex((kit) => kit.kitId === currentKitId);
 		if (index === -1) return;
-		selectedKit = kits[(index + delta + kits.length) % kits.length];
+		kitModal = { mode: 'view', kitId: kits[(index + delta + kits.length) % kits.length].kitId };
 	}
 
 	function handleKitNavKeydown(event: KeyboardEvent) {
@@ -55,121 +85,438 @@
 		else if (event.key === 'ArrowRight') stepKit(1);
 	}
 
-	let hasMultipleKits = $derived((selectedSet?.kits?.length ?? 0) > 1);
+	let hasMultipleKits = $derived(modal.mode === 'view' ? (modal.set.kits?.length ?? 0) > 1 : false);
+
+	async function openSet(keycapSetId: string) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		modal = { mode: 'loading' };
+		try {
+			const set = await keycapSetsApi.getKeycapSet({ userId, keycapSetId });
+			modal = { mode: 'view', set };
+		} catch {
+			modal = { mode: 'error', message: 'Could not load this keycap set.' };
+		}
+	}
+
+	function openCreate() {
+		saveError = null;
+		modal = { mode: 'create' };
+	}
+
+	function openEdit(set: KeycapSet) {
+		saveError = null;
+		modal = { mode: 'edit', set };
+	}
+
+	function closeModal() {
+		modal = { mode: 'closed' };
+		kitModal = { mode: 'closed' };
+		kitImageViewerOpen = false;
+		saveError = null;
+		deleteError = null;
+		blockingBuilds = null;
+		confirmingDelete = false;
+		resetKitState();
+	}
+
+	function resetKitState() {
+		kitSaveError = null;
+		kitDeleteError = null;
+		kitBlockingBuilds = null;
+		confirmingKitDelete = null;
+	}
+
+	async function handleCreate(input: KeycapSetInput) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		saving = true;
+		saveError = null;
+		try {
+			const set = await keycapSetsApi.createKeycapSet({ userId, keycapSetInput: input });
+			gridKey += 1;
+			// Land on the new set's view rather than closing outright, since
+			// the natural next step is adding its kits — closing would force
+			// hunting for the set just created back in the grid.
+			modal = { mode: 'view', set };
+		} catch {
+			saveError = 'Could not create this keycap set.';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function handleUpdate(keycapSetId: string, input: KeycapSetInput) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		saving = true;
+		saveError = null;
+		try {
+			const set = await keycapSetsApi.updateKeycapSet({
+				userId,
+				keycapSetId,
+				keycapSetInput: input
+			});
+			gridKey += 1;
+			modal = { mode: 'view', set };
+		} catch (err) {
+			if (err instanceof ResponseError) {
+				const body = await err.response.json().catch(() => null);
+				console.error('updateKeycapSet failed', err.response.status, body);
+			} else {
+				console.error('updateKeycapSet failed', err);
+			}
+			saveError = 'Could not save your changes.';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function refreshViewedSet(keycapSetId: string) {
+		const userId = userContext.userId;
+		if (!userId) return;
+		const set = await keycapSetsApi.getKeycapSet({ userId, keycapSetId });
+		gridKey += 1;
+		if (modal.mode === 'view') modal = { mode: 'view', set };
+		else if (modal.mode === 'edit') modal = { mode: 'edit', set };
+	}
+
+	async function deleteSet(keycapSetId: string, onDelete?: 'detach') {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		deleting = true;
+		deleteError = null;
+		try {
+			await keycapSetsApi.deleteKeycapSet({ userId, keycapSetId, onDelete });
+			gridKey += 1;
+			closeModal();
+		} catch (err) {
+			if (err instanceof ResponseError && err.response.status === 409) {
+				const body = await err.response.json().catch(() => null);
+				const buildIds: string[] = body?.blockingBuildIds ?? [];
+				if (buildIds.length > 0) {
+					blockingBuilds = await resolveBuildNames(userId, buildIds);
+				} else {
+					deleteError = 'This keycap set is still used by one or more builds.';
+				}
+			} else {
+				deleteError = 'Could not delete this keycap set.';
+			}
+		} finally {
+			deleting = false;
+		}
+	}
+
+	async function resolveBuildNames(userId: string, buildIds: string[]): Promise<string[]> {
+		return Promise.all(
+			buildIds.map(async (buildId) => {
+				try {
+					const build = await buildsApi.getBuild({ userId, buildId });
+					return build.keyboard?.name ?? 'Untitled build';
+				} catch {
+					return 'a build';
+				}
+			})
+		);
+	}
+
+	function openAddKit() {
+		resetKitState();
+		kitModal = { mode: 'create' };
+	}
+
+	function openViewKit(kit: KeycapKit) {
+		resetKitState();
+		kitImageViewerOpen = false;
+		kitModal = { mode: 'view', kitId: kit.kitId };
+	}
+
+	function openEditKit(kitId: string) {
+		resetKitState();
+		kitModal = { mode: 'edit', kitId };
+	}
+
+	function closeKitModal() {
+		kitModal = { mode: 'closed' };
+		kitImageViewerOpen = false;
+		resetKitState();
+	}
+
+	async function handleCreateKit(input: KeycapKitInput, stagedImage?: File) {
+		const userId = userContext.userId;
+		if (modal.mode !== 'view' || !userId) return;
+		const keycapSetId = modal.set.id;
+
+		kitSaving = true;
+		kitSaveError = null;
+		try {
+			const kit = await keycapSetsApi.createKeycapKit({
+				userId,
+				keycapSetId,
+				keycapKitInput: input
+			});
+			if (stagedImage) {
+				// The kit itself was created successfully at this point; an
+				// image-upload failure here shouldn't be reported as a failed
+				// create, so it's swallowed rather than surfaced via
+				// kitSaveError (which the created kit no longer applies to).
+				await uploadKitImage(keycapSetId, kit.kitId, stagedImage).catch(() => {});
+			}
+			await refreshViewedSet(keycapSetId);
+			closeKitModal();
+		} catch {
+			kitSaveError = 'Could not create this kit.';
+		} finally {
+			kitSaving = false;
+		}
+	}
+
+	async function handleUpdateKit(kitId: string, input: KeycapKitInput) {
+		const userId = userContext.userId;
+		if (modal.mode !== 'view' || !userId) return;
+		const keycapSetId = modal.set.id;
+
+		kitSaving = true;
+		kitSaveError = null;
+		try {
+			await keycapSetsApi.updateKeycapKit({ userId, keycapSetId, kitId, keycapKitInput: input });
+			await refreshViewedSet(keycapSetId);
+			kitModal = { mode: 'view', kitId };
+		} catch (err) {
+			if (err instanceof ResponseError) {
+				const body = await err.response.json().catch(() => null);
+				console.error('updateKeycapKit failed', err.response.status, body);
+			} else {
+				console.error('updateKeycapKit failed', err);
+			}
+			kitSaveError = 'Could not save your changes.';
+		} finally {
+			kitSaving = false;
+		}
+	}
+
+	async function uploadKitImage(keycapSetId: string, kitId: string, file: File) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		const { uploadUrl } = await keycapSetsApi.setKeycapKitImage({
+			userId,
+			keycapSetId,
+			kitId,
+			imageUploadRequest: { contentType: file.type }
+		});
+		const put = await fetch(uploadUrl, {
+			method: 'PUT',
+			headers: { 'Content-Type': file.type },
+			body: file
+		});
+		if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+	}
+
+	async function handleKitImageUpload(kitId: string, file: File) {
+		if (modal.mode !== 'view') return;
+		const keycapSetId = modal.set.id;
+		await uploadKitImage(keycapSetId, kitId, file);
+		await refreshViewedSet(keycapSetId);
+	}
+
+	async function handleKitImageRemove(kitId: string) {
+		const userId = userContext.userId;
+		if (modal.mode !== 'view' || !userId) return;
+		const keycapSetId = modal.set.id;
+		await keycapSetsApi.deleteKeycapKitImage({ userId, keycapSetId, kitId });
+		await refreshViewedSet(keycapSetId);
+	}
+
+	async function deleteKit(kitId: string, onDelete?: 'detach') {
+		const userId = userContext.userId;
+		if (modal.mode !== 'view' || !userId) return;
+		const keycapSetId = modal.set.id;
+
+		kitDeleting = true;
+		kitDeleteError = null;
+		try {
+			await keycapSetsApi.deleteKeycapKit({ userId, keycapSetId, kitId, onDelete });
+			await refreshViewedSet(keycapSetId);
+			closeKitModal();
+			confirmingKitDelete = null;
+		} catch (err) {
+			if (err instanceof ResponseError && err.response.status === 409) {
+				const body = await err.response.json().catch(() => null);
+				const buildIds: string[] = body?.blockingBuildIds ?? [];
+				if (buildIds.length > 0) {
+					kitBlockingBuilds = await resolveBuildNames(userId, buildIds);
+				} else {
+					kitDeleteError = 'This kit is still used by one or more builds.';
+				}
+			} else {
+				kitDeleteError = 'Could not delete this kit.';
+			}
+		} finally {
+			kitDeleting = false;
+		}
+	}
 </script>
 
-<svelte:window onkeydown={selectedKit && !viewerOpen ? handleKitNavKeydown : undefined} />
+{#if userContext.isOwnProfile}
+	<div class="flex justify-end p-4 pb-0">
+		<button type="button" class="btn btn-accent" onclick={openCreate}>+ Add keycap set</button>
+	</div>
+{/if}
 
-<CollectionGrid
-	userId={userContext.userId}
-	fetchPage={(userId: string, cursor: string | undefined) =>
-		keycapSetsApi.listKeycapSets({ userId, cursor })}
-	itemKey={(set) => set.id ?? ''}
-	emptyMessage="No keycap sets yet."
-	getName={(set) => set.name}
-	sortOptions={[
-		{ label: 'Name', getValue: (set) => set.name },
-		{ label: 'Brand', getValue: (set) => set.brand },
-		{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined }
-	]}
->
-	{#snippet card(set)}
-		{@const imageFailed = failedImages.has(set.id ?? '')}
-		<button
-			type="button"
-			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
-			onclick={() => openSet(set.id ?? '')}
-		>
-			{#if set.primaryKitImage?.url && !imageFailed}
-				<img
-					src={set.primaryKitImage.url}
-					alt={set.name}
-					class="kc-thumb h-16 w-16 shrink-0 object-contain"
-					onerror={() => failedImages.add(set.id ?? '')}
-				/>
-			{/if}
-			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
-				<div class="min-w-0">
-					<h2 class="heading-lg truncate text-lg">{set.name}</h2>
-					<p class="text-muted truncate text-sm">{set.brand}</p>
-					{#if set.profile}
-						<p class="text-faint font-mono text-xs">{set.profile}</p>
+{#key gridKey}
+	<CollectionGrid
+		userId={userContext.userId}
+		fetchPage={(userId: string, cursor: string | undefined) =>
+			keycapSetsApi.listKeycapSets({ userId, cursor })}
+		itemKey={(set) => set.id ?? ''}
+		emptyMessage="No keycap sets yet."
+		getName={(set) => set.name}
+		sortOptions={[
+			{ label: 'Name', getValue: (set) => set.name },
+			{ label: 'Brand', getValue: (set) => set.brand },
+			{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined }
+		]}
+	>
+		{#snippet card(set)}
+			{@const imageFailed = failedImages.has(set.id ?? '')}
+			<button
+				type="button"
+				class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
+				onclick={() => openSet(set.id ?? '')}
+			>
+				{#if set.primaryKitImage?.url && !imageFailed}
+					<img
+						src={set.primaryKitImage.url}
+						alt={set.name}
+						class="kc-thumb h-16 w-16 shrink-0 object-contain"
+						onerror={() => failedImages.add(set.id ?? '')}
+					/>
+				{/if}
+				<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+					<div class="min-w-0">
+						<h2 class="heading-lg truncate text-lg">{set.name}</h2>
+						<p class="text-muted truncate text-sm">{set.brand}</p>
+						{#if set.profile}
+							<p class="text-faint font-mono text-xs">{set.profile}</p>
+						{/if}
+					</div>
+					{#if set.orderStatus}
+						<span class="status-badge shrink-0 {orderStatusClass(set.orderStatus)}">
+							{set.orderStatus}
+						</span>
 					{/if}
 				</div>
-				{#if set.orderStatus}
-					<span class="status-badge shrink-0 {orderStatusClass(set.orderStatus)}">
-						{set.orderStatus}
-					</span>
-				{/if}
-			</div>
-		</button>
-	{/snippet}
-</CollectionGrid>
+			</button>
+		{/snippet}
+	</CollectionGrid>
+{/key}
 
-<Modal
-	open={detailLoading || detailError !== null || selectedSet !== null}
-	onClose={closeModal}
-	obscured={selectedKit !== null}
->
-	{#if detailLoading}
+<Modal open={modal.mode !== 'closed'} onClose={closeModal} obscured={kitModal.mode !== 'closed'}>
+	{#if modal.mode === 'loading'}
 		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
-	{:else if detailError}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{detailError}</p>
-	{:else if selectedSet}
-		<div class="pr-8">
-			<h2 class="heading-lg text-2xl">{selectedSet.name}</h2>
-			<p class="text-muted">{selectedSet.brand}</p>
-			<p class="text-faint mt-1 font-mono text-sm">
-				{[selectedSet.profile, selectedSet.material].filter(Boolean).join(' · ')}
-			</p>
-			{#if selectedSet.notes}
-				<p class="text-muted mt-2 text-sm">{selectedSet.notes}</p>
-			{/if}
-		</div>
+	{:else if modal.mode === 'error'}
+		<p class="p-8 text-center text-lg" style="color: var(--danger)">{modal.message}</p>
+	{:else if modal.mode === 'view'}
+		{@const set = modal.set}
+		<KeycapSetDetails
+			{set}
+			failedImages={new Set(failedImages)}
+			onImageError={(kitId) => failedImages.add(kitId)}
+			onKitClick={openViewKit}
+			onAddKit={userContext.isOwnProfile ? openAddKit : undefined}
+		/>
 
-		{#if selectedSet.kits && selectedSet.kits.length > 0}
-			<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-				{#each selectedSet.kits as kit (kit.kitId)}
-					{@const imageFailed = failedImages.has(kit.kitId)}
+		{#if userContext.isOwnProfile}
+			<div
+				class="mt-6 flex flex-wrap items-center gap-2 border-t pt-4"
+				style="border-color: var(--border)"
+			>
+				<button type="button" class="btn" onclick={() => openEdit(set)}>Edit set</button>
+				{#if blockingBuilds}
+					<span class="text-sm" style="color: var(--danger)">
+						Used in: {blockingBuilds.join(', ')}.
+					</span>
 					<button
 						type="button"
-						class="kc-card w-full overflow-hidden p-3 text-left"
-						onclick={() => (selectedKit = kit)}
+						class="btn"
+						disabled={deleting}
+						onclick={() => deleteSet(set.id ?? '', 'detach')}
 					>
-						{#if kit.image?.url && !imageFailed}
-							<img
-								src={kit.image.url}
-								alt={kit.name}
-								class="kc-thumb-tile aspect-square w-full object-contain"
-								onerror={() => failedImages.add(kit.kitId)}
-							/>
-						{:else}
-							<div
-								class="kc-thumb-tile text-faint flex aspect-square w-full items-center justify-center text-sm"
-							>
-								No image
-							</div>
-						{/if}
-						<div class="mt-2 flex items-center justify-between gap-2 pr-1">
-							<h3 class="font-semibold">{kit.name}</h3>
-							{#if kit.purchase?.orderStatus}
-								<span class="status-badge shrink-0 {orderStatusClass(kit.purchase.orderStatus)}">
-									{kit.purchase.orderStatus}
-								</span>
-							{/if}
-						</div>
+						{deleting ? 'Removing…' : 'Remove from builds & delete'}
 					</button>
-				{/each}
+					<button
+						type="button"
+						class="btn"
+						disabled={deleting}
+						onclick={() => (blockingBuilds = null)}
+					>
+						Cancel
+					</button>
+				{:else if confirmingDelete}
+					<span class="text-sm">Delete "{set.name}"?</span>
+					<button
+						type="button"
+						class="btn"
+						style="color: var(--danger)"
+						disabled={deleting}
+						onclick={() => deleteSet(set.id ?? '')}
+					>
+						{deleting ? 'Deleting…' : 'Confirm delete'}
+					</button>
+					<button
+						type="button"
+						class="btn"
+						disabled={deleting}
+						onclick={() => (confirmingDelete = false)}
+					>
+						Cancel
+					</button>
+				{:else}
+					<button
+						type="button"
+						class="btn"
+						style="color: var(--danger)"
+						onclick={() => (confirmingDelete = true)}
+					>
+						Delete set
+					</button>
+				{/if}
 			</div>
-		{:else}
-			<p class="text-muted mt-6 text-sm">No kits recorded for this set.</p>
+			{#if deleteError}
+				<p class="mt-2 text-sm" style="color: var(--danger)">{deleteError}</p>
+			{/if}
 		{/if}
+	{:else if modal.mode === 'create'}
+		<KeycapSetForm {saving} error={saveError} onSubmit={handleCreate} onCancel={closeModal} />
+	{:else if modal.mode === 'edit'}
+		{@const set = modal.set}
+		<KeycapSetForm
+			initial={set}
+			{saving}
+			error={saveError}
+			onSubmit={(input) => handleUpdate(set.id ?? '', input)}
+			onCancel={() => (modal = { mode: 'view', set })}
+		/>
 	{/if}
 </Modal>
 
-<Modal open={selectedKit !== null} onClose={() => (selectedKit = null)} wide obscured={viewerOpen}>
+<svelte:window
+	onkeydown={kitModal.mode === 'view' && !kitImageViewerOpen ? handleKitNavKeydown : undefined}
+/>
+
+<Modal
+	open={kitModal.mode !== 'closed'}
+	onClose={closeKitModal}
+	wide={kitModal.mode === 'view'}
+	obscured={kitImageViewerOpen}
+>
 	{#snippet headerExtra()}
-		{#if hasMultipleKits}
+		{#if kitModal.mode === 'view' && hasMultipleKits}
 			<button type="button" class="btn-icon" aria-label="Previous kit" onclick={() => stepKit(-1)}>
 				←
 			</button>
@@ -178,27 +525,108 @@
 			</button>
 		{/if}
 	{/snippet}
-	{#if selectedKit}
-		{@const kit = selectedKit}
+
+	{#if kitModal.mode === 'create'}
+		<KeycapKitForm
+			saving={kitSaving}
+			error={kitSaveError}
+			onSubmit={handleCreateKit}
+			onCancel={closeKitModal}
+		/>
+	{:else if kitModal.mode === 'view' && activeKit}
+		{@const kit = activeKit}
 		{@const imageFailed = failedImages.has(kit.kitId)}
 		<KeycapKitDetails
 			name={kit.name}
 			imageUrl={kit.image?.url}
 			{imageFailed}
 			onImageError={() => failedImages.add(kit.kitId)}
-			onImageClick={() => (viewerOpen = true)}
+			onImageClick={() => (kitImageViewerOpen = true)}
 			purchase={kit.purchase}
+		/>
+
+		{#if userContext.isOwnProfile}
+			<div
+				class="mt-6 flex flex-wrap items-center gap-2 border-t pt-4"
+				style="border-color: var(--border)"
+			>
+				<button type="button" class="btn" onclick={() => openEditKit(kit.kitId)}>Edit kit</button>
+				{#if kitBlockingBuilds}
+					<span class="text-sm" style="color: var(--danger)">
+						Used in: {kitBlockingBuilds.join(', ')}.
+					</span>
+					<button
+						type="button"
+						class="btn"
+						disabled={kitDeleting}
+						onclick={() => deleteKit(kit.kitId, 'detach')}
+					>
+						{kitDeleting ? 'Removing…' : 'Remove from builds & delete'}
+					</button>
+					<button
+						type="button"
+						class="btn"
+						disabled={kitDeleting}
+						onclick={() => (kitBlockingBuilds = null)}
+					>
+						Cancel
+					</button>
+				{:else if confirmingKitDelete === kit.kitId}
+					<span class="text-sm">Delete "{kit.name}"?</span>
+					<button
+						type="button"
+						class="btn"
+						style="color: var(--danger)"
+						disabled={kitDeleting}
+						onclick={() => deleteKit(kit.kitId)}
+					>
+						{kitDeleting ? 'Deleting…' : 'Confirm delete'}
+					</button>
+					<button
+						type="button"
+						class="btn"
+						disabled={kitDeleting}
+						onclick={() => (confirmingKitDelete = null)}
+					>
+						Cancel
+					</button>
+				{:else}
+					<button
+						type="button"
+						class="btn"
+						style="color: var(--danger)"
+						onclick={() => (confirmingKitDelete = kit.kitId)}
+					>
+						Delete kit
+					</button>
+				{/if}
+			</div>
+			{#if kitDeleteError}
+				<p class="mt-2 text-sm" style="color: var(--danger)">{kitDeleteError}</p>
+			{/if}
+		{/if}
+	{:else if kitModal.mode === 'edit' && activeKit}
+		{@const kit = activeKit}
+		<KeycapKitForm
+			initial={kit}
+			saving={kitSaving}
+			error={kitSaveError}
+			onSubmit={(input) => handleUpdateKit(kit.kitId, input)}
+			onCancel={() => (kitModal = { mode: 'view', kitId: kit.kitId })}
+			onImageUpload={(file) => handleKitImageUpload(kit.kitId, file)}
+			onImageRemove={() => handleKitImageRemove(kit.kitId)}
 		/>
 	{/if}
 </Modal>
 
-{#if selectedKit?.image?.url}
+{#if kitModal.mode === 'view' && activeKit?.image?.url}
+	{@const kit = activeKit}
 	<ImageViewer
-		open={viewerOpen}
-		src={selectedKit.image.url}
-		alt={selectedKit.name}
-		onClose={() => (viewerOpen = false)}
-		onPrev={(selectedSet?.kits?.length ?? 0) > 1 ? () => stepKit(-1) : undefined}
-		onNext={(selectedSet?.kits?.length ?? 0) > 1 ? () => stepKit(1) : undefined}
+		open={kitImageViewerOpen}
+		src={kit.image?.url ?? ''}
+		alt={kit.name}
+		onClose={() => (kitImageViewerOpen = false)}
+		onPrev={hasMultipleKits ? () => stepKit(-1) : undefined}
+		onNext={hasMultipleKits ? () => stepKit(1) : undefined}
 	/>
 {/if}
