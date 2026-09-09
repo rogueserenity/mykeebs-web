@@ -11,7 +11,9 @@
 		onSubmit,
 		onCancel,
 		onImageUpload,
-		onImageRemove
+		onImageRemove,
+		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
+		dirty = $bindable(false)
 	}: {
 		initial?: Keyboard;
 		saving: boolean;
@@ -20,6 +22,7 @@
 		onCancel: () => void;
 		onImageUpload?: (file: File) => Promise<void>;
 		onImageRemove?: (imageId: string) => Promise<void>;
+		dirty?: boolean;
 	} = $props();
 
 	let brand = $state(initial?.brand ?? '');
@@ -236,7 +239,71 @@
 		}
 	}
 
+	// Drives the "discard changes?" prompt on an accidental close (see
+	// Modal's `dirty` prop) -- true once anything meaningfully differs from
+	// the snapshot the form opened with.
+	const initialBrand = initial?.brand ?? '';
+	const initialName = initial?.name ?? '';
+	const initialSize = initial?.size ?? '';
+	const initialLayout = initial?.layout ?? '';
+	const initialTopCaseMaterial = initial?.design?.topCase?.material ?? '';
+	const initialTopCaseColor = initial?.design?.topCase?.color ?? '';
+	const initialBottomCaseMaterial = initial?.design?.bottomCase?.material ?? '';
+	const initialBottomCaseColor = initial?.design?.bottomCase?.color ?? '';
+	const initialWeightMaterial = initial?.design?.weight?.material ?? '';
+	const initialWeightColor = initial?.design?.weight?.color ?? '';
+	const initialPlates = [...(initial?.design?.plates ?? [])].sort();
+	const initialThickness = initial?.pcb?.thickness;
+	const initialFirmware = initial?.pcb?.firmware ?? '';
+	const initialAssembly = initial?.pcb?.assembly ?? '';
+	const initialConnectivity = initial?.pcb?.connectivity ?? '';
+	const initialVendor = initial?.purchase?.vendor ?? '';
+	const initialPrice = initial?.purchase?.price;
+	const initialOrderDate = toDateInput(initial?.purchase?.orderDate);
+	const initialDeliveryDate = toDateInput(initial?.purchase?.deliveryDate);
+	const initialOrderStatus = initial?.purchase?.orderStatus ?? '';
+	const initialNotes = initial?.notes ?? '';
+	const initialVisibility = initial?.visibility ?? Visibility.Private;
+
+	$effect(() => {
+		dirty =
+			brand !== initialBrand ||
+			name !== initialName ||
+			size !== initialSize ||
+			layout !== initialLayout ||
+			topCaseMaterial !== initialTopCaseMaterial ||
+			topCaseColor !== initialTopCaseColor ||
+			bottomCaseMaterial !== initialBottomCaseMaterial ||
+			bottomCaseColor !== initialBottomCaseColor ||
+			weightMaterial !== initialWeightMaterial ||
+			weightColor !== initialWeightColor ||
+			JSON.stringify([...plates].sort()) !== JSON.stringify(initialPlates) ||
+			thickness !== initialThickness ||
+			firmware !== initialFirmware ||
+			assembly !== initialAssembly ||
+			connectivity !== initialConnectivity ||
+			vendor !== initialVendor ||
+			price !== initialPrice ||
+			orderDate !== initialOrderDate ||
+			deliveryDate !== initialDeliveryDate ||
+			orderStatus !== initialOrderStatus ||
+			notes !== initialNotes ||
+			visibility !== initialVisibility ||
+			stagedImages.length > 0;
+	});
+
 	let validationError = $state<string | null>(null);
+
+	// Pressing Enter in a single-line field (number/date/text) submits the
+	// whole form by default -- surprising mid-way through a long form like
+	// this one, where Enter more often means "confirm this field" than
+	// "save everything." Textareas and buttons are left alone.
+	function guardEnterSubmit(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+		const target = event.target as HTMLElement;
+		if (target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON') return;
+		event.preventDefault();
+	}
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -318,7 +385,9 @@
 	}
 </script>
 
-<form class="flex flex-col gap-5" onsubmit={handleSubmit}>
+<!-- keydown here only guards against Enter submitting the form early -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<form class="flex flex-col gap-5" onsubmit={handleSubmit} onkeydown={guardEnterSubmit}>
 	<h2 class="heading-lg text-2xl">{initial ? 'Edit keyboard' : 'Add keyboard'}</h2>
 
 	<div class="flex flex-col gap-2">
@@ -378,7 +447,7 @@
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Brand <span style="color: var(--danger)">*</span></span>
-			<input type="text" class="field-input" bind:value={brand} autocomplete="off" />
+			<input type="text" class="field-input" bind:value={brand} autocomplete="off" data-autofocus />
 		</label>
 
 		<label class="flex flex-col gap-1.5">

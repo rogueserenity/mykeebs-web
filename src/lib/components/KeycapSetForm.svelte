@@ -8,13 +8,16 @@
 		saving,
 		error,
 		onSubmit,
-		onCancel
+		onCancel,
+		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
+		dirty = $bindable(false)
 	}: {
 		initial?: KeycapSet;
 		saving: boolean;
 		error: string | null;
 		onSubmit: (input: KeycapSetInput) => void;
 		onCancel: () => void;
+		dirty?: boolean;
 	} = $props();
 
 	let brand = $state(initial?.brand ?? '');
@@ -50,7 +53,38 @@
 			});
 	});
 
+	// Drives the "discard changes?" prompt on an accidental close (see
+	// Modal's `dirty` prop) -- true once anything meaningfully differs from
+	// the snapshot the form opened with.
+	const initialBrand = initial?.brand ?? '';
+	const initialName = initial?.name ?? '';
+	const initialProfile = initial?.profile ?? '';
+	const initialMaterial = initial?.material ?? '';
+	const initialNotes = initial?.notes ?? '';
+	const initialVisibility = initial?.visibility ?? Visibility.Private;
+
+	$effect(() => {
+		dirty =
+			brand !== initialBrand ||
+			name !== initialName ||
+			profile !== initialProfile ||
+			material !== initialMaterial ||
+			notes !== initialNotes ||
+			visibility !== initialVisibility;
+	});
+
 	let validationError = $state<string | null>(null);
+
+	// Pressing Enter in a single-line field (number/date/text) submits the
+	// whole form by default -- surprising mid-way through a long form like
+	// this one, where Enter more often means "confirm this field" than
+	// "save everything." Textareas and buttons are left alone.
+	function guardEnterSubmit(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+		const target = event.target as HTMLElement;
+		if (target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON') return;
+		event.preventDefault();
+	}
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -74,13 +108,15 @@
 	}
 </script>
 
-<form class="flex flex-col gap-5" onsubmit={handleSubmit}>
+<!-- keydown here only guards against Enter submitting the form early -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<form class="flex flex-col gap-5" onsubmit={handleSubmit} onkeydown={guardEnterSubmit}>
 	<h2 class="heading-lg text-2xl">{initial ? 'Edit keycap set' : 'Add keycap set'}</h2>
 
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Brand <span style="color: var(--danger)">*</span></span>
-			<input type="text" class="field-input" bind:value={brand} autocomplete="off" />
+			<input type="text" class="field-input" bind:value={brand} autocomplete="off" data-autofocus />
 		</label>
 
 		<label class="flex flex-col gap-1.5">

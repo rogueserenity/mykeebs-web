@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { Build, Keyboard, Switch as SwitchModel } from '@rogueserenity/kbdb-api-client';
+	import type {
+		Build,
+		BuildInput,
+		Keyboard,
+		Switch as SwitchModel
+	} from '@rogueserenity/kbdb-api-client';
+	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { buildsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
 	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
@@ -10,13 +16,28 @@
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import SwitchDetails from '$lib/components/SwitchDetails.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
+	import BuildForm from '$lib/components/BuildForm.svelte';
 
 	const userContext = getUserContext();
+
+	// 'view' shows the existing build detail markup below; 'create'/'edit'
+	// show BuildForm. Reloading the grid after a mutation is handled by
+	// bumping gridKey, which remounts CollectionGrid (it only fetches on
+	// mount/userId change).
+	type FormMode = { mode: 'create' } | { mode: 'edit'; build: Build } | { mode: 'closed' };
 
 	let selectedBuild = $state<Build | null>(null);
 	let detailError = $state<string | null>(null);
 	let detailLoading = $state(false);
 	let failedImages = new SvelteSet<string>();
+	let formMode = $state<FormMode>({ mode: 'closed' });
+	let gridKey = $state(0);
+	let saving = $state(false);
+	let saveError = $state<string | null>(null);
+	let deleting = $state(false);
+	let deleteError = $state<string | null>(null);
+	let confirmingDelete = $state(false);
+	let formDirty = $state(false);
 
 	let galleryViewerOpen = $state(false);
 	let galleryIndex = $state(0);
@@ -63,6 +84,129 @@
 		detailLoading = false;
 		galleryViewerOpen = false;
 		galleryIndex = 0;
+		formMode = { mode: 'closed' };
+		saveError = null;
+		deleteError = null;
+		confirmingDelete = false;
+		formDirty = false;
+	}
+
+	function openCreate() {
+		saveError = null;
+		formDirty = false;
+		formMode = { mode: 'create' };
+	}
+
+	function openEdit(build: Build) {
+		saveError = null;
+		formDirty = false;
+		formMode = { mode: 'edit', build };
+	}
+
+	async function handleCreate(input: BuildInput, stagedImages?: File[]) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		saving = true;
+		saveError = null;
+		try {
+			const build = await buildsApi.createBuild({ userId, buildInput: input });
+			if (stagedImages && stagedImages.length > 0) {
+				// The build itself was created successfully at this point; an
+				// image-upload failure here shouldn't be reported as a failed
+				// create, so it's swallowed rather than surfaced via saveError
+				// (which the created build no longer applies to).
+				await Promise.all(
+					stagedImages.map((file) => uploadBuildImage(build.id, file).catch(() => {}))
+				);
+			}
+			gridKey += 1;
+			closeModal();
+		} catch {
+			saveError = 'Could not create this build.';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function handleUpdate(buildId: string, input: BuildInput) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		saving = true;
+		saveError = null;
+		try {
+			const build = await buildsApi.updateBuild({ userId, buildId, buildInput: input });
+			gridKey += 1;
+			selectedBuild = build;
+			formMode = { mode: 'closed' };
+			formDirty = false;
+		} catch (err) {
+			if (err instanceof ResponseError) {
+				const body = await err.response.json().catch(() => null);
+				console.error('updateBuild failed', err.response.status, body);
+			} else {
+				console.error('updateBuild failed', err);
+			}
+			saveError = 'Could not save your changes.';
+		} finally {
+			saving = false;
+		}
+	}
+
+	async function refreshEditingBuild(buildId: string) {
+		const userId = userContext.userId;
+		if (!userId) return;
+		const build = await buildsApi.getBuild({ userId, buildId });
+		gridKey += 1;
+		selectedBuild = build;
+		if (formMode.mode === 'edit') formMode = { mode: 'edit', build };
+	}
+
+	async function uploadBuildImage(buildId: string, file: File) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		const { uploadUrl } = await buildsApi.createBuildImage({
+			userId,
+			buildId,
+			imageUploadRequest: { contentType: file.type }
+		});
+		const put = await fetch(uploadUrl, {
+			method: 'PUT',
+			headers: { 'Content-Type': file.type },
+			body: file
+		});
+		if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+	}
+
+	async function handleImageUpload(buildId: string, file: File) {
+		await uploadBuildImage(buildId, file);
+		await refreshEditingBuild(buildId);
+	}
+
+	async function handleImageRemove(buildId: string, imageId: string) {
+		const userId = userContext.userId;
+		if (!userId) return;
+		await buildsApi.deleteBuildImage({ userId, buildId, imageId });
+		await refreshEditingBuild(buildId);
+	}
+
+	async function deleteBuild(buildId: string) {
+		const userId = userContext.userId;
+		if (!userId) return;
+
+		deleting = true;
+		deleteError = null;
+		try {
+			await buildsApi.deleteBuild({ userId, buildId });
+			gridKey += 1;
+			closeModal();
+		} catch {
+			deleteError = 'Could not delete this build.';
+		} finally {
+			deleting = false;
+		}
 	}
 
 	async function openKeyboardDetail(keyboardId: string) {
@@ -151,58 +295,91 @@
 			kitDetailLoading ||
 			kitDetailError !== null ||
 			kitDetail !== null ||
-			galleryViewerOpen
+			galleryViewerOpen ||
+			formMode.mode !== 'closed'
 	);
 </script>
 
-<CollectionGrid
-	userId={userContext.userId}
-	fetchPage={(userId: string, cursor: string | undefined) =>
-		buildsApi.listBuilds({ userId, cursor })}
-	itemKey={(build) => build.id ?? ''}
-	emptyMessage="No builds yet."
-	getName={(build) => build.keyboard?.name}
-	sortOptions={[
-		{ label: 'Name', getValue: (build) => build.keyboard?.name },
-		{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() }
-	]}
->
-	{#snippet card(build)}
-		{@const imageFailed = build.id != null && failedImages.has(build.id)}
-		<button
-			type="button"
-			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
-			onclick={() => openBuild(build.id ?? '')}
-		>
-			{#if build.image?.url && !imageFailed}
-				<img
-					src={build.image.url}
-					alt={build.keyboard?.name ?? 'Build'}
-					class="kc-thumb h-24 w-24 shrink-0 object-contain"
-					onerror={() => build.id && failedImages.add(build.id)}
-				/>
-			{/if}
-			<div class="pr-4">
-				<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
-				<p class="text-muted text-sm">{build.keyboard?.brand}</p>
-				{#if formatDate(build.buildDate)}
-					<p class="text-faint font-mono text-xs">{formatDate(build.buildDate)}</p>
+{#if userContext.isOwnProfile}
+	<div class="flex justify-end p-4 pb-0">
+		<button type="button" class="btn btn-accent" onclick={openCreate}>+ Add build</button>
+	</div>
+{/if}
+
+{#key gridKey}
+	<CollectionGrid
+		userId={userContext.userId}
+		fetchPage={(userId: string, cursor: string | undefined) =>
+			buildsApi.listBuilds({ userId, cursor })}
+		itemKey={(build) => build.id ?? ''}
+		emptyMessage="No builds yet."
+		getName={(build) => build.keyboard?.name}
+		sortOptions={[
+			{ label: 'Name', getValue: (build) => build.keyboard?.name },
+			{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() }
+		]}
+	>
+		{#snippet card(build)}
+			{@const imageFailed = build.id != null && failedImages.has(build.id)}
+			<button
+				type="button"
+				class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
+				onclick={() => openBuild(build.id ?? '')}
+			>
+				{#if build.image?.url && !imageFailed}
+					<img
+						src={build.image.url}
+						alt={build.keyboard?.name ?? 'Build'}
+						class="kc-thumb h-24 w-24 shrink-0 object-contain"
+						onerror={() => build.id && failedImages.add(build.id)}
+					/>
 				{/if}
-			</div>
-		</button>
-	{/snippet}
-</CollectionGrid>
+				<div class="pr-4">
+					<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
+					<p class="text-muted text-sm">{build.keyboard?.brand}</p>
+					{#if formatDate(build.buildDate)}
+						<p class="text-faint font-mono text-xs">{formatDate(build.buildDate)}</p>
+					{/if}
+				</div>
+			</button>
+		{/snippet}
+	</CollectionGrid>
+{/key}
 
 <Modal
-	open={detailLoading || detailError !== null || selectedBuild !== null}
+	open={detailLoading ||
+		detailError !== null ||
+		selectedBuild !== null ||
+		formMode.mode === 'create'}
 	onClose={closeModal}
 	wide
-	obscured={anyNestedOpen}
+	obscured={anyNestedOpen && formMode.mode !== 'create' && formMode.mode !== 'edit'}
+	dirty={formDirty}
 >
-	{#if detailLoading}
+	{#if formMode.mode === 'create'}
+		<BuildForm
+			{saving}
+			error={saveError}
+			onSubmit={handleCreate}
+			onCancel={closeModal}
+			bind:dirty={formDirty}
+		/>
+	{:else if detailLoading}
 		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if detailError}
 		<p class="p-8 text-center text-lg" style="color: var(--danger)">{detailError}</p>
+	{:else if formMode.mode === 'edit'}
+		{@const build = formMode.build}
+		<BuildForm
+			initial={build}
+			{saving}
+			error={saveError}
+			onSubmit={(input) => handleUpdate(build.id, input)}
+			onCancel={() => (formMode = { mode: 'closed' })}
+			onImageUpload={(file) => handleImageUpload(build.id, file)}
+			onImageRemove={(imageId) => handleImageRemove(build.id, imageId)}
+			bind:dirty={formDirty}
+		/>
 	{:else if selectedBuild}
 		{@const build = selectedBuild}
 		<div class="pr-8">
@@ -364,6 +541,47 @@
 				</div>
 			{/if}
 		</div>
+
+		{#if userContext.isOwnProfile}
+			<div
+				class="mt-6 flex flex-wrap items-center gap-2 border-t pt-4"
+				style="border-color: var(--border)"
+			>
+				<button type="button" class="btn" onclick={() => openEdit(build)}>Edit</button>
+				{#if confirmingDelete}
+					<span class="text-sm">Delete this build?</span>
+					<button
+						type="button"
+						class="btn"
+						style="color: var(--danger)"
+						disabled={deleting}
+						onclick={() => deleteBuild(build.id)}
+					>
+						{deleting ? 'Deleting…' : 'Confirm delete'}
+					</button>
+					<button
+						type="button"
+						class="btn"
+						disabled={deleting}
+						onclick={() => (confirmingDelete = false)}
+					>
+						Cancel
+					</button>
+				{:else}
+					<button
+						type="button"
+						class="btn"
+						style="color: var(--danger)"
+						onclick={() => (confirmingDelete = true)}
+					>
+						Delete
+					</button>
+				{/if}
+			</div>
+			{#if deleteError}
+				<p class="mt-2 text-sm" style="color: var(--danger)">{deleteError}</p>
+			{/if}
+		{/if}
 	{/if}
 </Modal>
 

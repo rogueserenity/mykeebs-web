@@ -60,6 +60,8 @@
 	let kitDeleteError = $state<string | null>(null);
 	let kitBlockingBuilds = $state<string[] | null>(null);
 	let confirmingKitDelete = $state<string | null>(null);
+	let formDirty = $state(false);
+	let kitFormDirty = $state(false);
 
 	let activeKitId = $derived(
 		kitModal.mode === 'view' || kitModal.mode === 'edit' ? kitModal.kitId : null
@@ -102,11 +104,13 @@
 
 	function openCreate() {
 		saveError = null;
+		formDirty = false;
 		modal = { mode: 'create' };
 	}
 
 	function openEdit(set: KeycapSet) {
 		saveError = null;
+		formDirty = false;
 		modal = { mode: 'edit', set };
 	}
 
@@ -118,6 +122,7 @@
 		deleteError = null;
 		blockingBuilds = null;
 		confirmingDelete = false;
+		formDirty = false;
 		resetKitState();
 	}
 
@@ -126,6 +131,7 @@
 		kitDeleteError = null;
 		kitBlockingBuilds = null;
 		confirmingKitDelete = null;
+		kitFormDirty = false;
 	}
 
 	async function handleCreate(input: KeycapSetInput) {
@@ -162,6 +168,7 @@
 			});
 			gridKey += 1;
 			modal = { mode: 'view', set };
+			formDirty = false;
 		} catch (err) {
 			if (err instanceof ResponseError) {
 				const body = await err.response.json().catch(() => null);
@@ -286,6 +293,7 @@
 			await keycapSetsApi.updateKeycapKit({ userId, keycapSetId, kitId, keycapKitInput: input });
 			await refreshViewedSet(keycapSetId);
 			kitModal = { mode: 'view', kitId };
+			kitFormDirty = false;
 		} catch (err) {
 			if (err instanceof ResponseError) {
 				const body = await err.response.json().catch(() => null);
@@ -416,7 +424,12 @@
 	</CollectionGrid>
 {/key}
 
-<Modal open={modal.mode !== 'closed'} onClose={closeModal} obscured={kitModal.mode !== 'closed'}>
+<Modal
+	open={modal.mode !== 'closed'}
+	onClose={closeModal}
+	obscured={kitModal.mode !== 'closed'}
+	dirty={formDirty}
+>
 	{#if modal.mode === 'loading'}
 		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if modal.mode === 'error'}
@@ -492,7 +505,13 @@
 			{/if}
 		{/if}
 	{:else if modal.mode === 'create'}
-		<KeycapSetForm {saving} error={saveError} onSubmit={handleCreate} onCancel={closeModal} />
+		<KeycapSetForm
+			{saving}
+			error={saveError}
+			onSubmit={handleCreate}
+			onCancel={closeModal}
+			bind:dirty={formDirty}
+		/>
 	{:else if modal.mode === 'edit'}
 		{@const set = modal.set}
 		<KeycapSetForm
@@ -501,6 +520,7 @@
 			error={saveError}
 			onSubmit={(input) => handleUpdate(set.id ?? '', input)}
 			onCancel={() => (modal = { mode: 'view', set })}
+			bind:dirty={formDirty}
 		/>
 	{/if}
 </Modal>
@@ -514,6 +534,7 @@
 	onClose={closeKitModal}
 	wide={kitModal.mode === 'view'}
 	obscured={kitImageViewerOpen}
+	dirty={kitFormDirty}
 >
 	{#snippet headerExtra()}
 		{#if kitModal.mode === 'view' && hasMultipleKits}
@@ -532,6 +553,7 @@
 			error={kitSaveError}
 			onSubmit={handleCreateKit}
 			onCancel={closeKitModal}
+			bind:dirty={kitFormDirty}
 		/>
 	{:else if kitModal.mode === 'view' && activeKit}
 		{@const kit = activeKit}
@@ -615,6 +637,7 @@
 			onCancel={() => (kitModal = { mode: 'view', kitId: kit.kitId })}
 			onImageUpload={(file) => handleKitImageUpload(kit.kitId, file)}
 			onImageRemove={() => handleKitImageRemove(kit.kitId)}
+			bind:dirty={kitFormDirty}
 		/>
 	{/if}
 </Modal>

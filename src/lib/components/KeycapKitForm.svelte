@@ -9,7 +9,9 @@
 		onSubmit,
 		onCancel,
 		onImageUpload,
-		onImageRemove
+		onImageRemove,
+		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
+		dirty = $bindable(false)
 	}: {
 		initial?: KeycapKit;
 		saving: boolean;
@@ -18,6 +20,7 @@
 		onCancel: () => void;
 		onImageUpload?: (file: File) => Promise<void>;
 		onImageRemove?: () => Promise<void>;
+		dirty?: boolean;
 	} = $props();
 
 	let name = $state(initial?.name ?? '');
@@ -134,7 +137,41 @@
 		}
 	}
 
+	// Drives the "discard changes?" prompt on an accidental close (see
+	// Modal's `dirty` prop) -- true once anything meaningfully differs from
+	// the snapshot the form opened with.
+	const initialName = initial?.name ?? '';
+	const initialVendor = initial?.purchase?.vendor ?? '';
+	const initialPrice = initial?.purchase?.price;
+	const initialOrderDate = toDateInput(initial?.purchase?.orderDate);
+	const initialDeliveryDate = toDateInput(initial?.purchase?.deliveryDate);
+	const initialOrderStatus = initial?.purchase?.orderStatus ?? '';
+	const initialPrimary = initial?.primary ?? false;
+
+	$effect(() => {
+		dirty =
+			name !== initialName ||
+			vendor !== initialVendor ||
+			price !== initialPrice ||
+			orderDate !== initialOrderDate ||
+			deliveryDate !== initialDeliveryDate ||
+			orderStatus !== initialOrderStatus ||
+			primary !== initialPrimary ||
+			stagedImage != null;
+	});
+
 	let validationError = $state<string | null>(null);
+
+	// Pressing Enter in a single-line field (number/date/text) submits the
+	// whole form by default -- surprising mid-way through a long form like
+	// this one, where Enter more often means "confirm this field" than
+	// "save everything." Textareas and buttons are left alone.
+	function guardEnterSubmit(event: KeyboardEvent) {
+		if (event.key !== 'Enter') return;
+		const target = event.target as HTMLElement;
+		if (target.tagName === 'TEXTAREA' || target.tagName === 'BUTTON') return;
+		event.preventDefault();
+	}
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -173,7 +210,9 @@
 	}
 </script>
 
-<form class="flex flex-col gap-5" onsubmit={handleSubmit}>
+<!-- keydown here only guards against Enter submitting the form early -->
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<form class="flex flex-col gap-5" onsubmit={handleSubmit} onkeydown={guardEnterSubmit}>
 	<h2 class="heading-lg text-2xl">{initial ? 'Edit kit' : 'Add kit'}</h2>
 
 	<div class="flex items-center gap-4">
@@ -228,6 +267,7 @@
 			placeholder="e.g. Base, Extension, Accents"
 			bind:value={name}
 			autocomplete="off"
+			data-autofocus
 		/>
 	</label>
 

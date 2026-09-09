@@ -36,6 +36,7 @@
 	let deleteError = $state<string | null>(null);
 	let blockingBuilds = $state<string[] | null>(null);
 	let confirmingDelete = $state(false);
+	let formDirty = $state(false);
 
 	async function openKeyboard(keyboardId: string) {
 		const userId = userContext.userId;
@@ -52,11 +53,13 @@
 
 	function openCreate() {
 		saveError = null;
+		formDirty = false;
 		modal = { mode: 'create' };
 	}
 
 	function openEdit(keyboard: Keyboard) {
 		saveError = null;
+		formDirty = false;
 		modal = { mode: 'edit', keyboard };
 	}
 
@@ -68,6 +71,7 @@
 		deleteError = null;
 		blockingBuilds = null;
 		confirmingDelete = false;
+		formDirty = false;
 	}
 
 	async function handleCreate(input: KeyboardInput, stagedImages?: File[]) {
@@ -110,6 +114,7 @@
 			});
 			gridKey += 1;
 			modal = { mode: 'view', keyboard };
+			formDirty = false;
 		} catch (err) {
 			if (err instanceof ResponseError) {
 				const body = await err.response.json().catch(() => null);
@@ -254,7 +259,12 @@
 	</CollectionGrid>
 {/key}
 
-<Modal open={modal.mode !== 'closed'} onClose={closeModal} obscured={galleryViewerOpen}>
+<Modal
+	open={modal.mode !== 'closed'}
+	onClose={closeModal}
+	obscured={galleryViewerOpen}
+	dirty={formDirty}
+>
 	{#if modal.mode === 'loading'}
 		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if modal.mode === 'error'}
@@ -330,7 +340,13 @@
 			{/if}
 		{/if}
 	{:else if modal.mode === 'create'}
-		<KeyboardForm {saving} error={saveError} onSubmit={handleCreate} onCancel={closeModal} />
+		<KeyboardForm
+			{saving}
+			error={saveError}
+			onSubmit={handleCreate}
+			onCancel={closeModal}
+			bind:dirty={formDirty}
+		/>
 	{:else if modal.mode === 'edit'}
 		{@const keyboard = modal.keyboard}
 		<KeyboardForm
@@ -341,6 +357,7 @@
 			onCancel={() => (modal = { mode: 'view', keyboard })}
 			onImageUpload={(file) => handleImageUpload(keyboard.id ?? '', file)}
 			onImageRemove={(imageId) => handleImageRemove(keyboard.id ?? '', imageId)}
+			bind:dirty={formDirty}
 		/>
 	{/if}
 </Modal>

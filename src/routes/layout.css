@@ -344,6 +344,22 @@ select:focus-visible {
 	transform: translateY(0);
 }
 
+/* Picker rows -- compact clickable list items (ItemPicker), lighter-weight
+   than kc-card since many can be on screen inside a scrollable list. */
+
+.kc-picker-row:hover {
+	background: var(--surface-hover);
+}
+
+/* Keyboard-highlighted row (arrow-key navigation in ItemPicker) -- distinct
+   from :hover so moving the mouse away doesn't hide which row Enter would
+   pick. */
+.kc-picker-row-active {
+	background: var(--surface-hover);
+	outline: 2px solid var(--accent);
+	outline-offset: -2px;
+}
+
 /* Thumbnails -- product photos often have transparent/white backgrounds;
    give them a dark neutral mat so they don't blow out against kc-card. */
 
