@@ -147,6 +147,7 @@
 			// the natural next step is adding its kits — closing would force
 			// hunting for the set just created back in the grid.
 			modal = { mode: 'view', set };
+			formDirty = false;
 		} catch {
 			saveError = 'Could not create this keycap set.';
 		} finally {
