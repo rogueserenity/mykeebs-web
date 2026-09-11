@@ -41,6 +41,7 @@
 	});
 	$effect(() => {
 		if (!isDelivered) deliveryDate = '';
+		else if (!deliveryDate) deliveryDate = toDateInput(new Date());
 	});
 
 	function toDateInput(date: Date | undefined): string {
