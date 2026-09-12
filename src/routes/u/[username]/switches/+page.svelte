@@ -14,9 +14,9 @@
 	const userContext = getUserContext();
 
 	// 'view' shows SwitchDetails for an existing switch; 'create'/'edit' show
-	// SwitchForm. Reloading the grid after a mutation is handled by bumping
-	// gridKey, which remounts CollectionGrid (it only fetches on mount/userId
-	// change).
+	// SwitchForm. Reloading the grid after a mutation calls grid.refresh()
+	// directly rather than remounting CollectionGrid, so the user's status
+	// filter/sort/search selections survive the reload.
 	type ModalState =
 		| { mode: 'view'; sw: SwitchModel }
 		| { mode: 'create' }
@@ -28,7 +28,7 @@
 	let modal = $state<ModalState>({ mode: 'closed' });
 	let failedImages = new SvelteSet<string>();
 	let viewerOpen = $state(false);
-	let gridKey = $state(0);
+	let grid = $state<ReturnType<typeof CollectionGrid<SwitchModel>> | null>(null);
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
 	let deleting = $state(false);
@@ -87,7 +87,7 @@
 				// saveError (which the created switch no longer applies to).
 				await uploadSwitchImage(sw.id ?? '', stagedImage).catch(() => {});
 			}
-			gridKey += 1;
+			await grid?.refresh();
 			closeModal();
 		} catch {
 			saveError = 'Could not create this switch.';
@@ -104,7 +104,7 @@
 		saveError = null;
 		try {
 			const sw = await switchesApi.updateSwitch({ userId, switchId, switchInput: input });
-			gridKey += 1;
+			await grid?.refresh();
 			modal = { mode: 'view', sw };
 			formDirty = false;
 		} catch (err) {
@@ -124,7 +124,7 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 		const sw = await switchesApi.getSwitch({ userId, switchId });
-		gridKey += 1;
+		await grid?.refresh();
 		if (modal.mode === 'edit') modal = { mode: 'edit', sw };
 	}
 
@@ -165,7 +165,7 @@
 		deleteError = null;
 		try {
 			await switchesApi.deleteSwitch({ userId, switchId, onDelete });
-			gridKey += 1;
+			await grid?.refresh();
 			closeModal();
 		} catch (err) {
 			if (err instanceof ResponseError && err.response.status === 409) {
@@ -201,53 +201,53 @@
 	</div>
 {/if}
 
-{#key gridKey}
-	<CollectionGrid
-		userId={userContext.userId}
-		fetchPage={(userId: string, cursor: string | undefined) =>
-			switchesApi.listSwitches({ userId, cursor })}
-		itemKey={(sw) => sw.id ?? ''}
-		emptyMessage="No switches yet."
-		getName={(sw) => sw.name}
-		sortOptions={[
-			{ label: 'Name', getValue: (sw) => sw.name },
-			{ label: 'Brand', getValue: (sw) => sw.brand },
-			{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined }
-		]}
-	>
-		{#snippet card(sw)}
-			{@const imageFailed = failedImages.has(sw.id ?? '')}
-			<button
-				type="button"
-				class="kc-card flex w-full items-center gap-3 p-4 text-left"
-				onclick={() => openSwitch(sw.id ?? '')}
-			>
-				{#if sw.image?.url && !imageFailed}
-					<img
-						src={sw.image.url}
-						alt={sw.name}
-						class="kc-thumb h-16 w-16 shrink-0 object-contain"
-						onerror={() => failedImages.add(sw.id ?? '')}
-					/>
-				{/if}
-				<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
-					<div class="min-w-0">
-						<h2 class="heading-lg truncate text-lg">{sw.name}</h2>
-						<p class="text-muted truncate text-sm">{sw.brand}</p>
-						{#if sw.type}
-							<p class="text-faint font-mono text-xs">{sw.type}</p>
-						{/if}
-					</div>
-					{#if sw.orderStatus}
-						<span class="status-badge shrink-0 {orderStatusClass(sw.orderStatus)}">
-							{sw.orderStatus}
-						</span>
+<CollectionGrid
+	bind:this={grid}
+	userId={userContext.userId}
+	fetchPage={(userId: string, cursor: string | undefined) =>
+		switchesApi.listSwitches({ userId, cursor })}
+	itemKey={(sw) => sw.id ?? ''}
+	emptyMessage="No switches yet."
+	getName={(sw) => sw.name}
+	getOrderStatus={(sw) => sw.orderStatus ?? undefined}
+	sortOptions={[
+		{ label: 'Name', getValue: (sw) => sw.name },
+		{ label: 'Brand', getValue: (sw) => sw.brand },
+		{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined }
+	]}
+>
+	{#snippet card(sw)}
+		{@const imageFailed = failedImages.has(sw.id ?? '')}
+		<button
+			type="button"
+			class="kc-card flex w-full items-center gap-3 p-4 text-left"
+			onclick={() => openSwitch(sw.id ?? '')}
+		>
+			{#if sw.image?.url && !imageFailed}
+				<img
+					src={sw.image.url}
+					alt={sw.name}
+					class="kc-thumb h-16 w-16 shrink-0 object-contain"
+					onerror={() => failedImages.add(sw.id ?? '')}
+				/>
+			{/if}
+			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+				<div class="min-w-0">
+					<h2 class="heading-lg truncate text-lg">{sw.name}</h2>
+					<p class="text-muted truncate text-sm">{sw.brand}</p>
+					{#if sw.type}
+						<p class="text-faint font-mono text-xs">{sw.type}</p>
 					{/if}
 				</div>
-			</button>
-		{/snippet}
-	</CollectionGrid>
-{/key}
+				{#if sw.orderStatus}
+					<span class="status-badge shrink-0 {orderStatusClass(sw.orderStatus)}">
+						{sw.orderStatus}
+					</span>
+				{/if}
+			</div>
+		</button>
+	{/snippet}
+</CollectionGrid>
 
 <Modal open={modal.mode !== 'closed'} onClose={closeModal} obscured={viewerOpen} dirty={formDirty}>
 	{#if modal.mode === 'loading'}

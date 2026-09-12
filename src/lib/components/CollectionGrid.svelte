@@ -4,6 +4,16 @@
 	type Page = { items?: T[]; nextCursor?: string | null };
 	type SortOption = { label: string; getValue: (item: T) => string | number | undefined };
 
+	const STATUS_FILTERS = [
+		'all',
+		'planned',
+		'ordered',
+		'shipped',
+		'delivered',
+		'cancelled'
+	] as const;
+	type StatusFilter = (typeof STATUS_FILTERS)[number];
+
 	let {
 		userId,
 		fetchPage,
@@ -11,6 +21,7 @@
 		emptyMessage,
 		sortOptions,
 		getName,
+		getOrderStatus,
 		card
 	}: {
 		userId: string;
@@ -19,8 +30,11 @@
 		emptyMessage: string;
 		sortOptions: SortOption[];
 		getName: (item: T) => string | undefined;
+		getOrderStatus?: (item: T) => string | undefined;
 		card: Snippet<[T]>;
 	} = $props();
+
+	let statusFilter = $state<StatusFilter>('all');
 
 	let items = $state<T[]>([]);
 	let loading = $state(true);
@@ -64,10 +78,15 @@
 		);
 	}
 
+	let statusFilteredItems = $derived.by(() => {
+		if (!getOrderStatus || statusFilter === 'all') return items;
+		return items.filter((item) => (getOrderStatus(item) ?? '').toLowerCase() === statusFilter);
+	});
+
 	let filteredItems = $derived.by(() => {
 		const needle = filterText.trim().toLowerCase();
-		if (!needle) return items;
-		return items.filter((item) => matchesFilter(item, needle));
+		if (!needle) return statusFilteredItems;
+		return statusFilteredItems.filter((item) => matchesFilter(item, needle));
 	});
 
 	let sortIndex = $state(0);
@@ -91,12 +110,12 @@
 		});
 	});
 
-	$effect(() => {
+	async function load() {
 		if (!userId) return;
 
 		loadError = null;
 		loading = true;
-		(async () => {
+		try {
 			const allItems: T[] = [];
 			let cursor: string | undefined;
 			do {
@@ -105,13 +124,22 @@
 				cursor = page.nextCursor ?? undefined;
 			} while (cursor);
 			items = allItems;
-		})()
-			.catch(() => {
-				loadError = 'Could not load this collection.';
-			})
-			.finally(() => {
-				loading = false;
-			});
+		} catch {
+			loadError = 'Could not load this collection.';
+		} finally {
+			loading = false;
+		}
+	}
+
+	// Exposed so parent pages can refresh data after a create/update/delete
+	// without remounting this component, which would otherwise reset the
+	// user's status filter, sort, and search state.
+	export async function refresh() {
+		await load();
+	}
+
+	$effect(() => {
+		load();
 	});
 </script>
 
@@ -128,6 +156,23 @@
 		<p class="text-muted text-xl font-semibold">{emptyMessage}</p>
 	</div>
 {:else}
+	{#if getOrderStatus}
+		<div class="mt-4 flex justify-center">
+			<div class="segmented-control" role="group" aria-label="Filter by order status">
+				{#each STATUS_FILTERS as filter (filter)}
+					<button
+						type="button"
+						class="segmented-control-btn"
+						class:segmented-control-btn-active={statusFilter === filter}
+						aria-pressed={statusFilter === filter}
+						onclick={() => (statusFilter = filter)}
+					>
+						{filter}
+					</button>
+				{/each}
+			</div>
+		</div>
+	{/if}
 	<div class="flex items-center justify-end gap-2 p-4 pb-0">
 		{#if sortOptions.length > 0}
 			<select class="field-select w-auto" bind:value={sortIndex}>

@@ -14,9 +14,9 @@
 	const userContext = getUserContext();
 
 	// 'view' shows KeyboardDetails for an existing keyboard; 'create'/'edit'
-	// show KeyboardForm. Reloading the grid after a mutation is handled by
-	// bumping gridKey, which remounts CollectionGrid (it only fetches on
-	// mount/userId change).
+	// show KeyboardForm. Reloading the grid after a mutation calls
+	// grid.refresh() directly rather than remounting CollectionGrid, so the
+	// user's status filter/sort/search selections survive the reload.
 	type ModalState =
 		| { mode: 'view'; keyboard: Keyboard }
 		| { mode: 'create' }
@@ -29,7 +29,7 @@
 	let failedImages = new SvelteSet<string>();
 	let galleryViewerOpen = $state(false);
 	let galleryIndex = $state(0);
-	let gridKey = $state(0);
+	let grid = $state<ReturnType<typeof CollectionGrid<Keyboard>> | null>(null);
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
 	let deleting = $state(false);
@@ -91,7 +91,7 @@
 					stagedImages.map((file) => uploadKeyboardImage(keyboard.id ?? '', file).catch(() => {}))
 				);
 			}
-			gridKey += 1;
+			await grid?.refresh();
 			closeModal();
 		} catch {
 			saveError = 'Could not create this keyboard.';
@@ -112,7 +112,7 @@
 				keyboardId,
 				keyboardInput: input
 			});
-			gridKey += 1;
+			await grid?.refresh();
 			modal = { mode: 'view', keyboard };
 			formDirty = false;
 		} catch (err) {
@@ -132,7 +132,7 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 		const keyboard = await keyboardsApi.getKeyboard({ userId, keyboardId });
-		gridKey += 1;
+		await grid?.refresh();
 		if (modal.mode === 'edit') modal = { mode: 'edit', keyboard };
 	}
 
@@ -173,7 +173,7 @@
 		deleteError = null;
 		try {
 			await keyboardsApi.deleteKeyboard({ userId, keyboardId, onDelete });
-			gridKey += 1;
+			await grid?.refresh();
 			closeModal();
 		} catch (err) {
 			if (err instanceof ResponseError && err.response.status === 409) {
@@ -209,55 +209,55 @@
 	</div>
 {/if}
 
-{#key gridKey}
-	<CollectionGrid
-		userId={userContext.userId}
-		fetchPage={(userId: string, cursor: string | undefined) =>
-			keyboardsApi.listKeyboards({ userId, cursor })}
-		itemKey={(keyboard) => keyboard.id ?? ''}
-		emptyMessage="No keyboards yet."
-		getName={(keyboard) => keyboard.name}
-		sortOptions={[
-			{ label: 'Name', getValue: (keyboard) => keyboard.name },
-			{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
-			{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined }
-		]}
-	>
-		{#snippet card(keyboard)}
-			{@const imageFailed = failedImages.has(keyboard.id ?? '')}
-			<button
-				type="button"
-				class="kc-card flex w-full items-center gap-3 p-4 text-left"
-				onclick={() => openKeyboard(keyboard.id ?? '')}
-			>
-				{#if keyboard.image?.url && !imageFailed}
-					<img
-						src={keyboard.image.url}
-						alt={keyboard.name}
-						class="kc-thumb h-16 w-16 shrink-0 object-contain"
-						onerror={() => failedImages.add(keyboard.id ?? '')}
-					/>
-				{/if}
-				<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
-					<div class="min-w-0">
-						<h2 class="heading-lg truncate text-lg">{keyboard.name}</h2>
-						<p class="text-muted truncate text-sm">{keyboard.brand}</p>
-						{#if keyboard.size || keyboard.layout}
-							<p class="text-faint font-mono text-xs">
-								{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
-							</p>
-						{/if}
-					</div>
-					{#if keyboard.orderStatus}
-						<span class="status-badge shrink-0 {orderStatusClass(keyboard.orderStatus)}">
-							{keyboard.orderStatus}
-						</span>
+<CollectionGrid
+	bind:this={grid}
+	userId={userContext.userId}
+	fetchPage={(userId: string, cursor: string | undefined) =>
+		keyboardsApi.listKeyboards({ userId, cursor })}
+	itemKey={(keyboard) => keyboard.id ?? ''}
+	emptyMessage="No keyboards yet."
+	getName={(keyboard) => keyboard.name}
+	getOrderStatus={(keyboard) => keyboard.orderStatus ?? undefined}
+	sortOptions={[
+		{ label: 'Name', getValue: (keyboard) => keyboard.name },
+		{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
+		{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined }
+	]}
+>
+	{#snippet card(keyboard)}
+		{@const imageFailed = failedImages.has(keyboard.id ?? '')}
+		<button
+			type="button"
+			class="kc-card flex w-full items-center gap-3 p-4 text-left"
+			onclick={() => openKeyboard(keyboard.id ?? '')}
+		>
+			{#if keyboard.image?.url && !imageFailed}
+				<img
+					src={keyboard.image.url}
+					alt={keyboard.name}
+					class="kc-thumb h-16 w-16 shrink-0 object-contain"
+					onerror={() => failedImages.add(keyboard.id ?? '')}
+				/>
+			{/if}
+			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+				<div class="min-w-0">
+					<h2 class="heading-lg truncate text-lg">{keyboard.name}</h2>
+					<p class="text-muted truncate text-sm">{keyboard.brand}</p>
+					{#if keyboard.size || keyboard.layout}
+						<p class="text-faint font-mono text-xs">
+							{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
+						</p>
 					{/if}
 				</div>
-			</button>
-		{/snippet}
-	</CollectionGrid>
-{/key}
+				{#if keyboard.orderStatus}
+					<span class="status-badge shrink-0 {orderStatusClass(keyboard.orderStatus)}">
+						{keyboard.orderStatus}
+					</span>
+				{/if}
+			</div>
+		</button>
+	{/snippet}
+</CollectionGrid>
 
 <Modal
 	open={modal.mode !== 'closed'}

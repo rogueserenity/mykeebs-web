@@ -21,9 +21,9 @@
 	const userContext = getUserContext();
 
 	// 'view' shows the existing build detail markup below; 'create'/'edit'
-	// show BuildForm. Reloading the grid after a mutation is handled by
-	// bumping gridKey, which remounts CollectionGrid (it only fetches on
-	// mount/userId change).
+	// show BuildForm. Reloading the grid after a mutation calls
+	// grid.refresh() directly rather than remounting CollectionGrid, so the
+	// user's sort/search selections survive the reload.
 	type FormMode = { mode: 'create' } | { mode: 'edit'; build: Build } | { mode: 'closed' };
 
 	let selectedBuild = $state<Build | null>(null);
@@ -31,7 +31,7 @@
 	let detailLoading = $state(false);
 	let failedImages = new SvelteSet<string>();
 	let formMode = $state<FormMode>({ mode: 'closed' });
-	let gridKey = $state(0);
+	let grid = $state<ReturnType<typeof CollectionGrid<Build>> | null>(null);
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
 	let deleting = $state(false);
@@ -120,7 +120,7 @@
 					stagedImages.map((file) => uploadBuildImage(build.id, file).catch(() => {}))
 				);
 			}
-			gridKey += 1;
+			await grid?.refresh();
 			closeModal();
 		} catch {
 			saveError = 'Could not create this build.';
@@ -137,7 +137,7 @@
 		saveError = null;
 		try {
 			const build = await buildsApi.updateBuild({ userId, buildId, buildInput: input });
-			gridKey += 1;
+			await grid?.refresh();
 			selectedBuild = build;
 			formMode = { mode: 'closed' };
 			formDirty = false;
@@ -158,7 +158,7 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 		const build = await buildsApi.getBuild({ userId, buildId });
-		gridKey += 1;
+		await grid?.refresh();
 		selectedBuild = build;
 		if (formMode.mode === 'edit') formMode = { mode: 'edit', build };
 	}
@@ -200,7 +200,7 @@
 		deleteError = null;
 		try {
 			await buildsApi.deleteBuild({ userId, buildId });
-			gridKey += 1;
+			await grid?.refresh();
 			closeModal();
 		} catch {
 			deleteError = 'Could not delete this build.';
@@ -306,45 +306,44 @@
 	</div>
 {/if}
 
-{#key gridKey}
-	<CollectionGrid
-		userId={userContext.userId}
-		fetchPage={(userId: string, cursor: string | undefined) =>
-			buildsApi.listBuilds({ userId, cursor })}
-		itemKey={(build) => build.id ?? ''}
-		emptyMessage="No builds yet."
-		getName={(build) => build.keyboard?.name}
-		sortOptions={[
-			{ label: 'Name', getValue: (build) => build.keyboard?.name },
-			{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() }
-		]}
-	>
-		{#snippet card(build)}
-			{@const imageFailed = build.id != null && failedImages.has(build.id)}
-			<button
-				type="button"
-				class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
-				onclick={() => openBuild(build.id ?? '')}
-			>
-				{#if build.image?.url && !imageFailed}
-					<img
-						src={build.image.url}
-						alt={build.keyboard?.name ?? 'Build'}
-						class="kc-thumb h-24 w-24 shrink-0 object-contain"
-						onerror={() => build.id && failedImages.add(build.id)}
-					/>
+<CollectionGrid
+	bind:this={grid}
+	userId={userContext.userId}
+	fetchPage={(userId: string, cursor: string | undefined) =>
+		buildsApi.listBuilds({ userId, cursor })}
+	itemKey={(build) => build.id ?? ''}
+	emptyMessage="No builds yet."
+	getName={(build) => build.keyboard?.name}
+	sortOptions={[
+		{ label: 'Name', getValue: (build) => build.keyboard?.name },
+		{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() }
+	]}
+>
+	{#snippet card(build)}
+		{@const imageFailed = build.id != null && failedImages.has(build.id)}
+		<button
+			type="button"
+			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
+			onclick={() => openBuild(build.id ?? '')}
+		>
+			{#if build.image?.url && !imageFailed}
+				<img
+					src={build.image.url}
+					alt={build.keyboard?.name ?? 'Build'}
+					class="kc-thumb h-24 w-24 shrink-0 object-contain"
+					onerror={() => build.id && failedImages.add(build.id)}
+				/>
+			{/if}
+			<div class="pr-4">
+				<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
+				<p class="text-muted text-sm">{build.keyboard?.brand}</p>
+				{#if formatDate(build.buildDate)}
+					<p class="text-faint font-mono text-xs">{formatDate(build.buildDate)}</p>
 				{/if}
-				<div class="pr-4">
-					<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
-					<p class="text-muted text-sm">{build.keyboard?.brand}</p>
-					{#if formatDate(build.buildDate)}
-						<p class="text-faint font-mono text-xs">{formatDate(build.buildDate)}</p>
-					{/if}
-				</div>
-			</button>
-		{/snippet}
-	</CollectionGrid>
-{/key}
+			</div>
+		</button>
+	{/snippet}
+</CollectionGrid>
 
 <Modal
 	open={detailLoading ||

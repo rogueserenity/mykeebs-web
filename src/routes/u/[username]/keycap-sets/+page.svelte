@@ -24,8 +24,9 @@
 	// 'create'/'edit' show KeycapSetForm for the set's own fields. Kits are
 	// managed from within 'view' via the kit sub-modal below, since a kit
 	// can't exist without an already-created set. Reloading the grid after
-	// a mutation is handled by bumping gridKey, which remounts CollectionGrid
-	// (it only fetches on mount/userId change).
+	// a mutation calls grid.refresh() directly rather than remounting
+	// CollectionGrid, so the user's status filter/sort/search selections
+	// survive the reload.
 	type ModalState =
 		| { mode: 'view'; set: KeycapSet }
 		| { mode: 'create' }
@@ -47,7 +48,7 @@
 	let kitModal = $state<KitModalState>({ mode: 'closed' });
 	let failedImages = new SvelteSet<string>();
 	let kitImageViewerOpen = $state(false);
-	let gridKey = $state(0);
+	let grid = $state<ReturnType<typeof CollectionGrid<KeycapSet>> | null>(null);
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
 	let deleting = $state(false);
@@ -142,7 +143,7 @@
 		saveError = null;
 		try {
 			const set = await keycapSetsApi.createKeycapSet({ userId, keycapSetInput: input });
-			gridKey += 1;
+			await grid?.refresh();
 			// Land on the new set's view rather than closing outright, since
 			// the natural next step is adding its kits — closing would force
 			// hunting for the set just created back in the grid.
@@ -167,7 +168,7 @@
 				keycapSetId,
 				keycapSetInput: input
 			});
-			gridKey += 1;
+			await grid?.refresh();
 			modal = { mode: 'view', set };
 			formDirty = false;
 		} catch (err) {
@@ -187,7 +188,7 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 		const set = await keycapSetsApi.getKeycapSet({ userId, keycapSetId });
-		gridKey += 1;
+		await grid?.refresh();
 		if (modal.mode === 'view') modal = { mode: 'view', set };
 		else if (modal.mode === 'edit') modal = { mode: 'edit', set };
 	}
@@ -200,7 +201,7 @@
 		deleteError = null;
 		try {
 			await keycapSetsApi.deleteKeycapSet({ userId, keycapSetId, onDelete });
-			gridKey += 1;
+			await grid?.refresh();
 			closeModal();
 		} catch (err) {
 			if (err instanceof ResponseError && err.response.status === 409) {
@@ -377,53 +378,53 @@
 	</div>
 {/if}
 
-{#key gridKey}
-	<CollectionGrid
-		userId={userContext.userId}
-		fetchPage={(userId: string, cursor: string | undefined) =>
-			keycapSetsApi.listKeycapSets({ userId, cursor })}
-		itemKey={(set) => set.id ?? ''}
-		emptyMessage="No keycap sets yet."
-		getName={(set) => set.name}
-		sortOptions={[
-			{ label: 'Name', getValue: (set) => set.name },
-			{ label: 'Brand', getValue: (set) => set.brand },
-			{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined }
-		]}
-	>
-		{#snippet card(set)}
-			{@const imageFailed = failedImages.has(set.id ?? '')}
-			<button
-				type="button"
-				class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
-				onclick={() => openSet(set.id ?? '')}
-			>
-				{#if set.primaryKitImage?.url && !imageFailed}
-					<img
-						src={set.primaryKitImage.url}
-						alt={set.name}
-						class="kc-thumb h-16 w-16 shrink-0 object-contain"
-						onerror={() => failedImages.add(set.id ?? '')}
-					/>
-				{/if}
-				<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
-					<div class="min-w-0">
-						<h2 class="heading-lg truncate text-lg">{set.name}</h2>
-						<p class="text-muted truncate text-sm">{set.brand}</p>
-						{#if set.profile}
-							<p class="text-faint font-mono text-xs">{set.profile}</p>
-						{/if}
-					</div>
-					{#if set.orderStatus}
-						<span class="status-badge shrink-0 {orderStatusClass(set.orderStatus)}">
-							{set.orderStatus}
-						</span>
+<CollectionGrid
+	bind:this={grid}
+	userId={userContext.userId}
+	fetchPage={(userId: string, cursor: string | undefined) =>
+		keycapSetsApi.listKeycapSets({ userId, cursor })}
+	itemKey={(set) => set.id ?? ''}
+	emptyMessage="No keycap sets yet."
+	getName={(set) => set.name}
+	getOrderStatus={(set) => set.orderStatus ?? undefined}
+	sortOptions={[
+		{ label: 'Name', getValue: (set) => set.name },
+		{ label: 'Brand', getValue: (set) => set.brand },
+		{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined }
+	]}
+>
+	{#snippet card(set)}
+		{@const imageFailed = failedImages.has(set.id ?? '')}
+		<button
+			type="button"
+			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
+			onclick={() => openSet(set.id ?? '')}
+		>
+			{#if set.primaryKitImage?.url && !imageFailed}
+				<img
+					src={set.primaryKitImage.url}
+					alt={set.name}
+					class="kc-thumb h-16 w-16 shrink-0 object-contain"
+					onerror={() => failedImages.add(set.id ?? '')}
+				/>
+			{/if}
+			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+				<div class="min-w-0">
+					<h2 class="heading-lg truncate text-lg">{set.name}</h2>
+					<p class="text-muted truncate text-sm">{set.brand}</p>
+					{#if set.profile}
+						<p class="text-faint font-mono text-xs">{set.profile}</p>
 					{/if}
 				</div>
-			</button>
-		{/snippet}
-	</CollectionGrid>
-{/key}
+				{#if set.orderStatus}
+					<span class="status-badge shrink-0 {orderStatusClass(set.orderStatus)}">
+						{set.orderStatus}
+					</span>
+				{/if}
+			</div>
+		</button>
+	{/snippet}
+</CollectionGrid>
 
 <Modal
 	open={modal.mode !== 'closed'}
