@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { buildsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
+	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import { resolve } from '$app/paths';
 
@@ -19,11 +20,14 @@
 
 	let statusFilter = $state<StatusFilter>('all');
 
+	type ItemEntry = { status: string; price: number | undefined };
+
 	let itemStatuses = $state<{
-		keyboards: string[];
-		switches: string[];
-		keycapSets: string[];
+		keyboards: ItemEntry[];
+		switches: ItemEntry[];
+		keycapSets: ItemEntry[];
 		builds: number;
+		buildsTotalCost: number;
 	} | null>(null);
 	let countsLoading = $state(false);
 
@@ -50,22 +54,23 @@
 		countsLoading = true;
 		try {
 			const [keyboards, switches, keycapSets, builds] = await Promise.all([
-				fetchAll<{ orderStatus?: string }>((cursor) =>
+				fetchAll<{ orderStatus?: string; price?: number }>((cursor) =>
 					keyboardsApi.listKeyboards({ userId, cursor })
 				),
-				fetchAll<{ orderStatus?: string }>((cursor) =>
+				fetchAll<{ orderStatus?: string; price?: number }>((cursor) =>
 					switchesApi.listSwitches({ userId, cursor })
 				),
-				fetchAll<{ orderStatus?: string | null }>((cursor) =>
+				fetchAll<{ orderStatus?: string | null; totalCost?: number }>((cursor) =>
 					keycapSetsApi.listKeycapSets({ userId, cursor })
 				),
-				fetchAll((cursor) => buildsApi.listBuilds({ userId, cursor }))
+				fetchAll<{ totalCost?: number }>((cursor) => buildsApi.listBuilds({ userId, cursor }))
 			]);
 			itemStatuses = {
-				keyboards: keyboards.map((k) => k.orderStatus ?? ''),
-				switches: switches.map((s) => s.orderStatus ?? ''),
-				keycapSets: keycapSets.map((k) => k.orderStatus ?? ''),
-				builds: builds.length
+				keyboards: keyboards.map((k) => ({ status: k.orderStatus ?? '', price: k.price })),
+				switches: switches.map((s) => ({ status: s.orderStatus ?? '', price: s.price })),
+				keycapSets: keycapSets.map((k) => ({ status: k.orderStatus ?? '', price: k.totalCost })),
+				builds: builds.length,
+				buildsTotalCost: builds.reduce((sum, b) => sum + (b.totalCost ?? 0), 0)
 			};
 		} catch {
 			itemStatuses = null;
@@ -80,9 +85,15 @@
 
 	const profile = $derived(userContext.profile);
 
-	function countFor(statuses: string[], filter: StatusFilter): number {
-		if (filter === 'all') return statuses.length;
-		return statuses.filter((s) => s.toLowerCase() === filter).length;
+	function countFor(entries: ItemEntry[], filter: StatusFilter): number {
+		if (filter === 'all') return entries.length;
+		return entries.filter((e) => e.status.toLowerCase() === filter).length;
+	}
+
+	function priceSumFor(entries: ItemEntry[], filter: StatusFilter): number {
+		const matching =
+			filter === 'all' ? entries : entries.filter((e) => e.status.toLowerCase() === filter);
+		return matching.reduce((sum, e) => sum + (e.price ?? 0), 0);
 	}
 
 	const counts = $derived<ItemCounts | null>(
@@ -96,27 +107,48 @@
 			: null
 	);
 
+	type ItemTotals = { keyboards: number; switches: number; keycapSets: number; builds: number };
+
+	const totals = $derived<ItemTotals | null>(
+		itemStatuses
+			? {
+					keyboards: priceSumFor(itemStatuses.keyboards, statusFilter),
+					switches: priceSumFor(itemStatuses.switches, statusFilter),
+					keycapSets: priceSumFor(itemStatuses.keycapSets, statusFilter),
+					builds: statusFilter === 'all' ? itemStatuses.buildsTotalCost : 0
+				}
+			: null
+	);
+
+	const grandTotal = $derived(
+		totals ? totals.keyboards + totals.switches + totals.keycapSets : null
+	);
+
 	const statTiles = $derived(
 		counts
 			? [
 					{
 						label: 'Keyboards',
 						value: counts.keyboards,
+						price: totals?.keyboards,
 						href: resolve('/u/[username]/keyboards', { username: userContext.username })
 					},
 					{
 						label: 'Switches',
 						value: counts.switches,
+						price: totals?.switches,
 						href: resolve('/u/[username]/switches', { username: userContext.username })
 					},
 					{
 						label: 'Keycap Sets',
 						value: counts.keycapSets,
+						price: totals?.keycapSets,
 						href: resolve('/u/[username]/keycap-sets', { username: userContext.username })
 					},
 					{
 						label: 'Builds',
 						value: counts.builds,
+						price: totals?.builds,
 						href: resolve('/u/[username]/builds', { username: userContext.username })
 					}
 				]
@@ -188,10 +220,22 @@
 			{#each statTiles as tile (tile.label)}
 				<a href={tile.href} class="kc-card block p-4">
 					<p class="section-label mb-1">{tile.label}</p>
-					<p class="heading-lg text-3xl" style="font-family: var(--font-display)">{tile.value}</p>
+					<div class="flex items-end justify-between gap-2">
+						<p class="heading-lg text-3xl" style="font-family: var(--font-display)">
+							{tile.value}
+						</p>
+						{#if userContext.isOwnProfile && formatPrice(tile.price)}
+							<p class="text-faint font-mono text-xs">{formatPrice(tile.price)}</p>
+						{/if}
+					</div>
 				</a>
 			{/each}
 		</div>
+		{#if userContext.isOwnProfile && formatPrice(grandTotal ?? undefined)}
+			<p class="text-muted mt-4 text-center text-sm">
+				Total spent: <span class="font-mono">{formatPrice(grandTotal ?? undefined)}</span>
+			</p>
+		{/if}
 	{:else}
 		<p class="text-muted text-sm">Could not load this collection's stats.</p>
 	{/if}

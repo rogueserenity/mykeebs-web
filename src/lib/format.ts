@@ -36,6 +36,11 @@ export function formatDate(date: Date | undefined): string | undefined {
 	return date ? dateFormatter.format(date) : undefined;
 }
 
+const priceFormatter = new Intl.NumberFormat('en-US', {
+	style: 'currency',
+	currency: 'USD'
+});
+
 export function formatPrice(price: number | undefined): string | undefined {
-	return price != null ? `$${price.toFixed(2)}` : undefined;
+	return price != null ? priceFormatter.format(price) : undefined;
 }
