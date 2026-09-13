@@ -314,10 +314,16 @@
 	itemKey={(build) => build.id ?? ''}
 	emptyMessage="No builds yet."
 	getName={(build) => build.keyboard?.name}
-	sortOptions={[
-		{ label: 'Name', getValue: (build) => build.keyboard?.name },
-		{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() }
-	]}
+	sortOptions={userContext.isOwnProfile
+		? [
+				{ label: 'Name', getValue: (build) => build.keyboard?.name },
+				{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() },
+				{ label: 'Total cost', getValue: (build) => build.totalCost ?? undefined }
+			]
+		: [
+				{ label: 'Name', getValue: (build) => build.keyboard?.name },
+				{ label: 'Build Date', getValue: (build) => build.buildDate?.getTime() }
+			]}
 >
 	{#snippet card(build)}
 		{@const imageFailed = build.id != null && failedImages.has(build.id)}
@@ -337,8 +343,12 @@
 			<div class="pr-4">
 				<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
 				<p class="text-muted text-sm">{build.keyboard?.brand}</p>
-				{#if formatDate(build.buildDate)}
-					<p class="text-faint font-mono text-xs">{formatDate(build.buildDate)}</p>
+				{#if formatDate(build.buildDate) || formatPrice(build.totalCost)}
+					<p class="text-faint font-mono text-xs">
+						{[formatDate(build.buildDate), formatPrice(build.totalCost)]
+							.filter(Boolean)
+							.join(' · ')}
+					</p>
 				{/if}
 			</div>
 		</button>

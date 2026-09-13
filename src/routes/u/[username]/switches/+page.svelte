@@ -3,7 +3,7 @@
 	import type { Switch as SwitchModel, SwitchInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { switchesApi, buildsApi } from '$lib/api/client';
-	import { orderStatusClass } from '$lib/format';
+	import { formatPrice, orderStatusClass } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
@@ -210,11 +210,18 @@
 	emptyMessage="No switches yet."
 	getName={(sw) => sw.name}
 	getOrderStatus={(sw) => sw.orderStatus ?? undefined}
-	sortOptions={[
-		{ label: 'Name', getValue: (sw) => sw.name },
-		{ label: 'Brand', getValue: (sw) => sw.brand },
-		{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined }
-	]}
+	sortOptions={userContext.isOwnProfile
+		? [
+				{ label: 'Name', getValue: (sw) => sw.name },
+				{ label: 'Brand', getValue: (sw) => sw.brand },
+				{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined },
+				{ label: 'Price', getValue: (sw) => sw.price ?? undefined }
+			]
+		: [
+				{ label: 'Name', getValue: (sw) => sw.name },
+				{ label: 'Brand', getValue: (sw) => sw.brand },
+				{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined }
+			]}
 >
 	{#snippet card(sw)}
 		{@const imageFailed = failedImages.has(sw.id ?? '')}
@@ -237,6 +244,9 @@
 					<p class="text-muted truncate text-sm">{sw.brand}</p>
 					{#if sw.type}
 						<p class="text-faint font-mono text-xs">{sw.type}</p>
+					{/if}
+					{#if formatPrice(sw.price)}
+						<p class="text-faint font-mono text-xs">{formatPrice(sw.price)}</p>
 					{/if}
 				</div>
 				{#if sw.orderStatus}

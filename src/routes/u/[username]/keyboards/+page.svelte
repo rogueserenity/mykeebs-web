@@ -3,7 +3,7 @@
 	import type { Keyboard, KeyboardInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keyboardsApi, buildsApi } from '$lib/api/client';
-	import { orderStatusClass } from '$lib/format';
+	import { formatPrice, orderStatusClass } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
@@ -218,11 +218,18 @@
 	emptyMessage="No keyboards yet."
 	getName={(keyboard) => keyboard.name}
 	getOrderStatus={(keyboard) => keyboard.orderStatus ?? undefined}
-	sortOptions={[
-		{ label: 'Name', getValue: (keyboard) => keyboard.name },
-		{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
-		{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined }
-	]}
+	sortOptions={userContext.isOwnProfile
+		? [
+				{ label: 'Name', getValue: (keyboard) => keyboard.name },
+				{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
+				{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined },
+				{ label: 'Price', getValue: (keyboard) => keyboard.price ?? undefined }
+			]
+		: [
+				{ label: 'Name', getValue: (keyboard) => keyboard.name },
+				{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
+				{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined }
+			]}
 >
 	{#snippet card(keyboard)}
 		{@const imageFailed = failedImages.has(keyboard.id ?? '')}
@@ -247,6 +254,9 @@
 						<p class="text-faint font-mono text-xs">
 							{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
 						</p>
+					{/if}
+					{#if formatPrice(keyboard.price)}
+						<p class="text-faint font-mono text-xs">{formatPrice(keyboard.price)}</p>
 					{/if}
 				</div>
 				{#if keyboard.orderStatus}

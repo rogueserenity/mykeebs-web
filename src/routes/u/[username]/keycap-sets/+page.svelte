@@ -16,7 +16,7 @@
 	import KeycapSetForm from '$lib/components/KeycapSetForm.svelte';
 	import KeycapKitForm from '$lib/components/KeycapKitForm.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
-	import { orderStatusClass } from '$lib/format';
+	import { formatPrice, orderStatusClass } from '$lib/format';
 
 	const userContext = getUserContext();
 
@@ -387,11 +387,18 @@
 	emptyMessage="No keycap sets yet."
 	getName={(set) => set.name}
 	getOrderStatus={(set) => set.orderStatus ?? undefined}
-	sortOptions={[
-		{ label: 'Name', getValue: (set) => set.name },
-		{ label: 'Brand', getValue: (set) => set.brand },
-		{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined }
-	]}
+	sortOptions={userContext.isOwnProfile
+		? [
+				{ label: 'Name', getValue: (set) => set.name },
+				{ label: 'Brand', getValue: (set) => set.brand },
+				{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined },
+				{ label: 'Total cost', getValue: (set) => set.totalCost ?? undefined }
+			]
+		: [
+				{ label: 'Name', getValue: (set) => set.name },
+				{ label: 'Brand', getValue: (set) => set.brand },
+				{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined }
+			]}
 >
 	{#snippet card(set)}
 		{@const imageFailed = failedImages.has(set.id ?? '')}
@@ -414,6 +421,9 @@
 					<p class="text-muted truncate text-sm">{set.brand}</p>
 					{#if set.profile}
 						<p class="text-faint font-mono text-xs">{set.profile}</p>
+					{/if}
+					{#if formatPrice(set.totalCost)}
+						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost)}</p>
 					{/if}
 				</div>
 				{#if set.orderStatus}
