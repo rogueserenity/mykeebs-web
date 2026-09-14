@@ -537,7 +537,10 @@
 			{saving}
 			error={saveError}
 			onSubmit={(input) => handleUpdate(set.id ?? '', input)}
-			onCancel={() => (modal = { mode: 'view', set })}
+			onCancel={() => {
+				modal = { mode: 'view', set };
+				formDirty = false;
+			}}
 			bind:dirty={formDirty}
 		/>
 	{/if}
@@ -654,7 +657,10 @@
 			saving={kitSaving}
 			error={kitSaveError}
 			onSubmit={(input) => handleUpdateKit(kit.kitId, input)}
-			onCancel={() => (kitModal = { mode: 'view', kitId: kit.kitId })}
+			onCancel={() => {
+				kitModal = { mode: 'view', kitId: kit.kitId };
+				kitFormDirty = false;
+			}}
 			onImageUpload={(file) => handleKitImageUpload(kit.kitId, file)}
 			onImageRemove={() => handleKitImageRemove(kit.kitId)}
 			bind:dirty={kitFormDirty}

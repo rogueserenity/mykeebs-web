@@ -372,7 +372,10 @@
 			{saving}
 			error={saveError}
 			onSubmit={(input) => handleUpdate(keyboard.id ?? '', input)}
-			onCancel={() => (modal = { mode: 'view', keyboard })}
+			onCancel={() => {
+				modal = { mode: 'view', keyboard };
+				formDirty = false;
+			}}
 			onImageUpload={(file) => handleImageUpload(keyboard.id ?? '', file)}
 			onImageRemove={(imageId) => handleImageRemove(keyboard.id ?? '', imageId)}
 			bind:dirty={formDirty}

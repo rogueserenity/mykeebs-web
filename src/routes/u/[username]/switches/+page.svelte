@@ -349,7 +349,10 @@
 			{saving}
 			error={saveError}
 			onSubmit={(input) => handleUpdate(sw.id ?? '', input)}
-			onCancel={() => (modal = { mode: 'view', sw })}
+			onCancel={() => {
+				modal = { mode: 'view', sw };
+				formDirty = false;
+			}}
 			onImageUpload={(file) => handleImageUpload(sw.id ?? '', file)}
 			onImageRemove={() => handleImageRemove(sw.id ?? '')}
 			bind:dirty={formDirty}

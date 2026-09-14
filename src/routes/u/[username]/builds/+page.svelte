@@ -390,7 +390,10 @@
 			{saving}
 			error={saveError}
 			onSubmit={(input) => handleUpdate(build.id, input)}
-			onCancel={() => (formMode = { mode: 'closed' })}
+			onCancel={() => {
+				formMode = { mode: 'closed' };
+				formDirty = false;
+			}}
 			onImageUpload={(file) => handleImageUpload(build.id, file)}
 			onImageRemove={(imageId) => handleImageRemove(build.id, imageId)}
 			bind:dirty={formDirty}
