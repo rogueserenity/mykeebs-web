@@ -6,6 +6,12 @@
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
+	// kbdb omits price/totalCost from list responses entirely when this is
+	// off, so summing what comes back would otherwise show a misleading
+	// $0.00 rather than hiding the total as intended.
+	const showPrices = $derived(
+		userContext.isOwnProfile && (userContext.profile.preferences?.showPriceToMe ?? true)
+	);
 
 	type ItemCounts = { keyboards: number; switches: number; keycapSets: number; builds: number };
 
@@ -225,14 +231,14 @@
 						<p class="heading-lg text-3xl" style="font-family: var(--font-display)">
 							{tile.value}
 						</p>
-						{#if userContext.isOwnProfile && formatPrice(tile.price, currency)}
+						{#if showPrices && formatPrice(tile.price, currency)}
 							<p class="text-faint font-mono text-xs">{formatPrice(tile.price, currency)}</p>
 						{/if}
 					</div>
 				</a>
 			{/each}
 		</div>
-		{#if userContext.isOwnProfile && formatPrice(grandTotal ?? undefined, currency)}
+		{#if showPrices && formatPrice(grandTotal ?? undefined, currency)}
 			<p class="text-muted mt-4 text-center text-sm">
 				Total spent: <span class="font-mono">{formatPrice(grandTotal ?? undefined, currency)}</span>
 			</p>
