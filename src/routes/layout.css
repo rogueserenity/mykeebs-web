@@ -479,6 +479,52 @@ select:focus-visible {
 	border-color: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
+/* Build history timeline -- vertical line with a dot per build, newest at
+   top, used on the keyboard-centric build history page. */
+
+.kc-build-timeline {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.kc-build-timeline-item {
+	position: relative;
+	display: flex;
+	align-items: stretch;
+	gap: 1rem;
+	padding-left: 1.5rem;
+}
+
+.kc-build-timeline-item:not(:last-child)::before {
+	content: '';
+	position: absolute;
+	left: 0.3125rem;
+	top: 1.5rem;
+	bottom: -1rem;
+	width: 1px;
+	background: var(--border);
+}
+
+.kc-build-timeline-dot {
+	position: absolute;
+	left: 0;
+	top: 1.25rem;
+	width: 0.625rem;
+	height: 0.625rem;
+	border-radius: 999px;
+	background: var(--border-strong);
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+.kc-build-timeline-dot-current {
+	background: var(--accent);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
 .status-planned {
 	color: var(--text-muted);
 	background: color-mix(in srgb, var(--text-muted) 14%, transparent);
