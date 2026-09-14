@@ -2,8 +2,11 @@
 	import type { Keyboard } from '@rogueserenity/kbdb-api-client';
 	import PurchaseDetails from '$lib/components/PurchaseDetails.svelte';
 
-	let { keyboard, onImageClick }: { keyboard: Keyboard; onImageClick: (index: number) => void } =
-		$props();
+	let {
+		keyboard,
+		onImageClick,
+		currency
+	}: { keyboard: Keyboard; onImageClick: (index: number) => void; currency: string } = $props();
 
 	function materialColorText(part: { material?: string; color?: string } | undefined) {
 		return part ? [part.color, part.material].filter(Boolean).join(' ') : undefined;
@@ -117,7 +120,7 @@
 	{#if keyboard.purchase}
 		<div>
 			<h3 class="section-label">Purchase</h3>
-			<PurchaseDetails purchase={keyboard.purchase} />
+			<PurchaseDetails purchase={keyboard.purchase} {currency} />
 		</div>
 	{/if}
 </div>

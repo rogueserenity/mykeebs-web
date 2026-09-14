@@ -19,6 +19,7 @@
 	import BuildForm from '$lib/components/BuildForm.svelte';
 
 	const userContext = getUserContext();
+	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
 
 	// 'view' shows the existing build detail markup below; 'create'/'edit'
 	// show BuildForm. Reloading the grid after a mutation calls
@@ -343,9 +344,9 @@
 			<div class="pr-4">
 				<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
 				<p class="text-muted text-sm">{build.keyboard?.brand}</p>
-				{#if formatDate(build.buildDate) || formatPrice(build.totalCost)}
+				{#if formatDate(build.buildDate) || formatPrice(build.totalCost, currency)}
 					<p class="text-faint font-mono text-xs">
-						{[formatDate(build.buildDate), formatPrice(build.totalCost)]
+						{[formatDate(build.buildDate), formatPrice(build.totalCost, currency)]
 							.filter(Boolean)
 							.join(' · ')}
 					</p>
@@ -413,9 +414,11 @@
 			{:else}
 				<h2 class="heading-lg text-faint text-2xl">Deleted keyboard</h2>
 			{/if}
-			{#if formatDate(build.buildDate) || formatPrice(build.totalCost)}
+			{#if formatDate(build.buildDate) || formatPrice(build.totalCost, currency)}
 				<p class="text-faint mt-1 font-mono text-sm">
-					{[formatDate(build.buildDate), formatPrice(build.totalCost)].filter(Boolean).join(' · ')}
+					{[formatDate(build.buildDate), formatPrice(build.totalCost, currency)]
+						.filter(Boolean)
+						.join(' · ')}
 				</p>
 			{/if}
 			{#if build.notes}
@@ -627,6 +630,7 @@
 				keyboardGalleryIndex = index;
 				keyboardGalleryViewerOpen = true;
 			}}
+			{currency}
 		/>
 	{/if}
 </Modal>
@@ -659,7 +663,7 @@
 	{:else if switchDetailError}
 		<p class="p-8 text-center text-lg" style="color: var(--danger)">{switchDetailError}</p>
 	{:else if switchDetail}
-		<SwitchDetails sw={switchDetail} onImageClick={() => (switchViewerOpen = true)} />
+		<SwitchDetails sw={switchDetail} onImageClick={() => (switchViewerOpen = true)} {currency} />
 	{/if}
 </Modal>
 
@@ -690,6 +694,7 @@
 			onImageError={() => {}}
 			onImageClick={() => (kitViewerOpen = true)}
 			purchase={kit.purchase}
+			{currency}
 		/>
 	{/if}
 </Modal>

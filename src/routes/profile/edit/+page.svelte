@@ -13,6 +13,19 @@
 	const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$/;
 	const MAX_LINKS = 5;
 
+	// Fallback for browsers without Intl.supportedValuesOf (e.g. older Safari).
+	const FALLBACK_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+	const CURRENCY_CODES: string[] =
+		typeof Intl.supportedValuesOf === 'function'
+			? Intl.supportedValuesOf('currency')
+			: FALLBACK_CURRENCIES;
+
+	const currencyDisplayNames = new Intl.DisplayNames(['en'], { type: 'currency' });
+	const CURRENCY_OPTIONS = CURRENCY_CODES.map((code) => ({
+		code,
+		label: `${currencyDisplayNames.of(code) ?? code} (${code})`
+	})).sort((a, b) => a.label.localeCompare(b.label));
+
 	// Seeded from the store once it resolves. Editing an existing profile
 	// pre-fills; a brand-new profile (status 'none') starts blank and this
 	// page's submit creates it.
@@ -21,6 +34,10 @@
 	let bio = $state('');
 	let discoverable = $state(false);
 	let links = $state<ProfileLink[]>([]);
+	// Mirrors kbdb's own defaults for a profile with no preferences set yet.
+	let currency = $state('USD');
+	let showPriceToMe = $state(true);
+	let showPriceToOthers = $state(false);
 
 	let seeded = false;
 	$effect(() => {
@@ -32,6 +49,9 @@
 			bio = p.bio ?? '';
 			discoverable = p.discoverable ?? false;
 			links = (p.links ?? []).map((l) => ({ ...l }));
+			currency = p.preferences?.currency ?? 'USD';
+			showPriceToMe = p.preferences?.showPriceToMe ?? true;
+			showPriceToOthers = p.preferences?.showPriceToOthers ?? false;
 			seeded = true;
 		} else if (profile.status === 'none') {
 			seeded = true;
@@ -83,7 +103,8 @@
 			discoverable,
 			discordUsername: discordUsername.trim() || undefined,
 			bio: bio.trim() || undefined,
-			links: cleanedLinks.length > 0 ? cleanedLinks : undefined
+			links: cleanedLinks.length > 0 ? cleanedLinks : undefined,
+			preferences: { currency, showPriceToMe, showPriceToOthers }
 		};
 
 		saving = true;
@@ -270,14 +291,52 @@
 				{/if}
 			</div>
 
-			<label class="flex items-center gap-2">
-				<input type="checkbox" class="field-checkbox" bind:checked={discoverable} />
-				<span class="text-sm">Make my profile discoverable</span>
-			</label>
-			<p class="text-faint -mt-3 text-xs">
-				Others can find you in Discover and view /u/{usernameLooksValid ? username : 'username'}.
-				Individual builds still use their own visibility setting.
-			</p>
+			<div class="flex flex-col gap-3">
+				<span class="section-label mb-0">Prices</span>
+
+				<label class="flex flex-col gap-1.5">
+					<span class="text-sm">Currency</span>
+					<select class="field-select w-56" bind:value={currency}>
+						{#each CURRENCY_OPTIONS as option (option.code)}
+							<option value={option.code}>{option.label}</option>
+						{/each}
+					</select>
+					<span class="text-faint text-xs">
+						Used to label your prices. kbdb doesn't convert between currencies.
+					</span>
+				</label>
+
+				<label class="flex items-center gap-2">
+					<input type="checkbox" class="field-checkbox" bind:checked={showPriceToMe} />
+					<span class="text-sm">Show prices to me</span>
+				</label>
+				<p class="text-faint -mt-2 text-xs">
+					Show prices in your collection lists. You'll still see an item's price when editing it,
+					since editing requires the current value.
+				</p>
+
+				<label class="flex items-center gap-2">
+					<input type="checkbox" class="field-checkbox" bind:checked={showPriceToOthers} />
+					<span class="text-sm">Show prices to others</span>
+				</label>
+				<p class="text-faint -mt-2 text-xs">
+					Let other people who can already see an item also see its price. Individual item
+					visibility settings still apply first.
+				</p>
+			</div>
+
+			<div class="flex flex-col gap-3">
+				<span class="section-label mb-0">Discoverability</span>
+
+				<label class="flex items-center gap-2">
+					<input type="checkbox" class="field-checkbox" bind:checked={discoverable} />
+					<span class="text-sm">Make my profile discoverable</span>
+				</label>
+				<p class="text-faint -mt-2 text-xs">
+					Others can find you in Discover and view /u/{usernameLooksValid ? username : 'username'}.
+					Individual builds still use their own visibility setting.
+				</p>
+			</div>
 
 			{#if formError}
 				<p class="text-sm" style="color: var(--danger)">{formError}</p>

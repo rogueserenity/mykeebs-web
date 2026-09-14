@@ -12,6 +12,7 @@
 	import SwitchForm from '$lib/components/SwitchForm.svelte';
 
 	const userContext = getUserContext();
+	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
 
 	// 'view' shows SwitchDetails for an existing switch; 'create'/'edit' show
 	// SwitchForm. Reloading the grid after a mutation calls grid.refresh()
@@ -245,8 +246,8 @@
 					{#if sw.type}
 						<p class="text-faint font-mono text-xs">{sw.type}</p>
 					{/if}
-					{#if formatPrice(sw.price)}
-						<p class="text-faint font-mono text-xs">{formatPrice(sw.price)}</p>
+					{#if formatPrice(sw.price, currency)}
+						<p class="text-faint font-mono text-xs">{formatPrice(sw.price, currency)}</p>
 					{/if}
 				</div>
 				{#if sw.orderStatus}
@@ -265,7 +266,7 @@
 	{:else if modal.mode === 'error'}
 		<p class="p-8 text-center text-lg" style="color: var(--danger)">{modal.message}</p>
 	{:else if modal.mode === 'view'}
-		<SwitchDetails sw={modal.sw} onImageClick={() => (viewerOpen = true)} />
+		<SwitchDetails sw={modal.sw} onImageClick={() => (viewerOpen = true)} {currency} />
 
 		{#if userContext.isOwnProfile}
 			{@const sw = modal.sw}

@@ -2,7 +2,11 @@
 	import type { Switch as SwitchModel } from '@rogueserenity/kbdb-api-client';
 	import PurchaseDetails from '$lib/components/PurchaseDetails.svelte';
 
-	let { sw, onImageClick }: { sw: SwitchModel; onImageClick: () => void } = $props();
+	let {
+		sw,
+		onImageClick,
+		currency
+	}: { sw: SwitchModel; onImageClick: () => void; currency: string } = $props();
 
 	let imageFailed = $state(false);
 </script>
@@ -118,7 +122,7 @@
 	{#if sw.purchase}
 		<div>
 			<h3 class="section-label">Purchase</h3>
-			<PurchaseDetails purchase={sw.purchase} />
+			<PurchaseDetails purchase={sw.purchase} {currency} />
 		</div>
 	{/if}
 </div>

@@ -12,6 +12,7 @@
 	import KeyboardForm from '$lib/components/KeyboardForm.svelte';
 
 	const userContext = getUserContext();
+	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
 
 	// 'view' shows KeyboardDetails for an existing keyboard; 'create'/'edit'
 	// show KeyboardForm. Reloading the grid after a mutation calls
@@ -255,8 +256,8 @@
 							{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
 						</p>
 					{/if}
-					{#if formatPrice(keyboard.price)}
-						<p class="text-faint font-mono text-xs">{formatPrice(keyboard.price)}</p>
+					{#if formatPrice(keyboard.price, currency)}
+						<p class="text-faint font-mono text-xs">{formatPrice(keyboard.price, currency)}</p>
 					{/if}
 				</div>
 				{#if keyboard.orderStatus}
@@ -286,6 +287,7 @@
 				galleryIndex = index;
 				galleryViewerOpen = true;
 			}}
+			{currency}
 		/>
 
 		{#if userContext.isOwnProfile}

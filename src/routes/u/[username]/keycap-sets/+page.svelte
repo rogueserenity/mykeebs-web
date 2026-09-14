@@ -19,6 +19,7 @@
 	import { formatPrice, orderStatusClass } from '$lib/format';
 
 	const userContext = getUserContext();
+	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
 
 	// 'view' shows KeycapSetDetails for an existing set (with its kits);
 	// 'create'/'edit' show KeycapSetForm for the set's own fields. Kits are
@@ -422,8 +423,8 @@
 					{#if set.profile}
 						<p class="text-faint font-mono text-xs">{set.profile}</p>
 					{/if}
-					{#if formatPrice(set.totalCost)}
-						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost)}</p>
+					{#if formatPrice(set.totalCost, currency)}
+						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost, currency)}</p>
 					{/if}
 				</div>
 				{#if set.orderStatus}
@@ -577,6 +578,7 @@
 			onImageError={() => failedImages.add(kit.kitId)}
 			onImageClick={() => (kitImageViewerOpen = true)}
 			purchase={kit.purchase}
+			{currency}
 		/>
 
 		{#if userContext.isOwnProfile}

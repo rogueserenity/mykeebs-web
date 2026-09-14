@@ -36,11 +36,20 @@ export function formatDate(date: Date | undefined): string | undefined {
 	return date ? dateFormatter.format(date) : undefined;
 }
 
-const priceFormatter = new Intl.NumberFormat('en-US', {
-	style: 'currency',
-	currency: 'USD'
-});
+// Cached per currency code rather than rebuilt on every call.
+const priceFormatters = new Map<string, Intl.NumberFormat>();
 
-export function formatPrice(price: number | undefined): string | undefined {
-	return price != null ? priceFormatter.format(price) : undefined;
+function priceFormatterFor(currency: string): Intl.NumberFormat {
+	let formatter = priceFormatters.get(currency);
+	if (!formatter) {
+		formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency });
+		priceFormatters.set(currency, formatter);
+	}
+	return formatter;
+}
+
+// The currency is always the item owner's preference, never the viewer's -
+// a price is only ever shown alongside other items from the same owner.
+export function formatPrice(price: number | undefined, currency: string): string | undefined {
+	return price != null ? priceFormatterFor(currency).format(price) : undefined;
 }

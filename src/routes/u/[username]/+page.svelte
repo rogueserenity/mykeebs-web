@@ -5,6 +5,7 @@
 	import { resolve } from '$app/paths';
 
 	const userContext = getUserContext();
+	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
 
 	type ItemCounts = { keyboards: number; switches: number; keycapSets: number; builds: number };
 
@@ -224,16 +225,16 @@
 						<p class="heading-lg text-3xl" style="font-family: var(--font-display)">
 							{tile.value}
 						</p>
-						{#if userContext.isOwnProfile && formatPrice(tile.price)}
-							<p class="text-faint font-mono text-xs">{formatPrice(tile.price)}</p>
+						{#if userContext.isOwnProfile && formatPrice(tile.price, currency)}
+							<p class="text-faint font-mono text-xs">{formatPrice(tile.price, currency)}</p>
 						{/if}
 					</div>
 				</a>
 			{/each}
 		</div>
-		{#if userContext.isOwnProfile && formatPrice(grandTotal ?? undefined)}
+		{#if userContext.isOwnProfile && formatPrice(grandTotal ?? undefined, currency)}
 			<p class="text-muted mt-4 text-center text-sm">
-				Total spent: <span class="font-mono">{formatPrice(grandTotal ?? undefined)}</span>
+				Total spent: <span class="font-mono">{formatPrice(grandTotal ?? undefined, currency)}</span>
 			</p>
 		{/if}
 	{:else}
