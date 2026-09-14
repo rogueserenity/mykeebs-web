@@ -110,9 +110,15 @@
 		});
 	});
 
+	// Guards against a stale load() overwriting a newer one's result if the
+	// effect below fires again (e.g. userId settling after the profile
+	// loads) while a previous call is still paginating through fetchPage.
+	let loadToken = 0;
+
 	async function load() {
 		if (!userId) return;
 
+		const token = ++loadToken;
 		loadError = null;
 		loading = true;
 		try {
@@ -120,14 +126,17 @@
 			let cursor: string | undefined;
 			do {
 				const page = await fetchPage(userId, cursor);
+				if (token !== loadToken) return;
 				allItems.push(...(page.items ?? []));
 				cursor = page.nextCursor ?? undefined;
 			} while (cursor);
+			if (token !== loadToken) return;
 			items = allItems;
 		} catch {
+			if (token !== loadToken) return;
 			loadError = 'Could not load this collection.';
 		} finally {
-			loading = false;
+			if (token === loadToken) loading = false;
 		}
 	}
 
