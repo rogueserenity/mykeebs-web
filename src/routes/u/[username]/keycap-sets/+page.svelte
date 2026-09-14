@@ -20,6 +20,11 @@
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
+	const showPrice = $derived(
+		userContext.isOwnProfile
+			? (userContext.profile.preferences?.showPriceToMe ?? true)
+			: (userContext.profile.preferences?.showPriceToOthers ?? false)
+	);
 
 	// 'view' shows KeycapSetDetails for an existing set (with its kits);
 	// 'create'/'edit' show KeycapSetForm for the set's own fields. Kits are
@@ -579,6 +584,7 @@
 			onImageClick={() => (kitImageViewerOpen = true)}
 			purchase={kit.purchase}
 			{currency}
+			{showPrice}
 		/>
 
 		{#if userContext.isOwnProfile}

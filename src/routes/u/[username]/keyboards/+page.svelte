@@ -13,6 +13,11 @@
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
+	const showPrice = $derived(
+		userContext.isOwnProfile
+			? (userContext.profile.preferences?.showPriceToMe ?? true)
+			: (userContext.profile.preferences?.showPriceToOthers ?? false)
+	);
 
 	// 'view' shows KeyboardDetails for an existing keyboard; 'create'/'edit'
 	// show KeyboardForm. Reloading the grid after a mutation calls
@@ -288,6 +293,7 @@
 				galleryViewerOpen = true;
 			}}
 			{currency}
+			{showPrice}
 		/>
 
 		{#if userContext.isOwnProfile}

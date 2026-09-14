@@ -20,6 +20,11 @@
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
+	const showPrice = $derived(
+		userContext.isOwnProfile
+			? (userContext.profile.preferences?.showPriceToMe ?? true)
+			: (userContext.profile.preferences?.showPriceToOthers ?? false)
+	);
 
 	// 'view' shows the existing build detail markup below; 'create'/'edit'
 	// show BuildForm. Reloading the grid after a mutation calls
@@ -631,6 +636,7 @@
 				keyboardGalleryViewerOpen = true;
 			}}
 			{currency}
+			{showPrice}
 		/>
 	{/if}
 </Modal>
@@ -663,7 +669,12 @@
 	{:else if switchDetailError}
 		<p class="p-8 text-center text-lg" style="color: var(--danger)">{switchDetailError}</p>
 	{:else if switchDetail}
-		<SwitchDetails sw={switchDetail} onImageClick={() => (switchViewerOpen = true)} {currency} />
+		<SwitchDetails
+			sw={switchDetail}
+			onImageClick={() => (switchViewerOpen = true)}
+			{currency}
+			{showPrice}
+		/>
 	{/if}
 </Modal>
 
@@ -695,6 +706,7 @@
 			onImageClick={() => (kitViewerOpen = true)}
 			purchase={kit.purchase}
 			{currency}
+			{showPrice}
 		/>
 	{/if}
 </Modal>

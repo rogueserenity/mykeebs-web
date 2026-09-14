@@ -13,6 +13,11 @@
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
+	const showPrice = $derived(
+		userContext.isOwnProfile
+			? (userContext.profile.preferences?.showPriceToMe ?? true)
+			: (userContext.profile.preferences?.showPriceToOthers ?? false)
+	);
 
 	// 'view' shows SwitchDetails for an existing switch; 'create'/'edit' show
 	// SwitchForm. Reloading the grid after a mutation calls grid.refresh()
@@ -266,7 +271,7 @@
 	{:else if modal.mode === 'error'}
 		<p class="p-8 text-center text-lg" style="color: var(--danger)">{modal.message}</p>
 	{:else if modal.mode === 'view'}
-		<SwitchDetails sw={modal.sw} onImageClick={() => (viewerOpen = true)} {currency} />
+		<SwitchDetails sw={modal.sw} onImageClick={() => (viewerOpen = true)} {currency} {showPrice} />
 
 		{#if userContext.isOwnProfile}
 			{@const sw = modal.sw}

@@ -9,7 +9,8 @@
 		onImageError,
 		onImageClick,
 		purchase,
-		currency
+		currency,
+		showPrice
 	}: {
 		name: string;
 		imageUrl: string | undefined;
@@ -18,6 +19,7 @@
 		onImageClick: () => void;
 		purchase: PurchaseLike | undefined;
 		currency: string;
+		showPrice: boolean;
 	} = $props();
 </script>
 
@@ -43,6 +45,6 @@
 	{/if}
 	<div>
 		<h2 class="heading-lg text-2xl">{name}</h2>
-		<PurchaseDetails {purchase} {currency} />
+		<PurchaseDetails {purchase} {currency} {showPrice} />
 	</div>
 </div>

@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { formatDate, formatPrice, orderStatusClass, type PurchaseLike } from '$lib/format';
 
-	let { purchase, currency }: { purchase: PurchaseLike | undefined; currency: string } = $props();
+	let {
+		purchase,
+		currency,
+		showPrice
+	}: { purchase: PurchaseLike | undefined; currency: string; showPrice: boolean } = $props();
 </script>
 
 {#if purchase}
@@ -25,7 +29,7 @@
 				<dd>{purchase.quantity}</dd>
 			</div>
 		{/if}
-		{#if formatPrice(purchase.price, currency)}
+		{#if showPrice && formatPrice(purchase.price, currency)}
 			<div class="spec-row">
 				<dt>Price</dt>
 				<span class="spec-leader"></span>

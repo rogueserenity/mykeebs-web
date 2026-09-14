@@ -5,8 +5,14 @@
 	let {
 		keyboard,
 		onImageClick,
-		currency
-	}: { keyboard: Keyboard; onImageClick: (index: number) => void; currency: string } = $props();
+		currency,
+		showPrice
+	}: {
+		keyboard: Keyboard;
+		onImageClick: (index: number) => void;
+		currency: string;
+		showPrice: boolean;
+	} = $props();
 
 	function materialColorText(part: { material?: string; color?: string } | undefined) {
 		return part ? [part.color, part.material].filter(Boolean).join(' ') : undefined;
@@ -120,7 +126,7 @@
 	{#if keyboard.purchase}
 		<div>
 			<h3 class="section-label">Purchase</h3>
-			<PurchaseDetails purchase={keyboard.purchase} {currency} />
+			<PurchaseDetails purchase={keyboard.purchase} {currency} {showPrice} />
 		</div>
 	{/if}
 </div>
