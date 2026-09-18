@@ -159,6 +159,8 @@
 					src={build.image.url}
 					alt={build.keyboard?.name ?? 'Build'}
 					class="kc-thumb h-24 w-24 shrink-0 object-contain"
+					loading="lazy"
+					decoding="async"
 					onerror={() => build.id && failedImages.add(build.id)}
 				/>
 			{/if}

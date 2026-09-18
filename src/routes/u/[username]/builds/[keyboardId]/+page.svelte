@@ -336,6 +336,7 @@
 				src={keyboard.images[0].url}
 				alt={keyboard.name}
 				class="kc-thumb h-16 w-16 shrink-0 object-contain"
+				decoding="async"
 			/>
 		{/if}
 		<div>
@@ -369,6 +370,8 @@
 								src={build.image.url}
 								alt={keyboard?.name ?? 'Build'}
 								class="kc-thumb h-20 w-20 shrink-0 object-contain"
+								loading="lazy"
+								decoding="async"
 							/>
 						{/if}
 						<div>

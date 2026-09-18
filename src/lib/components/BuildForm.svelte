@@ -536,7 +536,13 @@
 			{#if initial}
 				{#each initial.images ?? [] as image (image.imageId)}
 					<div class="relative">
-						<img src={image.url} alt="Build" class="kc-thumb h-20 w-20 object-contain" />
+						<img
+							src={image.url}
+							alt="Build"
+							class="kc-thumb h-20 w-20 object-contain"
+							loading="lazy"
+							decoding="async"
+						/>
 						<button
 							type="button"
 							class="btn-icon absolute -top-2 -right-2 h-6 w-6 text-xs"
@@ -555,6 +561,7 @@
 							src={staged.preview}
 							alt="Selected build"
 							class="kc-thumb h-20 w-20 object-contain"
+							decoding="async"
 						/>
 						<button
 							type="button"
@@ -599,6 +606,7 @@
 						src={keyboard.imageUrl}
 						alt={keyboard.name}
 						class="kc-thumb h-12 w-12 shrink-0 object-contain"
+						decoding="async"
 					/>
 				{/if}
 				<div class="min-w-0 flex-1">
@@ -743,7 +751,13 @@
 				{#each switchEntries as entry (entry.switchId)}
 					<li class="kc-card flex items-center gap-3 p-2">
 						{#if entry.imageUrl}
-							<img src={entry.imageUrl} alt="" class="kc-thumb h-8 w-8 shrink-0 object-contain" />
+							<img
+								src={entry.imageUrl}
+								alt=""
+								class="kc-thumb h-8 w-8 shrink-0 object-contain"
+								loading="lazy"
+								decoding="async"
+							/>
 						{/if}
 						<span class="min-w-0 flex-1 truncate text-sm">{entry.label}</span>
 						<input
@@ -811,7 +825,13 @@
 				{#each keycapKitEntries as entry (entry.keycapSetId + entry.kitId)}
 					<li class="kc-card flex items-center gap-3 p-2">
 						{#if entry.imageUrl}
-							<img src={entry.imageUrl} alt="" class="kc-thumb h-8 w-8 shrink-0 object-contain" />
+							<img
+								src={entry.imageUrl}
+								alt=""
+								class="kc-thumb h-8 w-8 shrink-0 object-contain"
+								loading="lazy"
+								decoding="async"
+							/>
 						{/if}
 						<span class="min-w-0 flex-1 truncate text-sm">{entry.label}</span>
 						<button
@@ -865,6 +885,8 @@
 											src={kit.image.url}
 											alt=""
 											class="kc-thumb h-8 w-8 shrink-0 object-contain"
+											loading="lazy"
+											decoding="async"
 										/>
 									{/if}
 									<span class="text-sm">{kit.name}</span>

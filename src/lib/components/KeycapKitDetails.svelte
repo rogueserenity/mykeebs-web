@@ -35,6 +35,7 @@
 				src={imageUrl}
 				alt={name}
 				class="kc-thumb max-h-[70vh] w-full object-contain"
+				decoding="async"
 				onerror={onImageError}
 			/>
 		</button>

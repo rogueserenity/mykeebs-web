@@ -43,7 +43,13 @@
 					aria-label="View full size image"
 					onclick={() => onImageClick(index)}
 				>
-					<img src={image.url} alt={keyboard.name} class="h-full w-full object-contain" />
+					<img
+						src={image.url}
+						alt={keyboard.name}
+						class="h-full w-full object-contain"
+						loading="lazy"
+						decoding="async"
+					/>
 				</button>
 			{/each}
 		</div>

@@ -418,6 +418,8 @@
 					src={set.primaryKitImage.url}
 					alt={set.name}
 					class="kc-thumb h-16 w-16 shrink-0 object-contain"
+					loading="lazy"
+					decoding="async"
 					onerror={() => failedImages.add(set.id ?? '')}
 				/>
 			{/if}

@@ -186,6 +186,7 @@
 					? 'none'
 					: 'transform 0.15s ease-out'};"
 				draggable="false"
+				decoding="async"
 			/>
 		</div>
 	</div>

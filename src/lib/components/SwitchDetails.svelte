@@ -24,6 +24,7 @@
 				src={sw.image.url}
 				alt={sw.name}
 				class="kc-thumb h-24 w-24 object-contain"
+				decoding="async"
 				onerror={() => (imageFailed = true)}
 			/>
 		</button>

@@ -222,12 +222,14 @@
 				src={initial.image.url}
 				alt={initial.name}
 				class="kc-thumb h-20 w-20 shrink-0 object-contain"
+				decoding="async"
 			/>
 		{:else if stagedImagePreview}
 			<img
 				src={stagedImagePreview}
 				alt="Selected kit"
 				class="kc-thumb h-20 w-20 shrink-0 object-contain"
+				decoding="async"
 			/>
 		{/if}
 		<div class="flex flex-col gap-2">

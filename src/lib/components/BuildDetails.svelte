@@ -41,6 +41,7 @@
 					src={build.keyboard.imageUrl}
 					alt={build.keyboard.name}
 					class="kc-thumb h-16 w-16 shrink-0 object-contain"
+					decoding="async"
 				/>
 			{/if}
 			<div>
@@ -74,7 +75,13 @@
 					aria-label="View full size image"
 					onclick={() => onImageClick(index)}
 				>
-					<img src={image.url} alt="Build" class="h-full w-full object-contain" />
+					<img
+						src={image.url}
+						alt="Build"
+						class="h-full w-full object-contain"
+						loading="lazy"
+						decoding="async"
+					/>
 				</button>
 			{/each}
 		</div>
@@ -139,6 +146,8 @@
 										src={entry._switch.imageUrl}
 										alt={entry._switch.name}
 										class="kc-thumb h-8 w-8 shrink-0 object-contain"
+										loading="lazy"
+										decoding="async"
 									/>
 								{/if}
 								<span class="font-mono"
@@ -171,6 +180,8 @@
 										src={entry.kitImageUrl}
 										alt={entry.kitName}
 										class="kc-thumb h-8 w-8 shrink-0 object-contain"
+										loading="lazy"
+										decoding="async"
 									/>
 								{/if}
 								<span class="font-mono">{entry.keycapSet.name} &mdash; {entry.kitName}</span>

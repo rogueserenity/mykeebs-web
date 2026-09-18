@@ -211,6 +211,8 @@
 							src={getImageUrl(item)}
 							alt=""
 							class="kc-thumb h-10 w-10 shrink-0 object-contain"
+							loading="lazy"
+							decoding="async"
 						/>
 					{/if}
 					<div class="min-w-0">

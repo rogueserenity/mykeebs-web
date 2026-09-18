@@ -16,7 +16,7 @@
 
 <span class="avatar avatar-{size}">
 	{#if imageUrl}
-		<img src={imageUrl} alt={name} />
+		<img src={imageUrl} alt={name} decoding="async" />
 	{:else}
 		{initials(name)}
 	{/if}

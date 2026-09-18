@@ -396,7 +396,13 @@
 			{#if initial}
 				{#each initial.images ?? [] as image (image.imageId)}
 					<div class="relative">
-						<img src={image.url} alt={initial.name} class="kc-thumb h-20 w-20 object-contain" />
+						<img
+							src={image.url}
+							alt={initial.name}
+							class="kc-thumb h-20 w-20 object-contain"
+							loading="lazy"
+							decoding="async"
+						/>
 						<button
 							type="button"
 							class="btn-icon absolute -top-2 -right-2 h-6 w-6 text-xs"
@@ -415,6 +421,7 @@
 							src={staged.preview}
 							alt="Selected keyboard"
 							class="kc-thumb h-20 w-20 object-contain"
+							decoding="async"
 						/>
 						<button
 							type="button"
