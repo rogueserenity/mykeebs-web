@@ -107,7 +107,7 @@
 			</div>
 		</div>
 
-		<nav class="app-nav mt-6 border-b pb-2" style="border-color: var(--border)">
+		<nav class="app-nav profile-subnav mt-6 border-b pb-2" style="border-color: var(--border)">
 			{#each subNavItems as item (item.href)}
 				<a href={item.href} class="nav-key {page.url.pathname === item.href ? 'is-active' : ''}">
 					{item.label}

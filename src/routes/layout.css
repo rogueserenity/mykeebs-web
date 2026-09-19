@@ -121,6 +121,25 @@ body {
 	border-color: var(--accent-strong);
 }
 
+/* Profile page's own tab strip (Overview/Keyboards/...) - below md there
+   isn't room for 5 tabs without wrapping into a ragged second row, so it
+   scrolls horizontally instead, like a native mobile tab bar. */
+@media (max-width: 767px) {
+	.profile-subnav {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.profile-subnav::-webkit-scrollbar {
+		display: none;
+	}
+
+	.profile-subnav .nav-key {
+		white-space: nowrap;
+	}
+}
+
 .app-mobile-menu {
 	position: sticky;
 	top: 3.5rem;
