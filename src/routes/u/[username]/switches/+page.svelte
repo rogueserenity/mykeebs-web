@@ -233,7 +233,7 @@
 		{@const imageFailed = failedImages.has(sw.id ?? '')}
 		<button
 			type="button"
-			class="kc-card flex w-full items-center gap-3 p-4 text-left"
+			class="kc-card flex w-full items-start gap-3 p-4 text-left"
 			onclick={() => openSwitch(sw.id ?? '')}
 		>
 			{#if sw.image?.url && !imageFailed}
@@ -246,21 +246,21 @@
 					onerror={() => failedImages.add(sw.id ?? '')}
 				/>
 			{/if}
-			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
-				<div class="min-w-0">
-					<h2 class="heading-lg truncate text-lg">{sw.name}</h2>
-					<p class="text-muted truncate text-sm">{sw.brand}</p>
-					{#if sw.type}
-						<p class="text-faint font-mono text-xs">{sw.type}</p>
-					{/if}
-					{#if formatPrice(sw.price, currency)}
+			<div class="min-w-0 flex-1">
+				<h2 class="heading-lg truncate text-lg" title={sw.name}>{sw.name}</h2>
+				<p class="text-muted truncate text-sm" title={sw.brand}>{sw.brand}</p>
+				{#if sw.type}
+					<p class="text-faint font-mono text-xs">{sw.type}</p>
+				{/if}
+				{#if formatPrice(sw.price, currency) || sw.orderStatus}
+					<div class="flex items-center gap-2">
 						<p class="text-faint font-mono text-xs">{formatPrice(sw.price, currency)}</p>
-					{/if}
-				</div>
-				{#if sw.orderStatus}
-					<span class="status-badge shrink-0 {orderStatusClass(sw.orderStatus)}">
-						{sw.orderStatus}
-					</span>
+						{#if sw.orderStatus}
+							<span class="status-badge ml-auto shrink-0 {orderStatusClass(sw.orderStatus)}">
+								{sw.orderStatus}
+							</span>
+						{/if}
+					</div>
 				{/if}
 			</div>
 		</button>

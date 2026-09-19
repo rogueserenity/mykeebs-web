@@ -410,7 +410,7 @@
 		{@const imageFailed = failedImages.has(set.id ?? '')}
 		<button
 			type="button"
-			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
+			class="kc-card flex w-full items-start gap-3 overflow-hidden p-3 text-left"
 			onclick={() => openSet(set.id ?? '')}
 		>
 			{#if set.primaryKitImage?.url && !imageFailed}
@@ -423,21 +423,21 @@
 					onerror={() => failedImages.add(set.id ?? '')}
 				/>
 			{/if}
-			<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
-				<div class="min-w-0">
-					<h2 class="heading-lg truncate text-lg">{set.name}</h2>
-					<p class="text-muted truncate text-sm">{set.brand}</p>
-					{#if set.profile}
-						<p class="text-faint font-mono text-xs">{set.profile}</p>
-					{/if}
-					{#if formatPrice(set.totalCost, currency)}
+			<div class="min-w-0 flex-1">
+				<h2 class="heading-lg truncate text-lg" title={set.name}>{set.name}</h2>
+				<p class="text-muted truncate text-sm" title={set.brand}>{set.brand}</p>
+				{#if set.profile}
+					<p class="text-faint font-mono text-xs">{set.profile}</p>
+				{/if}
+				{#if formatPrice(set.totalCost, currency) || set.orderStatus}
+					<div class="flex items-center gap-2">
 						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost, currency)}</p>
-					{/if}
-				</div>
-				{#if set.orderStatus}
-					<span class="status-badge shrink-0 {orderStatusClass(set.orderStatus)}">
-						{set.orderStatus}
-					</span>
+						{#if set.orderStatus}
+							<span class="status-badge ml-auto shrink-0 {orderStatusClass(set.orderStatus)}">
+								{set.orderStatus}
+							</span>
+						{/if}
+					</div>
 				{/if}
 			</div>
 		</button>

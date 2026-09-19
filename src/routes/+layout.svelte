@@ -121,9 +121,13 @@
 						>
 							<Avatar name={summary.username ?? '?'} imageUrl={summary.avatar?.url} size="sm" />
 							<div class="min-w-0 flex-1">
-								<p class="heading-lg truncate text-sm">@{summary.username}</p>
+								<p class="heading-lg truncate text-sm" title={summary.username}>
+									@{summary.username}
+								</p>
 								{#if summary.discordUsername}
-									<p class="text-faint truncate font-mono text-xs">{summary.discordUsername}</p>
+									<p class="text-faint truncate font-mono text-xs" title={summary.discordUsername}>
+										{summary.discordUsername}
+									</p>
 								{/if}
 							</div>
 						</button>

@@ -42,11 +42,13 @@
 			<div class="flex items-center gap-3 px-2 pb-3">
 				<Avatar name={displayName} imageUrl={profile.data?.avatar?.url} size="lg" />
 				<div class="min-w-0">
-					<p class="heading-lg truncate text-sm">
+					<p class="heading-lg truncate text-sm" title={displayName}>
 						{#if hasProfile}@{displayName}{:else}{displayName}{/if}
 					</p>
 					{#if profile.data?.discordUsername}
-						<p class="text-faint truncate font-mono text-xs">{profile.data.discordUsername}</p>
+						<p class="text-faint truncate font-mono text-xs" title={profile.data.discordUsername}>
+							{profile.data.discordUsername}
+						</p>
 					{/if}
 				</div>
 			</div>
