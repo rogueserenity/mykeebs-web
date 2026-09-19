@@ -75,6 +75,15 @@
 	function closeSearchSoon() {
 		setTimeout(() => (searchOpen = false), 150);
 	}
+
+	// Collapsed below the `md` breakpoint: nav links and search move into
+	// this panel behind the hamburger toggle. Closed on every navigation so
+	// it doesn't stay open across page changes.
+	let mobileMenuOpen = $state(false);
+	$effect(() => {
+		void page.url.pathname;
+		mobileMenuOpen = false;
+	});
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -83,17 +92,19 @@
 		<span class="app-brand-key">⌨</span>
 		mykeebs
 	</div>
-	<nav class="app-nav">
-		{#each navItems as item (item.href)}
-			<a
-				href={item.href}
-				class="nav-key {page.url.pathname.startsWith(item.href) ? 'is-active' : ''}"
-			>
-				{item.label}
-			</a>
-		{/each}
-	</nav>
-	<div class="relative">
+	<div class="hidden md:block">
+		<nav class="app-nav">
+			{#each navItems as item (item.href)}
+				<a
+					href={item.href}
+					class="nav-key {page.url.pathname.startsWith(item.href) ? 'is-active' : ''}"
+				>
+					{item.label}
+				</a>
+			{/each}
+		</nav>
+	</div>
+	<div class="relative hidden md:block">
 		<input
 			type="search"
 			class="field-input w-56"
@@ -136,6 +147,96 @@
 			</div>
 		{/if}
 	</div>
-	<AuthControl />
+	<div class="ml-auto flex items-center gap-2 md:ml-0">
+		<div class="md:hidden">
+			<button
+				type="button"
+				class="btn-icon"
+				aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+				aria-expanded={mobileMenuOpen}
+				onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="mx-auto h-5 w-5"
+				>
+					{#if mobileMenuOpen}
+						<path d="M18 6 6 18" />
+						<path d="m6 6 12 12" />
+					{:else}
+						<path d="M4 6h16" />
+						<path d="M4 12h16" />
+						<path d="M4 18h16" />
+					{/if}
+				</svg>
+			</button>
+		</div>
+		<AuthControl />
+	</div>
 </header>
+{#if mobileMenuOpen}
+	<div class="app-mobile-menu md:hidden">
+		<nav class="flex flex-col gap-1">
+			{#each navItems as item (item.href)}
+				<a
+					href={item.href}
+					class="nav-key {page.url.pathname.startsWith(item.href) ? 'is-active' : ''}"
+				>
+					{item.label}
+				</a>
+			{/each}
+		</nav>
+		<div class="relative mt-3">
+			<input
+				type="search"
+				class="field-input w-full"
+				placeholder="Find a builder…"
+				bind:value={searchQuery}
+				oninput={onSearchInput}
+				onfocus={() => searchResults.length > 0 && (searchOpen = true)}
+			/>
+			{#if searchOpen}
+				<div
+					class="mt-1 overflow-hidden rounded-md"
+					style="background: var(--surface); border: 1px solid var(--border)"
+				>
+					{#if searchLoading}
+						<p class="text-muted p-3 text-sm">Searching&hellip;</p>
+					{:else if searchResults.length === 0}
+						<p class="text-muted p-3 text-sm">No builders match that search.</p>
+					{:else}
+						{#each searchResults as summary (summary.userId)}
+							<button
+								type="button"
+								class="user-card flex w-full items-center gap-2 p-2 text-left"
+								onclick={() => goToProfile(summary.username ?? '')}
+							>
+								<Avatar name={summary.username ?? '?'} imageUrl={summary.avatar?.url} size="sm" />
+								<div class="min-w-0 flex-1">
+									<p class="heading-lg truncate text-sm" title={summary.username}>
+										@{summary.username}
+									</p>
+									{#if summary.discordUsername}
+										<p
+											class="text-faint truncate font-mono text-xs"
+											title={summary.discordUsername}
+										>
+											{summary.discordUsername}
+										</p>
+									{/if}
+								</div>
+							</button>
+						{/each}
+					{/if}
+				</div>
+			{/if}
+		</div>
+	</div>
+{/if}
 {@render children()}
