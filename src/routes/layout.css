@@ -671,6 +671,11 @@ select:focus-visible {
 	background: var(--surface-hover);
 }
 
+.profile-menu-item-active {
+	background: color-mix(in srgb, var(--accent) 16%, transparent);
+	color: var(--accent-strong);
+}
+
 .profile-menu-divider {
 	height: 1px;
 	background: var(--border);

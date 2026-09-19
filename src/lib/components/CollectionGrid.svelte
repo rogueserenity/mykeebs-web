@@ -36,6 +36,27 @@
 
 	let statusFilter = $state<StatusFilter>('all');
 
+	// Mobile-only dropdown standing in for the segmented control, which
+	// doesn't fit that viewport. A native <select> would work but its
+	// option list is unstyled OS chrome, clashing with the rest of the
+	// app -- this reuses the same trigger+panel pattern as ProfileMenu.
+	let statusMenuOpen = $state(false);
+	let statusMenuEl = $state<HTMLDivElement | null>(null);
+
+	function closeStatusMenuOnOutsideClick(event: MouseEvent) {
+		if (statusMenuOpen && statusMenuEl && !statusMenuEl.contains(event.target as Node)) {
+			statusMenuOpen = false;
+		}
+	}
+
+	function closeStatusMenuOnEscape(event: KeyboardEvent) {
+		if (event.key === 'Escape') statusMenuOpen = false;
+	}
+
+	function statusLabel(filter: StatusFilter) {
+		return filter === 'all' ? 'All statuses' : filter;
+	}
+
 	let items = $state<T[]>([]);
 	let loading = $state(true);
 	let loadError = $state<string | null>(null);
@@ -152,6 +173,11 @@
 	});
 </script>
 
+<svelte:window
+	onclick={statusMenuOpen ? closeStatusMenuOnOutsideClick : undefined}
+	onkeydown={statusMenuOpen ? closeStatusMenuOnEscape : undefined}
+/>
+
 {#if loading}
 	<div class="flex items-center justify-center p-16">
 		<p class="text-muted font-mono text-sm tracking-wide">Loading&hellip;</p>
@@ -181,16 +207,34 @@
 				{/each}
 			</div>
 		</div>
-		<div class="mt-4 px-4 md:hidden">
-			<select
-				class="field-select w-full"
-				aria-label="Filter by order status"
-				bind:value={statusFilter}
+		<div class="relative mt-4 px-4 md:hidden" bind:this={statusMenuEl}>
+			<button
+				type="button"
+				class="field-select flex w-full items-center justify-between font-mono text-xs uppercase"
+				aria-haspopup="menu"
+				aria-expanded={statusMenuOpen}
+				onclick={() => (statusMenuOpen = !statusMenuOpen)}
 			>
-				{#each STATUS_FILTERS as filter (filter)}
-					<option value={filter}>{filter === 'all' ? 'All statuses' : filter}</option>
-				{/each}
-			</select>
+				{statusLabel(statusFilter)}
+			</button>
+			{#if statusMenuOpen}
+				<div class="profile-menu" style="width: 100%" role="menu">
+					{#each STATUS_FILTERS as filter (filter)}
+						<button
+							type="button"
+							class="profile-menu-item font-mono text-xs uppercase"
+							class:profile-menu-item-active={statusFilter === filter}
+							role="menuitem"
+							onclick={() => {
+								statusFilter = filter;
+								statusMenuOpen = false;
+							}}
+						>
+							{statusLabel(filter)}
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{/if}
 	<div class="flex items-center justify-end gap-2 p-4 pb-0">
