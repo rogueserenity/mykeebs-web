@@ -88,6 +88,35 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <header class="app-header">
+	<div class="md:hidden">
+		<button
+			type="button"
+			class="btn-icon"
+			aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+			aria-expanded={mobileMenuOpen}
+			onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				class="mx-auto h-5 w-5"
+			>
+				{#if mobileMenuOpen}
+					<path d="M18 6 6 18" />
+					<path d="m6 6 12 12" />
+				{:else}
+					<path d="M4 6h16" />
+					<path d="M4 12h16" />
+					<path d="M4 18h16" />
+				{/if}
+			</svg>
+		</button>
+	</div>
 	<div class="app-brand">
 		<span class="app-brand-key">⌨</span>
 		mykeebs
@@ -147,36 +176,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="ml-auto flex items-center gap-2 md:ml-0">
-		<div class="md:hidden">
-			<button
-				type="button"
-				class="btn-icon"
-				aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-				aria-expanded={mobileMenuOpen}
-				onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="mx-auto h-5 w-5"
-				>
-					{#if mobileMenuOpen}
-						<path d="M18 6 6 18" />
-						<path d="m6 6 12 12" />
-					{:else}
-						<path d="M4 6h16" />
-						<path d="M4 12h16" />
-						<path d="M4 18h16" />
-					{/if}
-				</svg>
-			</button>
-		</div>
+	<div class="ml-auto flex items-center">
 		<AuthControl />
 	</div>
 </header>

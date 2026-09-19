@@ -166,7 +166,7 @@
 	</div>
 {:else}
 	{#if getOrderStatus}
-		<div class="mt-4 flex justify-center">
+		<div class="mt-4 hidden justify-center md:flex">
 			<div class="segmented-control" role="group" aria-label="Filter by order status">
 				{#each STATUS_FILTERS as filter (filter)}
 					<button
@@ -180,6 +180,17 @@
 					</button>
 				{/each}
 			</div>
+		</div>
+		<div class="mt-4 px-4 md:hidden">
+			<select
+				class="field-select w-full"
+				aria-label="Filter by order status"
+				bind:value={statusFilter}
+			>
+				{#each STATUS_FILTERS as filter (filter)}
+					<option value={filter}>{filter === 'all' ? 'All statuses' : filter}</option>
+				{/each}
+			</select>
 		</div>
 	{/if}
 	<div class="flex items-center justify-end gap-2 p-4 pb-0">
