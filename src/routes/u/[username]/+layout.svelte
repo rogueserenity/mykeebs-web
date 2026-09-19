@@ -79,7 +79,31 @@
 				]
 			: []
 	);
+
+	// Below md the tab strip scrolls horizontally rather than wrapping;
+	// these track scroll position so the fade hints on each edge only show
+	// when there's actually more to scroll to in that direction.
+	let subNavEl = $state<HTMLElement | null>(null);
+	let subNavCanScrollLeft = $state(false);
+	let subNavCanScrollRight = $state(false);
+
+	function updateSubNavScrollState() {
+		if (!subNavEl) return;
+		subNavCanScrollLeft = subNavEl.scrollLeft > 0;
+		subNavCanScrollRight = subNavEl.scrollLeft + subNavEl.clientWidth < subNavEl.scrollWidth - 1;
+	}
+
+	// Measures right after the nav's tabs render (subNavItems changing means
+	// the tab count/labels are in the DOM). A window resize can also flip
+	// whether the strip overflows at all (e.g. crossing the md breakpoint),
+	// so that's re-checked via the onresize handler on the markup below.
+	$effect(() => {
+		void subNavItems;
+		requestAnimationFrame(updateSubNavScrollState);
+	});
 </script>
+
+<svelte:window onresize={updateSubNavScrollState} />
 
 <div class="mx-auto max-w-6xl px-4 py-10">
 	{#if view.status === 'loading'}
@@ -107,13 +131,25 @@
 			</div>
 		</div>
 
-		<nav class="app-nav profile-subnav mt-6 border-b pb-2" style="border-color: var(--border)">
-			{#each subNavItems as item (item.href)}
-				<a href={item.href} class="nav-key {page.url.pathname === item.href ? 'is-active' : ''}">
-					{item.label}
-				</a>
-			{/each}
-		</nav>
+		<div class="profile-subnav-wrap mt-6 border-b" style="border-color: var(--border)">
+			<nav
+				bind:this={subNavEl}
+				class="app-nav profile-subnav pb-2"
+				onscroll={updateSubNavScrollState}
+			>
+				{#each subNavItems as item (item.href)}
+					<a href={item.href} class="nav-key {page.url.pathname === item.href ? 'is-active' : ''}">
+						{item.label}
+					</a>
+				{/each}
+			</nav>
+			{#if subNavCanScrollLeft}
+				<div class="profile-subnav-fade profile-subnav-fade-left"></div>
+			{/if}
+			{#if subNavCanScrollRight}
+				<div class="profile-subnav-fade profile-subnav-fade-right"></div>
+			{/if}
+		</div>
 
 		<div class="mt-6">
 			{@render children()}
