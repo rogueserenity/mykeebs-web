@@ -53,7 +53,12 @@
 				</div>
 			</div>
 			<div class="profile-menu-divider"></div>
-			<a href={resolve('/profile/edit')} class="profile-menu-item" role="menuitem">
+			<a
+				href={resolve('/profile/edit')}
+				class="profile-menu-item"
+				role="menuitem"
+				onclick={() => (open = false)}
+			>
 				{hasProfile ? 'Edit profile' : 'Set up your profile'}
 			</a>
 			<div class="profile-menu-divider"></div>
