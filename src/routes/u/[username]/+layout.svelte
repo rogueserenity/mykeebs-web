@@ -129,12 +129,7 @@
 		<div class="flex items-center gap-4">
 			<Avatar name={profile.username} imageUrl={profile.avatar?.url} size="lg" />
 			<div class="min-w-0 flex-1">
-				<div class="flex flex-wrap items-center gap-3">
-					<h1 class="heading-lg text-2xl">@{profile.username}</h1>
-					{#if isOwnProfile}
-						<a href={resolve('/profile/edit')} class="btn">Edit profile</a>
-					{/if}
-				</div>
+				<h1 class="heading-lg text-2xl">@{profile.username}</h1>
 			</div>
 		</div>
 

@@ -52,12 +52,10 @@
 					{/if}
 				</div>
 			</div>
-			{#if !hasProfile}
-				<div class="profile-menu-divider"></div>
-				<a href={resolve('/profile/edit')} class="profile-menu-item" role="menuitem">
-					Set up your profile
-				</a>
-			{/if}
+			<div class="profile-menu-divider"></div>
+			<a href={resolve('/profile/edit')} class="profile-menu-item" role="menuitem">
+				{hasProfile ? 'Edit profile' : 'Set up your profile'}
+			</a>
 			<div class="profile-menu-divider"></div>
 			<button
 				type="button"

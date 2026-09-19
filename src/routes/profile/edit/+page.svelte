@@ -75,6 +75,14 @@
 		links = links.filter((_, i) => i !== index);
 	}
 
+	// Only rendered when !isNew (there's no profile to cancel back to for a
+	// brand-new one -- the root route redirects here again regardless).
+	function handleCancel() {
+		if (profile.status === 'ready') {
+			goto(resolve('/u/[username]', { username: profile.data!.username }));
+		}
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		formError = null;
@@ -346,6 +354,11 @@
 				<button type="submit" class="btn btn-accent" disabled={saving}>
 					{saving ? 'Saving…' : isNew ? 'Create profile' : 'Save changes'}
 				</button>
+				{#if !isNew}
+					<button type="button" class="btn" disabled={saving} onclick={handleCancel}>
+						Cancel
+					</button>
+				{/if}
 			</div>
 		</form>
 	{/if}
