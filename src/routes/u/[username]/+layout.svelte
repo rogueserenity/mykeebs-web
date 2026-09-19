@@ -101,6 +101,21 @@
 		void subNavItems;
 		requestAnimationFrame(updateSubNavScrollState);
 	});
+
+	// A full page load (not a client-side nav) remounts this component with
+	// the strip scrolled back to its start, so a tab scrolled off-screen
+	// (e.g. Builds) looks like it vanished even though it's still marked
+	// active. Scrolling the active tab into view -- on mount, and again
+	// whenever the active tab changes via a same-page client-side nav --
+	// keeps it visible either way. scrollIntoView with block/inline
+	// "nearest" is a no-op when the tab's already in view, so this doesn't
+	// jank the strip on desktop where every tab fits already.
+	$effect(() => {
+		void page.url.pathname;
+		if (!subNavEl) return;
+		const activeLink = subNavEl.querySelector<HTMLAnchorElement>('.nav-key.is-active');
+		activeLink?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+	});
 </script>
 
 <svelte:window onresize={updateSubNavScrollState} />
