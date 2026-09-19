@@ -210,51 +210,6 @@
 				{/each}
 			</nav>
 		{/if}
-		<div class="relative mt-3">
-			<input
-				type="search"
-				class="field-input w-full"
-				placeholder="Find a builder…"
-				bind:value={searchQuery}
-				oninput={onSearchInput}
-				onfocus={() => searchResults.length > 0 && (searchOpen = true)}
-			/>
-			{#if searchOpen}
-				<div
-					class="mt-1 overflow-hidden rounded-md"
-					style="background: var(--surface); border: 1px solid var(--border)"
-				>
-					{#if searchLoading}
-						<p class="text-muted p-3 text-sm">Searching&hellip;</p>
-					{:else if searchResults.length === 0}
-						<p class="text-muted p-3 text-sm">No builders match that search.</p>
-					{:else}
-						{#each searchResults as summary (summary.userId)}
-							<button
-								type="button"
-								class="user-card flex w-full items-center gap-2 p-2 text-left"
-								onclick={() => goToProfile(summary.username ?? '')}
-							>
-								<Avatar name={summary.username ?? '?'} imageUrl={summary.avatar?.url} size="sm" />
-								<div class="min-w-0 flex-1">
-									<p class="heading-lg truncate text-sm" title={summary.username}>
-										@{summary.username}
-									</p>
-									{#if summary.discordUsername}
-										<p
-											class="text-faint truncate font-mono text-xs"
-											title={summary.discordUsername}
-										>
-											{summary.discordUsername}
-										</p>
-									{/if}
-								</div>
-							</button>
-						{/each}
-					{/if}
-				</div>
-			{/if}
-		</div>
 	</div>
 {/if}
 {@render children()}
