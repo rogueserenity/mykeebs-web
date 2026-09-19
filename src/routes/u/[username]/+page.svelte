@@ -27,6 +27,26 @@
 
 	let statusFilter = $state<StatusFilter>('all');
 
+	// Mobile-only dropdown standing in for the segmented control, which
+	// doesn't fit that viewport -- same trigger+panel pattern as
+	// CollectionGrid's own status filter and ProfileMenu.
+	let statusMenuOpen = $state(false);
+	let statusMenuEl = $state<HTMLDivElement | null>(null);
+
+	function closeStatusMenuOnOutsideClick(event: MouseEvent) {
+		if (statusMenuOpen && statusMenuEl && !statusMenuEl.contains(event.target as Node)) {
+			statusMenuOpen = false;
+		}
+	}
+
+	function closeStatusMenuOnEscape(event: KeyboardEvent) {
+		if (event.key === 'Escape') statusMenuOpen = false;
+	}
+
+	function statusLabel(filter: StatusFilter) {
+		return filter === 'all' ? 'All statuses' : filter;
+	}
+
 	type ItemEntry = { status: string; price: number | undefined };
 
 	let itemStatuses = $state<{
@@ -163,6 +183,11 @@
 	);
 </script>
 
+<svelte:window
+	onclick={statusMenuOpen ? closeStatusMenuOnOutsideClick : undefined}
+	onkeydown={statusMenuOpen ? closeStatusMenuOnEscape : undefined}
+/>
+
 {#if profile.discordUsername || profile.bio || (profile.links && profile.links.length > 0)}
 	<div class="mb-8 flex flex-col gap-5">
 		{#if profile.discordUsername}
@@ -199,7 +224,7 @@
 {/if}
 
 <div>
-	<div class="mb-4 flex justify-center">
+	<div class="mb-4 hidden justify-center md:flex">
 		<div class="segmented-control" role="group" aria-label="Filter by order status">
 			{#each STATUS_FILTERS as filter (filter)}
 				<button
@@ -213,6 +238,35 @@
 				</button>
 			{/each}
 		</div>
+	</div>
+	<div class="relative mb-4 md:hidden" bind:this={statusMenuEl}>
+		<button
+			type="button"
+			class="field-select flex w-full items-center justify-between font-mono text-xs uppercase"
+			aria-haspopup="menu"
+			aria-expanded={statusMenuOpen}
+			onclick={() => (statusMenuOpen = !statusMenuOpen)}
+		>
+			{statusLabel(statusFilter)}
+		</button>
+		{#if statusMenuOpen}
+			<div class="profile-menu" style="width: 100%" role="menu">
+				{#each STATUS_FILTERS as filter (filter)}
+					<button
+						type="button"
+						class="profile-menu-item font-mono text-xs uppercase"
+						class:profile-menu-item-active={statusFilter === filter}
+						role="menuitem"
+						onclick={() => {
+							statusFilter = filter;
+							statusMenuOpen = false;
+						}}
+					>
+						{statusLabel(filter)}
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</div>
 	{#if countsLoading && !counts}
 		<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
