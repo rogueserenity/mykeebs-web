@@ -21,25 +21,43 @@ type AuthState =
 let state = $state<AuthState>({ status: 'loading' });
 let initPromise: Promise<void> | undefined;
 
-function decodeAccessTokenPayload(token: string): { sub: string; email?: string; exp: number } {
-	return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+type AccessTokenPayload = { sub: string; email?: string; exp: number };
+
+function decodeAccessTokenPayload(token: string): AccessTokenPayload | null {
+	try {
+		const segment = token.split('.')[1];
+		if (!segment) return null;
+		const payload = JSON.parse(atob(segment.replace(/-/g, '+').replace(/_/g, '/')));
+		if (typeof payload?.sub !== 'string' || typeof payload?.exp !== 'number') return null;
+		return payload;
+	} catch {
+		return null;
+	}
 }
 
-function decodeAccessToken(token: string): User {
-	const payload = decodeAccessTokenPayload(token);
-	return { id: payload.sub, email: payload.email ?? null };
+function clearStoredTokens() {
+	localStorage.removeItem(ACCESS_TOKEN_KEY);
+	localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 function syncFromStoredToken() {
 	const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-	state = token
-		? { status: 'signed-in', user: decodeAccessToken(token) }
+	const payload = token ? decodeAccessTokenPayload(token) : null;
+	if (token && !payload) clearStoredTokens();
+	state = payload
+		? { status: 'signed-in', user: { id: payload.sub, email: payload.email ?? null } }
 		: { status: 'signed-out' };
 }
 
 export function initAuth(): Promise<void> {
 	if (!initPromise) {
-		initPromise = Promise.resolve().then(syncFromStoredToken);
+		initPromise = Promise.resolve().then(() => {
+			try {
+				syncFromStoredToken();
+			} catch {
+				state = { status: 'signed-out' };
+			}
+		});
 	}
 	return initPromise;
 }
@@ -98,8 +116,20 @@ export async function exchangeCodeForToken(code: string): Promise<void> {
 }
 
 // Public PKCE client: Stytch rotates the refresh token on every exchange, so
-// the returned one must replace the stored one.
-async function refreshAccessToken(): Promise<string> {
+// concurrent refreshes would each invalidate the others' token. Callers share
+// one in-flight exchange instead.
+let refreshInFlight: Promise<string> | undefined;
+
+function refreshAccessToken(): Promise<string> {
+	if (!refreshInFlight) {
+		refreshInFlight = exchangeRefreshToken().finally(() => {
+			refreshInFlight = undefined;
+		});
+	}
+	return refreshInFlight;
+}
+
+async function exchangeRefreshToken(): Promise<string> {
 	const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 	if (!refreshToken) {
 		throw new Error('No refresh token available');
@@ -116,8 +146,7 @@ async function refreshAccessToken(): Promise<string> {
 	});
 
 	if (!response.ok) {
-		localStorage.removeItem(ACCESS_TOKEN_KEY);
-		localStorage.removeItem(REFRESH_TOKEN_KEY);
+		clearStoredTokens();
 		syncFromStoredToken();
 		throw new Error(`Token refresh failed: ${response.status} ${await response.text()}`);
 	}
@@ -163,9 +192,14 @@ export async function getAccessToken(): Promise<string> {
 		return '';
 	}
 
-	const { exp } = decodeAccessTokenPayload(token);
-	const expiresInSeconds = exp - Date.now() / 1000;
-	if (expiresInSeconds > REFRESH_SKEW_SECONDS) {
+	const payload = decodeAccessTokenPayload(token);
+	if (!payload) {
+		clearStoredTokens();
+		syncFromStoredToken();
+		return '';
+	}
+
+	if (payload.exp - Date.now() / 1000 > REFRESH_SKEW_SECONDS) {
 		return token;
 	}
 

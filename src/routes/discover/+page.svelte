@@ -19,37 +19,46 @@
 		debounceTimer = setTimeout(runSearch, 250);
 	}
 
+	// Guards against a stale search overwriting a newer one's result.
+	let loadToken = 0;
+
 	async function runSearch() {
+		const token = ++loadToken;
 		const username = query.trim() || undefined;
 		loading = true;
 		loadError = null;
 		try {
 			const page = await profilesApi.listProfiles({ username });
+			if (token !== loadToken) return;
 			results = page.items ?? [];
 			nextCursor = page.nextCursor ?? null;
 		} catch {
+			if (token !== loadToken) return;
 			loadError = 'Could not load the directory.';
 			results = [];
 			nextCursor = null;
 		} finally {
-			loading = false;
+			if (token === loadToken) loading = false;
 		}
 	}
 
 	async function loadMore() {
 		if (!nextCursor) return;
+		const token = loadToken;
 		loadingMore = true;
 		try {
 			const page = await profilesApi.listProfiles({
 				username: query.trim() || undefined,
 				cursor: nextCursor
 			});
+			if (token !== loadToken) return;
 			results = [...results, ...(page.items ?? [])];
 			nextCursor = page.nextCursor ?? null;
 		} catch {
+			if (token !== loadToken) return;
 			loadError = 'Could not load more results.';
 		} finally {
-			loadingMore = false;
+			if (token === loadToken) loadingMore = false;
 		}
 	}
 

@@ -162,6 +162,7 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 		await keyboardsApi.deleteKeyboardImage({ userId, keyboardId, imageId });
+		galleryIndex = 0;
 		await refreshEditingKeyboard(keyboardId);
 	}
 
@@ -379,7 +380,7 @@
 	{@const images = modal.keyboard.images}
 	<ImageViewer
 		open={galleryViewerOpen}
-		src={images[galleryIndex].url}
+		src={images[Math.min(galleryIndex, images.length - 1)].url}
 		alt={modal.keyboard.name}
 		onClose={() => (galleryViewerOpen = false)}
 		onPrev={images.length > 1

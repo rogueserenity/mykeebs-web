@@ -36,16 +36,31 @@
 	);
 	let isDelivered = $derived(orderStatus.trim().toLowerCase() === 'delivered');
 
+	// Only clears in response to a status change, never on mount: an existing
+	// kit may legitimately carry dates its current status wouldn't set.
+	let lastOrderStatus = initial?.purchase?.orderStatus ?? '';
 	$effect(() => {
+		if (orderStatus === lastOrderStatus) return;
+		lastOrderStatus = orderStatus;
 		if (!showOrderDate) orderDate = '';
-	});
-	$effect(() => {
 		if (!isDelivered) deliveryDate = '';
-		else if (!deliveryDate) deliveryDate = toDateInput(new Date());
+		else if (!deliveryDate) deliveryDate = todayDateInput();
 	});
 
+	// API calendar dates parse as UTC midnight, so they must be read back in
+	// UTC to round-trip the same day.
 	function toDateInput(date: Date | undefined): string {
 		return date ? date.toISOString().slice(0, 10) : '';
+	}
+
+	// Local, unlike toDateInput: a real timestamp formatted in UTC would land
+	// on the wrong day west of UTC.
+	function todayDateInput(): string {
+		const now = new Date();
+		const year = String(now.getFullYear()).padStart(4, '0');
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const day = String(now.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
 	}
 
 	let vendors = $state<string[]>([]);

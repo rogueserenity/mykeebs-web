@@ -9,7 +9,9 @@
 	// kbdb omits price/totalCost from list responses when this is off, so
 	// summing them would show a misleading $0.00 rather than hiding the total.
 	const showPrices = $derived(
-		userContext.isOwnProfile && (userContext.profile.preferences?.showPriceToMe ?? true)
+		userContext.isOwnProfile
+			? (userContext.profile.preferences?.showPriceToMe ?? true)
+			: (userContext.profile.preferences?.showPriceToOthers ?? false)
 	);
 
 	type ItemCounts = { keyboards: number; switches: number; keycapSets: number; builds: number };

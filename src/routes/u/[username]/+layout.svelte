@@ -34,8 +34,10 @@
 		}
 	}
 
+	let routeUsername = $derived(page.params.username ?? '');
+
 	$effect(() => {
-		loadProfile(page.params.username ?? '');
+		loadProfile(routeUsername);
 	});
 
 	let isOwnProfile = $derived(view.status === 'ready' && view.profile.userId === auth.user?.id);

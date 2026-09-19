@@ -8,8 +8,9 @@
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
 
-	// Mirrors ProfileInput.username in kbdb's schema.
-	const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$/;
+	// Mirrors ProfileInput.username in kbdb's schema: 3-32 chars, lowercase
+	// alphanumeric, single separators only, no leading/trailing separator.
+	const USERNAME_PATTERN = /^(?=.{3,32}$)[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 	const MAX_LINKS = 5;
 
 	// For browsers without Intl.supportedValuesOf (older Safari).
@@ -60,7 +61,7 @@
 	let usernameError = $state<string | null>(null);
 
 	let usernameLooksValid = $derived(
-		USERNAME_PATTERN.test(username) && !username.includes('..') && !username.startsWith('user-')
+		USERNAME_PATTERN.test(username) && !username.startsWith('user-')
 	);
 
 	function addLink() {

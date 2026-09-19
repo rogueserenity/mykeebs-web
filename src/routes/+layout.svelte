@@ -45,25 +45,33 @@
 	function onSearchInput() {
 		clearTimeout(debounceTimer);
 		if (!searchQuery.trim()) {
+			searchToken++;
 			searchResults = [];
 			searchOpen = false;
+			searchLoading = false;
 			return;
 		}
 		debounceTimer = setTimeout(runSearch, 250);
 	}
 
+	// Guards against a stale search overwriting a newer one's result.
+	let searchToken = 0;
+
 	async function runSearch() {
 		const username = searchQuery.trim();
 		if (!username) return;
+		const token = ++searchToken;
 		searchLoading = true;
 		try {
 			const result = await profilesApi.listProfiles({ username, limit: 6 });
+			if (token !== searchToken) return;
 			searchResults = result.items ?? [];
 			searchOpen = true;
 		} catch {
+			if (token !== searchToken) return;
 			searchResults = [];
 		} finally {
-			searchLoading = false;
+			if (token === searchToken) searchLoading = false;
 		}
 	}
 

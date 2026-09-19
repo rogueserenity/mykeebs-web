@@ -128,6 +128,7 @@
 		mountTypes.find((m) => m.name === caseMountType)?.supportsDurometer ?? false
 	);
 	$effect(() => {
+		if (mountTypes.length === 0) return;
 		if (!supportsDurometer) durometer = '';
 	});
 

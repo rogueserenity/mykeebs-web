@@ -203,6 +203,7 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 		await buildsApi.deleteBuildImage({ userId, buildId, imageId });
+		galleryIndex = 0;
 		await refreshEditingBuild(buildId);
 	}
 
@@ -479,7 +480,7 @@
 {#if selectedBuild?.images && selectedBuild.images.length > 0}
 	<ImageViewer
 		open={galleryViewerOpen}
-		src={selectedBuild.images[galleryIndex].url}
+		src={selectedBuild.images[Math.min(galleryIndex, selectedBuild.images.length - 1)].url}
 		alt="Build"
 		onClose={() => (galleryViewerOpen = false)}
 		onPrev={selectedBuild.images.length > 1
@@ -518,7 +519,8 @@
 {#if keyboardDetail?.images && keyboardDetail.images.length > 0}
 	<ImageViewer
 		open={keyboardGalleryViewerOpen}
-		src={keyboardDetail.images[keyboardGalleryIndex].url}
+		src={keyboardDetail.images[Math.min(keyboardGalleryIndex, keyboardDetail.images.length - 1)]
+			.url}
 		alt={keyboardDetail.name}
 		onClose={() => (keyboardGalleryViewerOpen = false)}
 		onPrev={keyboardDetail.images.length > 1

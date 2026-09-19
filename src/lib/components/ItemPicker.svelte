@@ -38,6 +38,9 @@
 	let items = $state<T[]>(cache?.items ?? []);
 	let loading = $state(cache?.items == null);
 	let loadError = $state<string | null>(null);
+
+	// Guards against a stale load overwriting a newer one's result.
+	let loadToken = 0;
 	let filterText = $state('');
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let listEl = $state<HTMLDivElement | null>(null);
@@ -118,11 +121,13 @@
 	$effect(() => {
 		if (!userId) return;
 		if (cache?.items) {
+			loadToken++;
 			items = cache.items;
 			loading = false;
 			return;
 		}
 
+		const token = ++loadToken;
 		loadError = null;
 		loading = true;
 		(async () => {
@@ -130,6 +135,7 @@
 			let cursor: string | undefined;
 			do {
 				const page = await fetchPage(userId, cursor);
+				if (token !== loadToken) return;
 				allItems.push(...(page.items ?? []));
 				cursor = page.nextCursor ?? undefined;
 			} while (cursor);
@@ -137,10 +143,11 @@
 			if (cache) cache.items = allItems;
 		})()
 			.catch(() => {
+				if (token !== loadToken) return;
 				loadError = 'Could not load this collection.';
 			})
 			.finally(() => {
-				loading = false;
+				if (token === loadToken) loading = false;
 			});
 	});
 </script>

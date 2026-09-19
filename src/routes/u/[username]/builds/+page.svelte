@@ -33,11 +33,12 @@
 			(groups[keyboardId] ??= []).push(build);
 		}
 
-		return Object.entries(groups).map(([keyboardId, groupBuilds]) => {
+		return Object.entries(groups).flatMap(([keyboardId, groupBuilds]) => {
 			const sorted = [...groupBuilds].sort(
 				(a, b) => (b.buildDate?.getTime() ?? 0) - (a.buildDate?.getTime() ?? 0)
 			);
-			return { keyboardId, current: sorted[0], buildCount: sorted.length };
+			const current = sorted[0];
+			return current ? [{ keyboardId, current, buildCount: sorted.length }] : [];
 		});
 	}
 

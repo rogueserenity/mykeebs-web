@@ -52,10 +52,13 @@
 	);
 	let isDelivered = $derived(orderStatus.trim().toLowerCase() === 'delivered');
 
+	// Only clears in response to a status change, never on mount: an existing
+	// item may legitimately carry dates its current status wouldn't set.
+	let lastOrderStatus = initial?.purchase?.orderStatus ?? '';
 	$effect(() => {
+		if (orderStatus === lastOrderStatus) return;
+		lastOrderStatus = orderStatus;
 		if (!showOrderDate) orderDate = '';
-	});
-	$effect(() => {
 		if (!isDelivered) deliveryDate = '';
 	});
 
