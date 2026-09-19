@@ -1,10 +1,6 @@
 <script lang="ts" module>
-	// Holds a picker's fetched collection across opens of the same logical
-	// picker -- ItemPicker fully unmounts when its host closes it (an
-	// {#if}), so without a cache passed in from the parent, reopening the
-	// same picker re-fetches the user's entire collection (paginated,
-	// including presigned image URLs for every item) from scratch every
-	// time. Left undefined for a one-off picker that doesn't need this.
+	// ItemPicker fully unmounts when its host closes it, so without a
+	// parent-held cache every reopen re-fetches the whole collection.
 	export type ItemPickerCache<T> = { items: T[] | null };
 </script>
 
@@ -35,9 +31,6 @@
 		getImageUrl?: (item: T) => string | undefined;
 		placeholder?: string;
 		onPick: (item: T) => void;
-		// Optional: lets Escape dismiss the picker (from the search box) the
-		// same way a visible Cancel/Done button would, instead of doing
-		// nothing once the filter text is already empty.
 		onCancel?: () => void;
 		cache?: ItemPickerCache<T>;
 	} = $props();
@@ -49,11 +42,8 @@
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let listEl = $state<HTMLDivElement | null>(null);
 
-	// Runs once per mount of this component instance -- covers both a
-	// picker opening inside an already-open Modal (Modal's own open-effect
-	// only fires when the Modal itself opens, not on this) and the Modal's
-	// own autofocus picking this up via data-autofocus when the picker is
-	// what the Modal opens showing.
+	// Modal's own open-effect fires only when the Modal opens, not when a
+	// picker opens inside an already-open one.
 	$effect(() => {
 		searchInput?.focus();
 	});
@@ -68,10 +58,6 @@
 		});
 	});
 
-	// The keyboard-highlighted row, driven by Arrow/Home/End on the search
-	// box below -- a plain text input gives no arrow-key behavior on its
-	// own, so this recreates the standard combobox-listbox pattern by
-	// hand: arrows move a highlighted index, Enter picks it.
 	let activeIndex = $state(0);
 
 	$effect(() => {
@@ -132,9 +118,6 @@
 	$effect(() => {
 		if (!userId) return;
 		if (cache?.items) {
-			// Already fetched by an earlier open of this same picker --
-			// reuse it instead of re-fetching the whole collection (with a
-			// fresh presigned image URL per item) again.
 			items = cache.items;
 			loading = false;
 			return;

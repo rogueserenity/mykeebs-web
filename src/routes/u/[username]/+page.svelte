@@ -6,9 +6,8 @@
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
-	// kbdb omits price/totalCost from list responses entirely when this is
-	// off, so summing what comes back would otherwise show a misleading
-	// $0.00 rather than hiding the total as intended.
+	// kbdb omits price/totalCost from list responses when this is off, so
+	// summing them would show a misleading $0.00 rather than hiding the total.
 	const showPrices = $derived(
 		userContext.isOwnProfile && (userContext.profile.preferences?.showPriceToMe ?? true)
 	);
@@ -27,9 +26,7 @@
 
 	let statusFilter = $state<StatusFilter>('all');
 
-	// Mobile-only dropdown standing in for the segmented control, which
-	// doesn't fit that viewport -- same trigger+panel pattern as
-	// CollectionGrid's own status filter and ProfileMenu.
+	// Stands in for the segmented control below sm.
 	let statusMenuOpen = $state(false);
 	let statusMenuEl = $state<HTMLDivElement | null>(null);
 
@@ -74,9 +71,8 @@
 		return all;
 	}
 
-	// The API scopes each of these to what the viewer is allowed to see: the
-	// owner gets everything, anyone else gets only items shared with them.
-	// Builds carry no order status, so only their total count is tracked.
+	// The API scopes these to what the viewer may see. Builds carry no order
+	// status, so only their count is tracked.
 	async function loadCounts(userId: string) {
 		countsLoading = true;
 		try {

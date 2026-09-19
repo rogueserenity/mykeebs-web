@@ -38,20 +38,12 @@
 
 	const userContext = getUserContext();
 
-	// Each picker fully unmounts when closed, so without these its
-	// ItemPicker would re-fetch the user's whole collection (with a fresh
-	// presigned image URL per item) from scratch on every reopen -- over a
-	// long editing session that repeatedly adds several switches or kits,
-	// this piles up fast. One cache per resource type, shared across every
-	// open of that picker for the lifetime of this form.
 	const keyboardPickerCache: ItemPickerCache<KeyboardSummary> = { items: null };
 	const switchPickerCache: ItemPickerCache<SwitchSummary> = { items: null };
 	const keycapSetPickerCache: ItemPickerCache<KeycapSetSummary> = { items: null };
 
-	// The keyboard picker only needs id/brand/name/image for display, but the
-	// chosen keyboard's own `design.plates` list is needed to populate the
-	// plate select — so the full Keyboard is fetched once a keyboard is
-	// picked (or on load, for an existing build).
+	// The picker returns only display fields; the full Keyboard is fetched for
+	// its design.plates list.
 	type ChosenKeyboard = { id: string; brand: string; name: string; imageUrl?: string };
 	let keyboard = $state<ChosenKeyboard | undefined>(
 		initial?.keyboard
@@ -101,36 +93,23 @@
 	let stabsMountType = $state(initial?.stabs?.mountType ?? '');
 	let stabsPrice = $state<number | undefined>(initial?.stabs?.price);
 	let foam = $state(initial?.foam ?? false);
-	// Defaults to today on a new build so the field always shows a real
-	// date rather than each browser's own (inconsistent) empty-date
-	// rendering -- Safari fills today's date automatically while
-	// Chrome/Brave just show the mm/dd/yyyy placeholder. Editing an
-	// existing build with no date set is left genuinely empty, since
-	// that's the user's own data rather than a default to suggest.
+	// Browsers disagree on empty-date rendering (Safari fills today, Chrome
+	// shows mm/dd/yyyy), so a new build defaults to today explicitly.
 	let buildDate = $state(initial ? toDateInput(initial.buildDate) : todayDateInput());
 	let notes = $state(initial?.notes ?? '');
 	let visibility = $state<Visibility>(initial?.visibility ?? Visibility.Private);
 
-	// Seeded once from initial data and never bound again — each <details>
-	// then owns its own open/closed state via the browser's native toggle,
-	// so typing into a field inside it (which changes the summary text
-	// below) can't force it to snap shut mid-edit.
 	let caseMountOpen = $state(Boolean(initial?.caseMountType));
 	let stabsOpen = $state(Boolean(initial?.stabs));
 
-	// The API sends/receives plain calendar dates (no time component), and
-	// the generated client parses them with `new Date(...)`, which the ES
-	// spec treats as UTC midnight -- so this must read the UTC fields back
-	// (toISOString(), same idea) to round-trip the same calendar day,
-	// matching format.ts's formatDate.
+	// API calendar dates parse as UTC midnight, so they must be read back in
+	// UTC to round-trip the same day.
 	function toDateInput(date: Date | undefined): string {
 		return date ? date.toISOString().slice(0, 10) : '';
 	}
 
-	// Today's *local* calendar date, for defaulting a new build's date
-	// field. Unlike toDateInput above, this starts from a real timestamp
-	// (not a UTC-midnight-encoded calendar date), so formatting it in UTC
-	// would land on the wrong day for anyone west of UTC in the evening.
+	// Local, unlike toDateInput: a real timestamp formatted in UTC would land
+	// on the wrong day west of UTC.
 	function todayDateInput(): string {
 		const now = new Date();
 		const year = String(now.getFullYear()).padStart(4, '0');
@@ -156,12 +135,8 @@
 		return current && !loaded.includes(current) ? [current, ...loaded] : loaded;
 	}
 
-	// Closing a picker unmounts its "Done"/"Cancel" button, so focus would
-	// otherwise silently drop to <body>. Pass this to `use:` on whatever
-	// trigger button reappears in that spot (e.g. "+ Add switch"), along
-	// with a "should I claim focus right now" flag the caller flips just
-	// before the picker closes; the flag is consumed (reset) here so a
-	// later unrelated remount of the same button doesn't steal focus again.
+	// Closing a picker unmounts its buttons, dropping focus to <body>. The
+	// flag is consumed here so a later remount doesn't steal focus again.
 	function focusOnMount(node: HTMLElement, shouldFocus: { value: boolean }) {
 		if (shouldFocus.value) {
 			node.focus();
@@ -184,16 +159,10 @@
 				stabMountTypes = stabMountLookup.values;
 				durometers = durometerLookup.values;
 			})
-			.catch(() => {
-				// Open-vocabulary suggestions are a nice-to-have; the fields
-				// still work as free text if lookups fail to load.
-			});
+			// Lookups only populate suggestions; the fields work without them.
+			.catch(() => {});
 	});
 
-	// Switches -- each entry is a switch id + count. Resolved refs (from an
-	// existing build) are kept alongside so the list can render name/image
-	// without a follow-up fetch; a freshly picked switch is resolved from
-	// the picker's own SwitchSummary instead.
 	type SwitchEntry = { switchId: string; count: number; label: string; imageUrl?: string };
 	let switchEntries = $state<SwitchEntry[]>(
 		(initial?.switches ?? [])
@@ -208,10 +177,6 @@
 	let switchPickerOpen = $state(false);
 	const refocusSwitchTrigger = { value: false };
 	let switchCountInputs = new SvelteMap<string, HTMLInputElement>();
-	// Set right before the picker closes; the count-input's own {#each}
-	// element action picks it up once that input exists in the DOM and
-	// focuses+selects it, so the user can immediately type a quantity
-	// without reaching for the mouse.
 	let focusSwitchId = $state<string | null>(null);
 
 	function addSwitch(sw: SwitchSummary) {
@@ -245,9 +210,8 @@
 
 	$effect(() => {
 		if (!focusSwitchId) return;
-		// Already-existing rows (re-picking a switch just bumps its count)
-		// don't remount, so the use: action above won't fire for them --
-		// look the input up directly instead.
+		// Re-picking an existing switch only bumps its count, so its row never
+		// remounts and the use: action above won't fire.
 		const input = switchCountInputs.get(focusSwitchId);
 		if (input) {
 			input.focus();
@@ -258,15 +222,12 @@
 
 	function removeSwitch(switchId: string) {
 		switchEntries = switchEntries.filter((e) => e.switchId !== switchId);
-		// The row (and its focused ✕ button) is gone once this re-renders,
-		// which would otherwise drop focus to <body> -- send it somewhere
-		// still on the page instead.
+		// The focused ✕ button is gone once this re-renders.
 		refocusSwitchTrigger.value = true;
 	}
 
-	// Keycap kits -- each entry pairs a keycap set id with one of that set's
-	// kit ids. Picking is two-step: choose a set, then choose one of its
-	// kits (fetched fresh since listKeycapSets doesn't include kits[]).
+	// Two-step pick: listKeycapSets doesn't include kits[], so the chosen
+	// set's kits are fetched separately.
 	type KeycapKitEntryDisplay = {
 		keycapSetId: string;
 		kitId: string;
@@ -306,12 +267,8 @@
 		}
 	}
 
-	// Kits ticked in the current kitPickerSet's checklist, added together
-	// via "Add selected" -- picking multiple kits from the same set (e.g.
-	// a base + novelty kit) is the common case, so confirming one kit at a
-	// time and losing the set's kit list each time would be tedious.
-	// Cleared in place (never reassigned) so SvelteSet's own reactivity is
-	// enough -- reassigning it would need an outer $state to stay tracked.
+	// Cleared in place, never reassigned: SvelteSet's own reactivity covers
+	// mutation, but a reassignment would need an outer $state to stay tracked.
 	const checkedKitIds = new SvelteSet<string>();
 
 	$effect(() => {
@@ -347,8 +304,7 @@
 		keycapKitEntries = keycapKitEntries.filter(
 			(e) => !(e.keycapSetId === keycapSetId && e.kitId === kitId)
 		);
-		// See removeSwitch -- the removed row's focused ✕ button is gone
-		// once this re-renders, so send focus somewhere still on the page.
+		// See removeSwitch.
 		refocusKeycapKitTrigger.value = true;
 	}
 
@@ -357,10 +313,6 @@
 	let fileInput = $state<HTMLInputElement | null>(null);
 	let addPhotoButton = $state<HTMLButtonElement | null>(null);
 
-	// On create there's no buildId yet to attach images to, so picked files
-	// are staged locally (with object URL previews) and handed to onSubmit
-	// alongside the form data — the parent uploads them once the build
-	// exists.
 	type StagedImage = { file: File; preview: string };
 	let stagedImages = $state<StagedImage[]>([]);
 
@@ -404,8 +356,7 @@
 		const [removed] = stagedImages.splice(index, 1);
 		stagedImages = [...stagedImages];
 		if (removed) URL.revokeObjectURL(removed.preview);
-		// The removed thumbnail's focused ✕ button is gone once this
-		// re-renders, so send focus somewhere still on the page.
+		// The focused ✕ button is gone once this re-renders.
 		addPhotoButton?.focus();
 	}
 
@@ -421,9 +372,6 @@
 		}
 	}
 
-	// Drives the "discard changes?" prompt on an accidental close (see
-	// Modal's `dirty` prop) -- true once anything meaningfully differs from
-	// the snapshot the form opened with.
 	const initialKeyboardId = initial?.keyboard?.id ?? '';
 	const initialPlate = initial?.plate ?? '';
 	const initialCaseMountType = initial?.caseMountType?.type ?? '';
@@ -460,11 +408,6 @@
 
 	let validationError = $state<string | null>(null);
 
-	// Pressing Enter in a single-line field (number/date/text) submits the
-	// whole form by default -- surprising mid-way through a long form like
-	// this one, where Enter more often means "confirm this field" than
-	// "save everything." Textareas, buttons, and ItemPicker's own search
-	// box (which uses Enter to pick the highlighted item) are left alone.
 	function guardEnterSubmit(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
 		const target = event.target as HTMLElement;
@@ -525,7 +468,6 @@
 	}
 </script>
 
-<!-- keydown here only guards against Enter submitting the form early -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form class="flex flex-col gap-5" onsubmit={handleSubmit} onkeydown={guardEnterSubmit}>
 	<h2 class="heading-lg text-2xl">{initial ? 'Edit build' : 'Add build'}</h2>

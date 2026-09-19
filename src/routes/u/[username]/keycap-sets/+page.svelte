@@ -26,13 +26,6 @@
 			: (userContext.profile.preferences?.showPriceToOthers ?? false)
 	);
 
-	// 'view' shows KeycapSetDetails for an existing set (with its kits);
-	// 'create'/'edit' show KeycapSetForm for the set's own fields. Kits are
-	// managed from within 'view' via the kit sub-modal below, since a kit
-	// can't exist without an already-created set. Reloading the grid after
-	// a mutation calls grid.refresh() directly rather than remounting
-	// CollectionGrid, so the user's status filter/sort/search selections
-	// survive the reload.
 	type ModalState =
 		| { mode: 'view'; set: KeycapSet }
 		| { mode: 'create' }
@@ -41,9 +34,8 @@
 		| { mode: 'error'; message: string }
 		| { mode: 'closed' };
 
-	// Sub-modal, only reachable from a 'view' set. 'view'/'edit' name the kit
-	// by kitId (looked up fresh from the current set on each render, so it
-	// stays in sync after a save); 'create' has no kit yet.
+	// Kits are named by id and looked up fresh from the current set on each
+	// render, so they stay in sync after a save.
 	type KitModalState =
 		| { mode: 'view'; kitId: string }
 		| { mode: 'create' }
@@ -150,9 +142,7 @@
 		try {
 			const set = await keycapSetsApi.createKeycapSet({ userId, keycapSetInput: input });
 			await grid?.refresh();
-			// Land on the new set's view rather than closing outright, since
-			// the natural next step is adding its kits — closing would force
-			// hunting for the set just created back in the grid.
+			// The next step is adding kits, which needs the set's view.
 			modal = { mode: 'view', set };
 			formDirty = false;
 		} catch {
@@ -275,10 +265,8 @@
 				keycapKitInput: input
 			});
 			if (stagedImage) {
-				// The kit itself was created successfully at this point; an
-				// image-upload failure here shouldn't be reported as a failed
-				// create, so it's swallowed rather than surfaced via
-				// kitSaveError (which the created kit no longer applies to).
+				// The kit already exists, so an upload failure isn't a failed
+				// create and kitSaveError no longer applies to it.
 				await uploadKitImage(keycapSetId, kit.kitId, stagedImage).catch(() => {});
 			}
 			await refreshViewedSet(keycapSetId);

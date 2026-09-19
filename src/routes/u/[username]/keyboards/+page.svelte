@@ -19,10 +19,6 @@
 			: (userContext.profile.preferences?.showPriceToOthers ?? false)
 	);
 
-	// 'view' shows KeyboardDetails for an existing keyboard; 'create'/'edit'
-	// show KeyboardForm. Reloading the grid after a mutation calls
-	// grid.refresh() directly rather than remounting CollectionGrid, so the
-	// user's status filter/sort/search selections survive the reload.
 	type ModalState =
 		| { mode: 'view'; keyboard: Keyboard }
 		| { mode: 'create' }
@@ -89,10 +85,8 @@
 		try {
 			const keyboard = await keyboardsApi.createKeyboard({ userId, keyboardInput: input });
 			if (stagedImages && stagedImages.length > 0) {
-				// The keyboard itself was created successfully at this point;
-				// an image-upload failure here shouldn't be reported as a
-				// failed create, so it's swallowed rather than surfaced via
-				// saveError (which the created keyboard no longer applies to).
+				// The keyboard already exists, so an upload failure isn't a failed
+				// create and saveError no longer applies to it.
 				await Promise.all(
 					stagedImages.map((file) => uploadKeyboardImage(keyboard.id ?? '', file).catch(() => {}))
 				);

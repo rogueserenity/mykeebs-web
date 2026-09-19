@@ -19,10 +19,6 @@
 			: (userContext.profile.preferences?.showPriceToOthers ?? false)
 	);
 
-	// 'view' shows SwitchDetails for an existing switch; 'create'/'edit' show
-	// SwitchForm. Reloading the grid after a mutation calls grid.refresh()
-	// directly rather than remounting CollectionGrid, so the user's status
-	// filter/sort/search selections survive the reload.
 	type ModalState =
 		| { mode: 'view'; sw: SwitchModel }
 		| { mode: 'create' }
@@ -87,10 +83,8 @@
 		try {
 			const sw = await switchesApi.createSwitch({ userId, switchInput: input });
 			if (stagedImage) {
-				// The switch itself was created successfully at this point;
-				// an image-upload failure here shouldn't be reported as a
-				// failed create, so it's swallowed rather than surfaced via
-				// saveError (which the created switch no longer applies to).
+				// The switch already exists, so an upload failure isn't a failed
+				// create and saveError no longer applies to it.
 				await uploadSwitchImage(sw.id ?? '', stagedImage).catch(() => {});
 			}
 			await grid?.refresh();

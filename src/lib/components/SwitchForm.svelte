@@ -59,10 +59,6 @@
 		if (!isDelivered) deliveryDate = '';
 	});
 
-	// Seeded once from initial data and never bound again — each <details>
-	// then owns its own open/closed state via the browser's native toggle,
-	// so typing into a field inside it (which changes the summary text
-	// below) can't force it to snap shut mid-edit.
 	let constructionOpen = $state(
 		Boolean(
 			initial?.material?.topHousing || initial?.material?.bottomHousing || initial?.material?.stem
@@ -109,10 +105,6 @@
 	let vendors = $state<string[]>([]);
 	let orderStatuses = $state<string[]>([]);
 
-	// Closed sets validated server-side against the matching lookup. The
-	// current value is always included even before the lookup loads (or if
-	// it's since been retired from the list), so editing never silently
-	// clears a value the switch already has.
 	function optionsWith(loaded: string[], current: string): string[] {
 		return current && !loaded.includes(current) ? [current, ...loaded] : loaded;
 	}
@@ -132,19 +124,14 @@
 				vendors = vendor.values;
 				orderStatuses = status.values;
 			})
-			.catch(() => {
-				// Open-vocabulary suggestions are a nice-to-have; the fields
-				// still work as free text if lookups fail to load.
-			});
+			// Lookups only populate suggestions; the fields work without them.
+			.catch(() => {});
 	});
 
 	let imageBusy = $state(false);
 	let imageError = $state<string | null>(null);
 	let fileInput = $state<HTMLInputElement | null>(null);
 
-	// On create there's no switchId yet to attach an image to, so the file
-	// is staged locally (with an object URL preview) and handed to onSubmit
-	// alongside the form data — the parent uploads it once the switch exists.
 	let stagedImage = $state<File | null>(null);
 	let stagedImagePreview = $state<string | null>(null);
 
@@ -202,9 +189,6 @@
 		}
 	}
 
-	// Drives the "discard changes?" prompt on an accidental close (see
-	// Modal's `dirty` prop) -- true once anything meaningfully differs from
-	// the snapshot the form opened with.
 	const initialBrand = initial?.brand ?? '';
 	const initialManufacturer = initial?.manufacturer ?? '';
 	const initialName = initial?.name ?? '';
@@ -257,10 +241,6 @@
 
 	let validationError = $state<string | null>(null);
 
-	// Pressing Enter in a single-line field (number/date/text) submits the
-	// whole form by default -- surprising mid-way through a long form like
-	// this one, where Enter more often means "confirm this field" than
-	// "save everything." Textareas and buttons are left alone.
 	function guardEnterSubmit(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
 		const target = event.target as HTMLElement;
@@ -333,7 +313,6 @@
 	}
 </script>
 
-<!-- keydown here only guards against Enter submitting the form early -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form class="flex flex-col gap-5" onsubmit={handleSubmit} onkeydown={guardEnterSubmit}>
 	<h2 class="heading-lg text-2xl">{initial ? 'Edit switch' : 'Add switch'}</h2>

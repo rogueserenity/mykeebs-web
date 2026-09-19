@@ -17,10 +17,8 @@
 			: (userContext.profile.preferences?.showPriceToOthers ?? false)
 	);
 
-	// One card per keyboard, showing that keyboard's current build (the one
-	// with the most recent buildDate — the API has no persisted "current
-	// build" concept). Clicking a card navigates to the keyboard's build
-	// history timeline rather than opening a build directly.
+	// "Current" is the most recent buildDate; the API has no persisted
+	// current-build concept.
 	type KeyboardBuildGroup = {
 		keyboardId: string;
 		current: BuildSummary;
@@ -44,9 +42,8 @@
 	}
 
 	async function fetchGroupedBuilds(userId: string, cursor: string | undefined) {
-		// CollectionGrid streams one page at a time, but grouping requires
-		// every build up front, so the full paginated set is fetched here in
-		// one go and handed back as a single synthetic page.
+		// Grouping needs every build up front, so the full paginated set is
+		// fetched here and handed back as one synthetic page.
 		if (cursor) return { items: [], nextCursor: undefined };
 
 		const allBuilds: BuildSummary[] = [];
@@ -90,10 +87,8 @@
 		try {
 			const build = await buildsApi.createBuild({ userId, buildInput: input });
 			if (stagedImages && stagedImages.length > 0) {
-				// The build itself was created successfully at this point; an
-				// image-upload failure here shouldn't be reported as a failed
-				// create, so it's swallowed rather than surfaced via saveError
-				// (which the created build no longer applies to).
+				// The build already exists, so an upload failure isn't a failed
+				// create and saveError no longer applies to it.
 				await Promise.all(
 					stagedImages.map((file) => uploadBuildImage(build.id, file).catch(() => {}))
 				);

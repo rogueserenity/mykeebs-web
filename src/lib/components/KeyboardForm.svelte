@@ -60,10 +60,6 @@
 		if (!isDelivered) deliveryDate = '';
 	});
 
-	// Seeded once from initial data and never bound again — each <details>
-	// then owns its own open/closed state via the browser's native toggle,
-	// so typing into a field inside it (which changes the summary text
-	// below) can't force it to snap shut mid-edit.
 	let designOpen = $state(Boolean(initial?.design));
 	let pcbOpen = $state(Boolean(initial?.pcb));
 	let purchaseOpen = $state(Boolean(initial?.purchase));
@@ -104,10 +100,6 @@
 	let vendors = $state<string[]>([]);
 	let orderStatuses = $state<string[]>([]);
 
-	// Layout options narrow to whichever layouts support the selected size;
-	// the current layout is always included even if it wouldn't otherwise
-	// match, so editing never silently clears a value the keyboard already
-	// has.
 	let availableLayouts = $derived(
 		size
 			? allLayouts.filter((l) => l.sizes.includes(size)).map((l) => l.name)
@@ -118,10 +110,6 @@
 		if (size && layout && !availableLayouts.includes(layout)) layout = '';
 	});
 
-	// Closed sets validated server-side against the matching lookup. The
-	// current value(s) are always included even before the lookup loads (or
-	// if they've since been retired from the list), so editing never
-	// silently clears a value the keyboard already has.
 	function optionsWith(loaded: string[], current: string): string[];
 	function optionsWith(loaded: string[], current: string[]): string[];
 	function optionsWith(loaded: string[], current: string | string[]): string[] {
@@ -169,20 +157,14 @@
 					orderStatuses = statusLookup.values;
 				}
 			)
-			.catch(() => {
-				// Open-vocabulary suggestions are a nice-to-have; the fields
-				// still work as free text if lookups fail to load.
-			});
+			// Lookups only populate suggestions; the fields work without them.
+			.catch(() => {});
 	});
 
 	let imageBusy = $state(false);
 	let imageError = $state<string | null>(null);
 	let fileInput = $state<HTMLInputElement | null>(null);
 
-	// On create there's no keyboardId yet to attach images to, so picked
-	// files are staged locally (with object URL previews) and handed to
-	// onSubmit alongside the form data — the parent uploads them once the
-	// keyboard exists.
 	type StagedImage = { file: File; preview: string };
 	let stagedImages = $state<StagedImage[]>([]);
 
@@ -239,9 +221,6 @@
 		}
 	}
 
-	// Drives the "discard changes?" prompt on an accidental close (see
-	// Modal's `dirty` prop) -- true once anything meaningfully differs from
-	// the snapshot the form opened with.
 	const initialBrand = initial?.brand ?? '';
 	const initialName = initial?.name ?? '';
 	const initialSize = initial?.size ?? '';
@@ -294,10 +273,6 @@
 
 	let validationError = $state<string | null>(null);
 
-	// Pressing Enter in a single-line field (number/date/text) submits the
-	// whole form by default -- surprising mid-way through a long form like
-	// this one, where Enter more often means "confirm this field" than
-	// "save everything." Textareas and buttons are left alone.
 	function guardEnterSubmit(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
 		const target = event.target as HTMLElement;
@@ -385,7 +360,6 @@
 	}
 </script>
 
-<!-- keydown here only guards against Enter submitting the form early -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <form class="flex flex-col gap-5" onsubmit={handleSubmit} onkeydown={guardEnterSubmit}>
 	<h2 class="heading-lg text-2xl">{initial ? 'Edit keyboard' : 'Add keyboard'}</h2>

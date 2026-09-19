@@ -5,9 +5,6 @@
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
 
-	// Server-side begins-with filter on username. Debounced so each
-	// keystroke doesn't fire a request. An empty query lists the directory
-	// from the top.
 	let query = $state('');
 	let results = $state<ProfileSummary[]>([]);
 	let nextCursor = $state<string | null>(null);

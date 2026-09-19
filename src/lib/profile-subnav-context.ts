@@ -1,8 +1,7 @@
 import { getContext, setContext } from 'svelte';
 
-// route/params rather than a pre-resolved href, so the root layout can call
-// resolve() itself where svelte/no-navigation-without-resolve can see it --
-// that lint rule can't trace a resolve() call across this context boundary.
+// route/params rather than a resolved href: svelte/no-navigation-without-resolve
+// can't trace a resolve() call across this context boundary.
 export type ProfileSubNavItem = {
 	route:
 		| '/u/[username]'
@@ -14,12 +13,6 @@ export type ProfileSubNavItem = {
 	label: string;
 };
 
-// Lets a nested /u/[username] route register its own tab strip
-// (Overview/Keyboards/...) with the root layout, so the root header's
-// hamburger menu can fold those tabs in below the md breakpoint instead of
-// only the app-wide nav links. The root layout creates and owns this state;
-// the nested layout writes into it and clears it on destroy so navigating
-// away from a profile page doesn't leave stale tabs in the menu.
 export type ProfileSubNavContext = {
 	items: ProfileSubNavItem[];
 };

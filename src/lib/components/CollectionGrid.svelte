@@ -33,10 +33,6 @@
 		sortOptions: SortOption[];
 		getName: (item: T) => string | undefined;
 		getOrderStatus?: (item: T) => string | undefined;
-		// Shows a "+" icon button in the sort/filter row, next to the filter
-		// button, instead of the page rendering its own separate "+ Add X"
-		// button above the grid. Both omitted (rather than just checking
-		// onAdd) when the viewer can't add items, e.g. someone else's profile.
 		onAdd?: () => void;
 		addLabel?: string;
 		card: Snippet<[T]>;
@@ -44,10 +40,8 @@
 
 	let statusFilter = $state<StatusFilter>('all');
 
-	// Mobile-only dropdown standing in for the segmented control, which
-	// doesn't fit that viewport. A native <select> would work but its
-	// option list is unstyled OS chrome, clashing with the rest of the
-	// app -- this reuses the same trigger+panel pattern as ProfileMenu.
+	// Stands in for the segmented control below sm. A native <select> would
+	// work but renders as unstyled OS chrome.
 	let statusMenuOpen = $state(false);
 	let statusMenuEl = $state<HTMLDivElement | null>(null);
 
@@ -139,9 +133,7 @@
 		});
 	});
 
-	// Guards against a stale load() overwriting a newer one's result if the
-	// effect below fires again (e.g. userId settling after the profile
-	// loads) while a previous call is still paginating through fetchPage.
+	// Guards against a stale load() overwriting a newer one's result.
 	let loadToken = 0;
 
 	async function load() {
@@ -169,9 +161,7 @@
 		}
 	}
 
-	// Exposed so parent pages can refresh data after a create/update/delete
-	// without remounting this component, which would otherwise reset the
-	// user's status filter, sort, and search state.
+	// Lets parents reload without remounting, which would reset filter/sort/search.
 	export async function refresh() {
 		await load();
 	}

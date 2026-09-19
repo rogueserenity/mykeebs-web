@@ -15,9 +15,6 @@
 
 	let { children } = $props();
 
-	// Populated by a nested /u/[username] route's own layout when one is
-	// active, so the hamburger menu below can fold those tabs in alongside
-	// the app-wide nav links on narrow screens.
 	const profileSubNav: ProfileSubNavContext = $state({ items: [] });
 	setProfileSubNavContext(profileSubNav);
 
@@ -39,8 +36,6 @@
 		].filter((item) => item !== null)
 	);
 
-	// Quick-jump search: debounced begins-with match on username, so users
-	// can switch context without a full trip through /discover.
 	let searchQuery = $state('');
 	let searchResults = $state<ProfileSummary[]>([]);
 	let searchOpen = $state(false);
@@ -83,9 +78,6 @@
 		setTimeout(() => (searchOpen = false), 150);
 	}
 
-	// Collapsed below the `md` breakpoint: nav links and search move into
-	// this panel behind the hamburger toggle. Closed on every navigation so
-	// it doesn't stay open across page changes.
 	let mobileMenuOpen = $state(false);
 	$effect(() => {
 		void page.url.pathname;

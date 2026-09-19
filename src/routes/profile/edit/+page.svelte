@@ -8,12 +8,11 @@
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
 
-	// Lowercase letters, digits, hyphen, period, underscore; 3-32 chars; no
-	// leading/trailing separator; no consecutive periods. Mirrors ProfileInput.username.
+	// Mirrors ProfileInput.username in kbdb's schema.
 	const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9._-]{1,30}[a-z0-9])?$/;
 	const MAX_LINKS = 5;
 
-	// Fallback for browsers without Intl.supportedValuesOf (e.g. older Safari).
+	// For browsers without Intl.supportedValuesOf (older Safari).
 	const FALLBACK_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
 	const CURRENCY_CODES: string[] =
 		typeof Intl.supportedValuesOf === 'function'
@@ -26,15 +25,12 @@
 		label: `${currencyDisplayNames.of(code) ?? code} (${code})`
 	})).sort((a, b) => a.label.localeCompare(b.label));
 
-	// Seeded from the store once it resolves. Editing an existing profile
-	// pre-fills; a brand-new profile (status 'none') starts blank and this
-	// page's submit creates it.
 	let username = $state('');
 	let discordUsername = $state('');
 	let bio = $state('');
 	let discoverable = $state(false);
 	let links = $state<ProfileLink[]>([]);
-	// Mirrors kbdb's own defaults for a profile with no preferences set yet.
+	// Mirrors kbdb's defaults for a profile with no preferences set.
 	let currency = $state('USD');
 	let showPriceToMe = $state(true);
 	let showPriceToOthers = $state(false);
@@ -75,8 +71,6 @@
 		links = links.filter((_, i) => i !== index);
 	}
 
-	// Only rendered when !isNew (there's no profile to cancel back to for a
-	// brand-new one -- the root route redirects here again regardless).
 	function handleCancel() {
 		if (profile.status === 'ready') {
 			goto(resolve('/u/[username]', { username: profile.data!.username }));
@@ -135,8 +129,6 @@
 		}
 	}
 
-	// Avatar: allocate a presigned S3 PUT URL, upload the bytes to it, then
-	// refresh the store to pick up the new avatar URL.
 	let avatarBusy = $state(false);
 	let avatarError = $state<string | null>(null);
 	let fileInput = $state<HTMLInputElement | null>(null);

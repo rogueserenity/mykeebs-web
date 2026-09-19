@@ -37,9 +37,7 @@
 
 	let view = $state<ViewState>({ status: 'loading' });
 
-	// Guards against a slow, stale load() overwriting the result of a newer
-	// one — which could otherwise happen if the user navigates between
-	// keyboards while a previous load is still in flight.
+	// Guards against a stale load() overwriting a newer one's result.
 	let loadToken = 0;
 
 	async function load(userId: string, kId: string) {

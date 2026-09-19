@@ -9,12 +9,6 @@
 	import { getProfileSubNavContext } from '$lib/profile-subnav-context';
 	import Avatar from '$lib/components/Avatar.svelte';
 
-	// Registers this profile's tabs with the root layout so its hamburger
-	// menu can fold them in below md, alongside the app-wide nav links.
-	// Undefined outside the root layout's context (shouldn't happen in
-	// practice, since every route is nested under it) -- guarded rather than
-	// asserted so a missing context degrades to "no tabs in the menu"
-	// instead of crashing the page.
 	const profileSubNav = getProfileSubNavContext();
 
 	let { children } = $props();
@@ -89,13 +83,8 @@
 			: []
 	);
 
-	// Below md the tab strip isn't shown at all -- the root layout's
-	// hamburger menu folds these same tabs in instead (see
-	// profile-subnav-context.ts). route/username rather than the resolved
-	// hrefs above, so the root layout calls resolve() itself where
-	// svelte/no-navigation-without-resolve can see it. Cleared on destroy so
-	// navigating away from a profile page doesn't leave stale tabs in that
-	// menu.
+	// Registered for the root layout's hamburger menu, which shows these below
+	// md where the tab strip is hidden. Cleared on destroy.
 	$effect(() => {
 		if (!profileSubNav || view.status !== 'ready') return;
 		const username = view.profile.username;

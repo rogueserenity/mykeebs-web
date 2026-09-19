@@ -4,8 +4,6 @@
 	import { profile } from '$lib/profile/profile.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
 
-	// Falls back to the auth email's local part until the profile loads (or
-	// if the user has no profile yet).
 	let displayName = $derived(profile.data?.username ?? auth.user?.email?.split('@')[0] ?? 'you');
 	let hasProfile = $derived(profile.status === 'ready');
 

@@ -3,9 +3,6 @@ import { ResponseError } from '@rogueserenity/kbdb-api-client';
 import { auth } from '$lib/auth/auth.svelte';
 import { profilesApi } from '$lib/api/client';
 
-// The signed-in user's own profile, fetched once per sign-in via
-// getProfile(auth.user.id). A user may not have a profile yet (status
-// 'none') - the edit page doubles as the create flow in that case.
 type ProfileState =
 	| { status: 'idle' }
 	| { status: 'loading' }
@@ -30,10 +27,7 @@ async function load(userId: string): Promise<void> {
 	}
 }
 
-/**
- * Keeps the store in sync with auth: loads the profile when a user signs
- * in, clears it on sign-out. Call once from the root layout's onMount.
- */
+/** Call once, from the root layout's onMount. */
 export function initProfile(): void {
 	$effect.root(() => {
 		$effect(() => {
@@ -50,17 +44,11 @@ export function initProfile(): void {
 	});
 }
 
-/** Re-fetches the current user's profile (after an edit or avatar change). */
 export async function refreshProfile(): Promise<void> {
 	const userId = auth.user?.id;
 	if (userId) await load(userId);
 }
 
-/**
- * Creates or replaces the current user's profile, depending on whether
- * one already exists, and updates the store with the result. Lets the
- * caller handle ResponseError (409 username-unavailable, etc.).
- */
 export async function saveProfile(input: ProfileInput): Promise<Profile> {
 	const userId = auth.user?.id;
 	if (!userId) throw new Error('Not signed in');

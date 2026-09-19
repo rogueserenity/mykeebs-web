@@ -14,10 +14,7 @@
 		onClose: () => void;
 		wide?: boolean;
 		obscured?: boolean;
-		// When true, backdrop-click/Escape/the ✕ button don't close
-		// immediately — they surface an inline "Discard changes?" prompt
-		// instead, so an accidental click outside a form in progress can't
-		// silently throw away edits.
+		// Close attempts surface a "Discard changes?" prompt instead of closing.
 		dirty?: boolean;
 		headerExtra?: Snippet;
 		children: Snippet;
@@ -53,11 +50,6 @@
 			return;
 		}
 
-		// Trap Tab/Shift+Tab within the modal so keyboard users can't
-		// escape into the page behind it — without this, Tab walks past
-		// the last focusable element in the modal straight into whatever
-		// the underlying page has, which reads as controls being randomly
-		// skipped.
 		if (event.key !== 'Tab' || obscured) return;
 		const focusable = focusableElements();
 		if (focusable.length === 0) return;
@@ -82,8 +74,7 @@
 		}
 
 		previouslyFocused = document.activeElement as HTMLElement | null;
-		// Defer to let the just-opened content mount before searching it
-		// for a focus target.
+		// Deferred so the just-opened content has mounted.
 		const raf = requestAnimationFrame(() => {
 			const explicit = panel?.querySelector<HTMLElement>('[data-autofocus]');
 			(explicit ?? focusableElements()[0])?.focus();

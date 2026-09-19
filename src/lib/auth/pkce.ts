@@ -1,11 +1,5 @@
-/**
- * Minimal PKCE (RFC 7636) helpers for driving Stytch's Connected Apps
- * OAuth flow directly - Stytch's SDK has no built-in PKCE/OAuth-client
- * helper (only third-party social login via `oauth.continueWithX`), so
- * the authorization request and code exchange are hand-rolled here
- * against the Web Crypto API rather than pulling in a separate library
- * for what's a few lines of code.
- */
+// PKCE (RFC 7636) hand-rolled against Web Crypto: Stytch's SDK ships no
+// OAuth-client helper, only third-party social login.
 
 function base64UrlEncode(bytes: Uint8Array): string {
 	let binary = '';
