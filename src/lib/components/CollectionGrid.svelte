@@ -192,7 +192,7 @@
 	</div>
 {:else}
 	{#if getOrderStatus}
-		<div class="mt-4 hidden justify-center md:flex">
+		<div class="mt-4 hidden justify-center sm:flex">
 			<div class="segmented-control" role="group" aria-label="Filter by order status">
 				{#each STATUS_FILTERS as filter (filter)}
 					<button
@@ -207,7 +207,7 @@
 				{/each}
 			</div>
 		</div>
-		<div class="relative mt-4 px-4 md:hidden" bind:this={statusMenuEl}>
+		<div class="relative mt-4 px-4 sm:hidden" bind:this={statusMenuEl}>
 			<button
 				type="button"
 				class="field-select flex w-full items-center justify-between font-mono text-xs uppercase"

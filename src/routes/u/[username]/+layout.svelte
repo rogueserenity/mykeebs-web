@@ -110,11 +110,30 @@
 	// keeps it visible either way. scrollIntoView with block/inline
 	// "nearest" is a no-op when the tab's already in view, so this doesn't
 	// jank the strip on desktop where every tab fits already.
+	//
+	// On a real reload, the browser applies its own scroll-position
+	// restoration to this element *after* layout, sometime after the first
+	// animation frame -- a single requestAnimationFrame still lands before
+	// that and gets overwritten, landing a few px short (the active tab's
+	// trailing edge stays clipped). Re-running once more on the next
+	// macrotask (setTimeout 0, nested inside the rAF) reliably comes after
+	// that restoration, so this alignment wins instead of losing to it.
+	function scrollActiveTabIntoView() {
+		if (!subNavEl) return;
+		const nav = subNavEl;
+		const align = () => {
+			const activeLink = nav.querySelector<HTMLAnchorElement>('.nav-key.is-active');
+			activeLink?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		};
+		requestAnimationFrame(() => {
+			align();
+			setTimeout(align, 0);
+		});
+	}
+
 	$effect(() => {
 		void page.url.pathname;
-		if (!subNavEl) return;
-		const activeLink = subNavEl.querySelector<HTMLAnchorElement>('.nav-key.is-active');
-		activeLink?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		scrollActiveTabIntoView();
 	});
 </script>
 
