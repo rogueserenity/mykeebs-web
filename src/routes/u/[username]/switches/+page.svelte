@@ -201,12 +201,6 @@
 	}
 </script>
 
-{#if userContext.isOwnProfile}
-	<div class="flex justify-end p-4 pb-0">
-		<button type="button" class="btn btn-accent" onclick={openCreate}>+ Add switch</button>
-	</div>
-{/if}
-
 <CollectionGrid
 	bind:this={grid}
 	userId={userContext.userId}
@@ -216,6 +210,8 @@
 	emptyMessage="No switches yet."
 	getName={(sw) => sw.name}
 	getOrderStatus={(sw) => sw.orderStatus ?? undefined}
+	onAdd={userContext.isOwnProfile ? openCreate : undefined}
+	addLabel="Add switch"
 	sortOptions={userContext.isOwnProfile
 		? [
 				{ label: 'Name', getValue: (sw) => sw.name },

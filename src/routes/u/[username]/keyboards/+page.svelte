@@ -209,12 +209,6 @@
 	}
 </script>
 
-{#if userContext.isOwnProfile}
-	<div class="flex justify-end p-4 pb-0">
-		<button type="button" class="btn btn-accent" onclick={openCreate}>+ Add keyboard</button>
-	</div>
-{/if}
-
 <CollectionGrid
 	bind:this={grid}
 	userId={userContext.userId}
@@ -224,6 +218,8 @@
 	emptyMessage="No keyboards yet."
 	getName={(keyboard) => keyboard.name}
 	getOrderStatus={(keyboard) => keyboard.orderStatus ?? undefined}
+	onAdd={userContext.isOwnProfile ? openCreate : undefined}
+	addLabel="Add keyboard"
 	sortOptions={userContext.isOwnProfile
 		? [
 				{ label: 'Name', getValue: (keyboard) => keyboard.name },

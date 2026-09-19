@@ -22,6 +22,8 @@
 		sortOptions,
 		getName,
 		getOrderStatus,
+		onAdd,
+		addLabel,
 		card
 	}: {
 		userId: string;
@@ -31,6 +33,12 @@
 		sortOptions: SortOption[];
 		getName: (item: T) => string | undefined;
 		getOrderStatus?: (item: T) => string | undefined;
+		// Shows a "+" icon button in the sort/filter row, next to the filter
+		// button, instead of the page rendering its own separate "+ Add X"
+		// button above the grid. Both omitted (rather than just checking
+		// onAdd) when the viewer can't add items, e.g. someone else's profile.
+		onAdd?: () => void;
+		addLabel?: string;
 		card: Snippet<[T]>;
 	} = $props();
 
@@ -186,10 +194,6 @@
 	<div class="flex items-center justify-center p-16">
 		<p class="text-lg" style="color: var(--danger)">{loadError}</p>
 	</div>
-{:else if items.length === 0}
-	<div class="flex items-center justify-center p-16">
-		<p class="text-muted text-xl font-semibold">{emptyMessage}</p>
-	</div>
 {:else}
 	{#if getOrderStatus}
 		<div class="mt-4 hidden justify-center sm:flex">
@@ -280,10 +284,34 @@
 				</svg>
 			</button>
 		{/if}
+		{#if onAdd}
+			<button
+				type="button"
+				class="btn-icon btn-accent"
+				aria-label={addLabel ?? 'Add'}
+				onclick={onAdd}
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="mx-auto h-5 w-5"
+				>
+					<path d="M12 5v14" />
+					<path d="M5 12h14" />
+				</svg>
+			</button>
+		{/if}
 	</div>
 	{#if sortedItems.length === 0}
 		<div class="flex items-center justify-center p-16">
-			<p class="text-muted text-xl font-semibold">No matches.</p>
+			<p class="text-muted text-xl font-semibold">
+				{items.length === 0 ? emptyMessage : 'No matches.'}
+			</p>
 		</div>
 	{:else}
 		<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">

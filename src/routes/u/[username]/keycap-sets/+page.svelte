@@ -378,12 +378,6 @@
 	}
 </script>
 
-{#if userContext.isOwnProfile}
-	<div class="flex justify-end p-4 pb-0">
-		<button type="button" class="btn btn-accent" onclick={openCreate}>+ Add keycap set</button>
-	</div>
-{/if}
-
 <CollectionGrid
 	bind:this={grid}
 	userId={userContext.userId}
@@ -393,6 +387,8 @@
 	emptyMessage="No keycap sets yet."
 	getName={(set) => set.name}
 	getOrderStatus={(set) => set.orderStatus ?? undefined}
+	onAdd={userContext.isOwnProfile ? openCreate : undefined}
+	addLabel="Add keycap set"
 	sortOptions={userContext.isOwnProfile
 		? [
 				{ label: 'Name', getValue: (set) => set.name },

@@ -125,12 +125,6 @@
 	}
 </script>
 
-{#if userContext.isOwnProfile}
-	<div class="flex justify-end p-4 pb-0">
-		<button type="button" class="btn btn-accent" onclick={openCreate}>+ Add build</button>
-	</div>
-{/if}
-
 <CollectionGrid
 	bind:this={grid}
 	userId={userContext.userId}
@@ -138,6 +132,8 @@
 	itemKey={(group) => group.keyboardId}
 	emptyMessage="No builds yet."
 	getName={(group) => group.current.keyboard?.name}
+	onAdd={userContext.isOwnProfile ? openCreate : undefined}
+	addLabel="Add build"
 	sortOptions={[
 		{ label: 'Name', getValue: (group) => group.current.keyboard?.name },
 		{ label: 'Build Date', getValue: (group) => group.current.buildDate?.getTime() },
