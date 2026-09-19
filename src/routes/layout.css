@@ -199,6 +199,20 @@ body {
 	transform: translateY(1px);
 }
 
+/* .btn-icon's own background/color/border-color come later in the
+   cascade than .btn-accent's at equal specificity, so combining the two
+   classes on one element (e.g. the "+" add button) silently loses the
+   accent styling without this override. */
+.btn-icon.btn-accent {
+	background: var(--accent);
+	color: var(--accent-ink);
+	border-color: var(--accent-strong);
+}
+
+.btn-icon.btn-accent:hover {
+	background: var(--accent-strong);
+}
+
 /* Focus visibility */
 
 a:focus-visible,
