@@ -11,8 +11,15 @@
 	import { profilesApi } from '$lib/api/client';
 	import AuthControl from '$lib/auth/AuthControl.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
+	import { setProfileSubNavContext, type ProfileSubNavContext } from '$lib/profile-subnav-context';
 
 	let { children } = $props();
+
+	// Populated by a nested /u/[username] route's own layout when one is
+	// active, so the hamburger menu below can fold those tabs in alongside
+	// the app-wide nav links on narrow screens.
+	const profileSubNav: ProfileSubNavContext = $state({ items: [] });
+	setProfileSubNavContext(profileSubNav);
 
 	onMount(() => {
 		initAuth();
@@ -192,6 +199,17 @@
 				</a>
 			{/each}
 		</nav>
+		{#if profileSubNav.items.length > 0}
+			<div class="profile-menu-divider"></div>
+			<nav class="flex flex-col gap-1">
+				{#each profileSubNav.items as item (item.route)}
+					{@const href = resolve(item.route, { username: item.username })}
+					<a {href} class="nav-key {page.url.pathname === href ? 'is-active' : ''}">
+						{item.label}
+					</a>
+				{/each}
+			</nav>
+		{/if}
 		<div class="relative mt-3">
 			<input
 				type="search"

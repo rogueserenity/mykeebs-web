@@ -6,7 +6,16 @@
 	import { profilesApi } from '$lib/api/client';
 	import { auth } from '$lib/auth/auth.svelte';
 	import { setUserContext } from '$lib/user-context';
+	import { getProfileSubNavContext } from '$lib/profile-subnav-context';
 	import Avatar from '$lib/components/Avatar.svelte';
+
+	// Registers this profile's tabs with the root layout so its hamburger
+	// menu can fold them in below md, alongside the app-wide nav links.
+	// Undefined outside the root layout's context (shouldn't happen in
+	// practice, since every route is nested under it) -- guarded rather than
+	// asserted so a missing context degrades to "no tabs in the menu"
+	// instead of crashing the page.
+	const profileSubNav = getProfileSubNavContext();
 
 	let { children } = $props();
 
@@ -80,64 +89,28 @@
 			: []
 	);
 
-	// Below md the tab strip scrolls horizontally rather than wrapping;
-	// these track scroll position so the fade hints on each edge only show
-	// when there's actually more to scroll to in that direction.
-	let subNavEl = $state<HTMLElement | null>(null);
-	let subNavCanScrollLeft = $state(false);
-	let subNavCanScrollRight = $state(false);
-
-	function updateSubNavScrollState() {
-		if (!subNavEl) return;
-		subNavCanScrollLeft = subNavEl.scrollLeft > 0;
-		subNavCanScrollRight = subNavEl.scrollLeft + subNavEl.clientWidth < subNavEl.scrollWidth - 1;
-	}
-
-	// Measures right after the nav's tabs render (subNavItems changing means
-	// the tab count/labels are in the DOM). A window resize can also flip
-	// whether the strip overflows at all (e.g. crossing the md breakpoint),
-	// so that's re-checked via the onresize handler on the markup below.
+	// Below md the tab strip isn't shown at all -- the root layout's
+	// hamburger menu folds these same tabs in instead (see
+	// profile-subnav-context.ts). route/username rather than the resolved
+	// hrefs above, so the root layout calls resolve() itself where
+	// svelte/no-navigation-without-resolve can see it. Cleared on destroy so
+	// navigating away from a profile page doesn't leave stale tabs in that
+	// menu.
 	$effect(() => {
-		void subNavItems;
-		requestAnimationFrame(updateSubNavScrollState);
-	});
-
-	// A full page load (not a client-side nav) remounts this component with
-	// the strip scrolled back to its start, so a tab scrolled off-screen
-	// (e.g. Builds) looks like it vanished even though it's still marked
-	// active. Scrolling the active tab into view -- on mount, and again
-	// whenever the active tab changes via a same-page client-side nav --
-	// keeps it visible either way. scrollIntoView with block/inline
-	// "nearest" is a no-op when the tab's already in view, so this doesn't
-	// jank the strip on desktop where every tab fits already.
-	//
-	// On a real reload, the browser applies its own scroll-position
-	// restoration to this element *after* layout, sometime after the first
-	// animation frame -- a single requestAnimationFrame still lands before
-	// that and gets overwritten, landing a few px short (the active tab's
-	// trailing edge stays clipped). Re-running once more on the next
-	// macrotask (setTimeout 0, nested inside the rAF) reliably comes after
-	// that restoration, so this alignment wins instead of losing to it.
-	function scrollActiveTabIntoView() {
-		if (!subNavEl) return;
-		const nav = subNavEl;
-		const align = () => {
-			const activeLink = nav.querySelector<HTMLAnchorElement>('.nav-key.is-active');
-			activeLink?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		if (!profileSubNav || view.status !== 'ready') return;
+		const username = view.profile.username;
+		profileSubNav.items = [
+			{ route: '/u/[username]', username, label: 'Overview' },
+			{ route: '/u/[username]/keyboards', username, label: 'Keyboards' },
+			{ route: '/u/[username]/switches', username, label: 'Switches' },
+			{ route: '/u/[username]/keycap-sets', username, label: 'Keycap Sets' },
+			{ route: '/u/[username]/builds', username, label: 'Builds' }
+		];
+		return () => {
+			if (profileSubNav) profileSubNav.items = [];
 		};
-		requestAnimationFrame(() => {
-			align();
-			setTimeout(align, 0);
-		});
-	}
-
-	$effect(() => {
-		void page.url.pathname;
-		scrollActiveTabIntoView();
 	});
 </script>
-
-<svelte:window onresize={updateSubNavScrollState} />
 
 <div class="mx-auto max-w-6xl px-4 py-10">
 	{#if view.status === 'loading'}
@@ -165,24 +138,14 @@
 			</div>
 		</div>
 
-		<div class="profile-subnav-wrap mt-6 border-b" style="border-color: var(--border)">
-			<nav
-				bind:this={subNavEl}
-				class="app-nav profile-subnav pb-2"
-				onscroll={updateSubNavScrollState}
-			>
+		<div class="mt-6 hidden border-b pb-2 md:block" style="border-color: var(--border)">
+			<nav class="app-nav">
 				{#each subNavItems as item (item.href)}
 					<a href={item.href} class="nav-key {page.url.pathname === item.href ? 'is-active' : ''}">
 						{item.label}
 					</a>
 				{/each}
 			</nav>
-			{#if subNavCanScrollLeft}
-				<div class="profile-subnav-fade profile-subnav-fade-left"></div>
-			{/if}
-			{#if subNavCanScrollRight}
-				<div class="profile-subnav-fade profile-subnav-fade-right"></div>
-			{/if}
 		</div>
 
 		<div class="mt-6">
