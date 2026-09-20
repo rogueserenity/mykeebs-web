@@ -16,3 +16,7 @@ export async function generateCodeChallenge(verifier: string): Promise<string> {
 	const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
 	return base64UrlEncode(new Uint8Array(digest));
 }
+
+// The OAuth `state` parameter (RFC 6749 §10.12) is the same shape as a PKCE
+// verifier - 32 bytes of CSPRNG output, base64url - so it shares the generator.
+export { generateCodeVerifier as generateState };

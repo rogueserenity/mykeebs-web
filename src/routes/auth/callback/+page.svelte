@@ -3,19 +3,28 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { exchangeCodeForToken } from '$lib/auth/auth.svelte';
+	import { consumeStateMatches, exchangeCodeForToken } from '$lib/auth/auth.svelte';
 
 	let error = $state<string | null>(null);
 
 	onMount(() => {
 		const code = page.url.searchParams.get('code');
+		// Consume the stored state either way, so a rejected redirect can't
+		// leave it behind for a later replay.
+		const stateMatches = consumeStateMatches(page.url.searchParams.get('state'));
 		if (!code) {
 			error = 'No authorization code in the redirect URL.';
 			return;
 		}
+		if (!stateMatches) {
+			error = 'Sign-in could not be verified. Please start again from the sign-in button.';
+			return;
+		}
 
 		exchangeCodeForToken(code)
-			.then(() => goto(resolve('/')))
+			// replaceState drops ?code= from history, keeping the single-use
+			// code out of back-navigation and the Referer of later requests.
+			.then(() => goto(resolve('/'), { replaceState: true }))
 			.catch(() => {
 				error = 'Sign-in failed. Please try again.';
 			});

@@ -1,6 +1,6 @@
 import { SvelteURLSearchParams } from 'svelte/reactivity';
 import { PUBLIC_STYTCH_CLIENT_ID } from '$env/static/public';
-import { generateCodeChallenge, generateCodeVerifier } from './pkce';
+import { generateCodeChallenge, generateCodeVerifier, generateState } from './pkce';
 
 // AUTHORIZE/LOGOUT are kbdb's own hosted consent pages, not paths under the
 // Stytch issuer: Connected Apps requires the app to host its own consent UI.
@@ -9,6 +9,7 @@ const LOGOUT_ENDPOINT = 'https://api.jay.mykeebs.dev/logout';
 const TOKEN_ENDPOINT = 'https://auth.jay.mykeebs.dev/v1/oauth2/token';
 
 const CODE_VERIFIER_KEY = 'stytch_pkce_code_verifier';
+const STATE_KEY = 'stytch_oauth_state';
 const ACCESS_TOKEN_KEY = 'stytch_access_token';
 const REFRESH_TOKEN_KEY = 'stytch_refresh_token';
 
@@ -67,17 +68,33 @@ export async function signIn(): Promise<void> {
 	const challenge = await generateCodeChallenge(verifier);
 	localStorage.setItem(CODE_VERIFIER_KEY, verifier);
 
+	// PKCE binds the code to this browser; `state` binds it to this specific
+	// flow. Without it an attacker can feed their own code to the callback and
+	// silently sign the victim into the attacker's account.
+	const oauthState = generateState();
+	localStorage.setItem(STATE_KEY, oauthState);
+
 	const redirectUri = `${window.location.origin}/auth/callback`;
 	const params = new SvelteURLSearchParams({
 		client_id: PUBLIC_STYTCH_CLIENT_ID,
 		redirect_uri: redirectUri,
 		response_type: 'code',
 		scope: 'openid email profile offline_access',
+		state: oauthState,
 		code_challenge: challenge,
 		code_challenge_method: 'S256'
 	});
 
 	window.location.assign(`${AUTHORIZE_ENDPOINT}?${params.toString()}`);
+}
+
+// Consumes the stored `state` and reports whether the redirect's matches it.
+// Fails closed: a missing stored value or a missing/mismatched returned one is
+// a rejection, never a skipped check.
+export function consumeStateMatches(returnedState: string | null): boolean {
+	const expected = localStorage.getItem(STATE_KEY);
+	localStorage.removeItem(STATE_KEY);
+	return expected !== null && returnedState === expected;
 }
 
 export async function exchangeCodeForToken(code: string): Promise<void> {
