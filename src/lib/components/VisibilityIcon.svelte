@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
-	import { Contrast, Globe, Lock, User } from 'lucide-svelte';
+	import { Globe, Layers, Lock, User } from 'lucide-svelte';
 
 	let {
 		visibility,
@@ -13,7 +13,7 @@
 	} = $props();
 
 	const Icon = $derived.by(() => {
-		if (mixed) return Contrast;
+		if (mixed) return Layers;
 		switch (visibility) {
 			case Visibility.Public:
 				return Globe;
