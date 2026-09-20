@@ -21,7 +21,6 @@
 	--success: #7c9473;
 	--warning: #d6a94a;
 	--info: #6f8fa6;
-	--sold: #6b656b;
 
 	--visibility-public: #6f9e8a;
 	--visibility-authenticated: #8a86b8;
@@ -498,12 +497,6 @@ select:focus-visible {
 	color: #a8c29b;
 	background: color-mix(in srgb, var(--success) 22%, transparent);
 	border-color: color-mix(in srgb, var(--success) 45%, transparent);
-}
-
-.status-sold {
-	color: var(--sold);
-	background: color-mix(in srgb, var(--sold) 18%, transparent);
-	border-color: color-mix(in srgb, var(--sold) 35%, transparent);
 }
 
 .status-default {

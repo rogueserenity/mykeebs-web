@@ -12,8 +12,7 @@ const orderStatusColors: Record<string, string> = {
 	ordered: 'status-ordered',
 	shipped: 'status-shipped',
 	delivered: 'status-delivered',
-	cancelled: 'status-cancelled',
-	sold: 'status-sold'
+	cancelled: 'status-cancelled'
 };
 
 export function orderStatusClass(status: string): string {
