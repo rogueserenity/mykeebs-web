@@ -1,6 +1,6 @@
 <script lang="ts" generics="T">
 	import type { Snippet } from 'svelte';
-	import { Plus, Search } from 'lucide-svelte';
+	import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-svelte';
 
 	type Page = { items?: T[]; nextCursor?: string | null };
 	type SortOption = { label: string; getValue: (item: T) => string | number | undefined };
@@ -245,7 +245,11 @@
 				aria-label={sortDescending ? 'Sort ascending' : 'Sort descending'}
 				onclick={() => (sortDescending = !sortDescending)}
 			>
-				{sortDescending ? '↓' : '↑'}
+				{#if sortDescending}
+					<ArrowDown class="h-5 w-5" />
+				{:else}
+					<ArrowUp class="h-5 w-5" />
+				{/if}
 			</button>
 		{/if}
 		{#if filterExpanded}

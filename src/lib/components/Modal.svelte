@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { X } from 'lucide-svelte';
 
 	let {
 		open,
@@ -125,7 +126,7 @@
 					{@render headerExtra()}
 				{/if}
 				<button type="button" class="btn-icon" aria-label="Close" onclick={requestClose}>
-					✕
+					<X class="h-5 w-5" />
 				</button>
 			</div>
 			{@render children()}

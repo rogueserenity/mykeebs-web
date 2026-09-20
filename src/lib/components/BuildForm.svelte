@@ -15,6 +15,7 @@
 	import { lookupsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
 	import { getUserContext } from '$lib/user-context';
 	import ItemPicker, { type ItemPickerCache } from '$lib/components/ItemPicker.svelte';
+	import { X } from 'lucide-svelte';
 
 	let {
 		initial,
@@ -224,7 +225,7 @@
 
 	function removeSwitch(switchId: string) {
 		switchEntries = switchEntries.filter((e) => e.switchId !== switchId);
-		// The focused ✕ button is gone once this re-renders.
+		// The focused remove button is gone once this re-renders.
 		refocusSwitchTrigger.value = true;
 	}
 
@@ -358,7 +359,7 @@
 		const [removed] = stagedImages.splice(index, 1);
 		stagedImages = [...stagedImages];
 		if (removed) URL.revokeObjectURL(removed.preview);
-		// The focused ✕ button is gone once this re-renders.
+		// The focused remove button is gone once this re-renders.
 		addPhotoButton?.focus();
 	}
 
@@ -494,7 +495,7 @@
 							aria-label="Remove image"
 							onclick={() => removeImage(image.imageId)}
 						>
-							✕
+							<X class="h-3.5 w-3.5" />
 						</button>
 					</div>
 				{/each}
@@ -513,7 +514,7 @@
 							aria-label="Remove image"
 							onclick={() => removeStagedImage(index)}
 						>
-							✕
+							<X class="h-3.5 w-3.5" />
 						</button>
 					</div>
 				{/each}
@@ -723,7 +724,7 @@
 							aria-label="Remove switch"
 							onclick={() => removeSwitch(entry.switchId)}
 						>
-							✕
+							<X class="h-3.5 w-3.5" />
 						</button>
 					</li>
 				{/each}
@@ -789,7 +790,7 @@
 							aria-label="Remove keycap kit"
 							onclick={() => removeKeycapKit(entry.keycapSetId, entry.kitId)}
 						>
-							✕
+							<X class="h-3.5 w-3.5" />
 						</button>
 					</li>
 				{/each}

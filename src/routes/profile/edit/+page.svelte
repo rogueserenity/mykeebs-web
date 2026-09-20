@@ -7,6 +7,7 @@
 	import { profile, saveProfile, refreshProfile } from '$lib/profile/profile.svelte';
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
+	import { X } from 'lucide-svelte';
 
 	// Mirrors ProfileInput.username in kbdb's schema: 3-32 chars, lowercase
 	// alphanumeric, single separators only, no leading/trailing separator.
@@ -283,7 +284,7 @@
 							aria-label="Remove link"
 							onclick={() => removeLink(index)}
 						>
-							✕
+							<X class="h-5 w-5" />
 						</button>
 					</div>
 				{/each}

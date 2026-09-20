@@ -4,6 +4,7 @@
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
 	import VisibilityPicker from './VisibilityPicker.svelte';
 	import { lookupsApi } from '$lib/api/client';
+	import { X } from 'lucide-svelte';
 
 	let {
 		initial,
@@ -389,7 +390,7 @@
 							aria-label="Remove image"
 							onclick={() => removeImage(image.imageId)}
 						>
-							✕
+							<X class="h-3.5 w-3.5" />
 						</button>
 					</div>
 				{/each}
@@ -408,7 +409,7 @@
 							aria-label="Remove image"
 							onclick={() => removeStagedImage(index)}
 						>
-							✕
+							<X class="h-3.5 w-3.5" />
 						</button>
 					</div>
 				{/each}

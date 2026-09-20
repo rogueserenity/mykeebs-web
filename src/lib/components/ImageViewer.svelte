@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ArrowLeft, ArrowRight, X } from 'lucide-svelte';
 	let {
 		open,
 		src,
@@ -109,7 +110,7 @@
 			class="btn-icon absolute top-4 right-4 z-10 bg-black/70 text-white hover:bg-black/90"
 			onclick={onClose}
 		>
-			✕
+			<X class="h-5 w-5" />
 		</button>
 
 		<div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
@@ -151,7 +152,7 @@
 				class="btn-icon absolute top-1/2 left-4 z-10 -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
 				onclick={onPrev}
 			>
-				←
+				<ArrowLeft class="h-5 w-5" />
 			</button>
 		{/if}
 		{#if onNext}
@@ -161,7 +162,7 @@
 				class="btn-icon absolute top-1/2 right-4 z-10 -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
 				onclick={onNext}
 			>
-				→
+				<ArrowRight class="h-5 w-5" />
 			</button>
 		{/if}
 

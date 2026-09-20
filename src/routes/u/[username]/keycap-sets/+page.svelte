@@ -18,6 +18,7 @@
 	import KeycapKitForm from '$lib/components/KeycapKitForm.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
 	import { formatPrice, orderStatusClass } from '$lib/format';
+	import { ArrowLeft, ArrowRight } from 'lucide-svelte';
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
@@ -559,10 +560,10 @@
 	{#snippet headerExtra()}
 		{#if kitModal.mode === 'view' && hasMultipleKits}
 			<button type="button" class="btn-icon" aria-label="Previous kit" onclick={() => stepKit(-1)}>
-				←
+				<ArrowLeft class="h-5 w-5" />
 			</button>
 			<button type="button" class="btn-icon" aria-label="Next kit" onclick={() => stepKit(1)}>
-				→
+				<ArrowRight class="h-5 w-5" />
 			</button>
 		{/if}
 	{/snippet}
