@@ -682,6 +682,26 @@ select:focus-visible {
 	padding-inline: 0.7rem;
 }
 
+/* Shares the controls row with three fixed-size icon buttons, so it has to
+   be the element that gives when the row runs out of width. */
+.sort-select {
+	width: auto;
+	min-width: 0;
+	flex-shrink: 1;
+}
+
+@media (width < 40rem) {
+	.sort-select {
+		flex: 1 1 0;
+	}
+
+	/* An open search leaves the select too narrow to read, and sorting is not
+	   what you came to the row to do while searching. */
+	.sort-select-hidden {
+		display: none;
+	}
+}
+
 /* Below sm the labels drop and the pills become icon-only, which fits all
    six across a phone without the control wrapping. */
 @media (width < 40rem) {

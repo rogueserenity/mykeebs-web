@@ -180,14 +180,18 @@
 	{/if}
 	<div class="flex items-center justify-end gap-2 p-4 pb-0">
 		{#if sortOptions.length > 0}
-			<select class="field-select w-auto" bind:value={sortIndex}>
+			<select
+				class="field-select sort-select"
+				class:sort-select-hidden={filterExpanded}
+				bind:value={sortIndex}
+			>
 				{#each sortOptions as option, index (option.label)}
 					<option value={index}>Sort: {option.label}</option>
 				{/each}
 			</select>
 			<button
 				type="button"
-				class="btn-icon"
+				class="btn-icon shrink-0"
 				aria-label={sortDescending ? 'Sort ascending' : 'Sort descending'}
 				onclick={() => (sortDescending = !sortDescending)}
 			>
@@ -202,21 +206,21 @@
 			<input
 				bind:this={filterInput}
 				type="search"
-				class="field-input w-64"
+				class="field-input w-full min-w-0 sm:w-64 sm:flex-none"
 				placeholder="Filter…"
 				bind:value={filterText}
 				onblur={collapseFilterIfEmpty}
 				onkeydown={handleFilterKeydown}
 			/>
 		{:else}
-			<button type="button" class="btn-icon" aria-label="Filter" onclick={expandFilter}>
+			<button type="button" class="btn-icon shrink-0" aria-label="Filter" onclick={expandFilter}>
 				<Search class="mx-auto h-5 w-5" />
 			</button>
 		{/if}
 		{#if onAdd}
 			<button
 				type="button"
-				class="btn-icon btn-accent"
+				class="btn-icon btn-accent shrink-0"
 				aria-label={addLabel ?? 'Add'}
 				onclick={onAdd}
 			>
