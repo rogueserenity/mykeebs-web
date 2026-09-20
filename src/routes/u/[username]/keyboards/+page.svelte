@@ -28,6 +28,8 @@
 		| { mode: 'closed' };
 
 	let modal = $state<ModalState>({ mode: 'closed' });
+	// Keyed by URL, not item id: the API hands back a freshly signed URL when
+	// the old one expires, so a new key retries instead of staying hidden.
 	let failedImages = new SvelteSet<string>();
 	let galleryViewerOpen = $state(false);
 	let galleryIndex = $state(0);
@@ -229,7 +231,7 @@
 			]}
 >
 	{#snippet card(keyboard)}
-		{@const imageFailed = failedImages.has(keyboard.id ?? '')}
+		{@const imageFailed = keyboard.image?.url != null && failedImages.has(keyboard.image.url)}
 		<button
 			type="button"
 			class="kc-card flex w-full items-start gap-3 p-4 text-left"
@@ -242,7 +244,7 @@
 					class="kc-thumb h-16 w-16 shrink-0 object-contain"
 					loading="lazy"
 					decoding="async"
-					onerror={() => failedImages.add(keyboard.id ?? '')}
+					onerror={() => keyboard.image?.url && failedImages.add(keyboard.image.url)}
 				/>
 			{/if}
 			<div class="min-w-0 flex-1">

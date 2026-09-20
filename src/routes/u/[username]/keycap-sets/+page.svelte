@@ -44,6 +44,8 @@
 
 	let modal = $state<ModalState>({ mode: 'closed' });
 	let kitModal = $state<KitModalState>({ mode: 'closed' });
+	// Keyed by URL, not item id: the API hands back a freshly signed URL when
+	// the old one expires, so a new key retries instead of staying hidden.
 	let failedImages = new SvelteSet<string>();
 	let kitImageViewerOpen = $state(false);
 	let grid = $state<ReturnType<typeof CollectionGrid<KeycapSet>> | null>(null);
@@ -391,7 +393,8 @@
 			]}
 >
 	{#snippet card(set)}
-		{@const imageFailed = failedImages.has(set.id ?? '')}
+		{@const imageFailed =
+			set.primaryKitImage?.url != null && failedImages.has(set.primaryKitImage.url)}
 		<button
 			type="button"
 			class="kc-card flex w-full items-start gap-3 overflow-hidden p-3 text-left"
@@ -404,7 +407,7 @@
 					class="kc-thumb h-16 w-16 shrink-0 object-contain"
 					loading="lazy"
 					decoding="async"
-					onerror={() => failedImages.add(set.id ?? '')}
+					onerror={() => set.primaryKitImage?.url && failedImages.add(set.primaryKitImage.url)}
 				/>
 			{/if}
 			<div class="min-w-0 flex-1">
@@ -442,8 +445,8 @@
 		{@const set = modal.set}
 		<KeycapSetDetails
 			{set}
-			failedImages={new Set(failedImages)}
-			onImageError={(kitId) => failedImages.add(kitId)}
+			{failedImages}
+			onImageError={(url) => failedImages.add(url)}
 			onKitClick={openViewKit}
 			onAddKit={userContext.isOwnProfile ? openAddKit : undefined}
 		/>
@@ -564,12 +567,12 @@
 		/>
 	{:else if kitModal.mode === 'view' && activeKit}
 		{@const kit = activeKit}
-		{@const imageFailed = failedImages.has(kit.kitId)}
+		{@const imageFailed = kit.image?.url != null && failedImages.has(kit.image.url)}
 		<KeycapKitDetails
 			name={kit.name}
 			imageUrl={kit.image?.url}
 			{imageFailed}
-			onImageError={() => failedImages.add(kit.kitId)}
+			onImageError={() => kit.image?.url && failedImages.add(kit.image.url)}
 			onImageClick={() => (kitImageViewerOpen = true)}
 			purchase={kit.purchase}
 			{currency}

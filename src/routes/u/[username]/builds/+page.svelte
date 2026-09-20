@@ -60,6 +60,8 @@
 
 	type FormMode = { mode: 'create' } | { mode: 'closed' };
 
+	// Keyed by URL, not item id: the API hands back a freshly signed URL when
+	// the old one expires, so a new key retries instead of staying hidden.
 	let failedImages = new SvelteSet<string>();
 	let formMode = $state<FormMode>({ mode: 'closed' });
 	let grid = $state<ReturnType<typeof CollectionGrid<KeyboardBuildGroup>> | null>(null);
@@ -138,7 +140,7 @@
 >
 	{#snippet card(group)}
 		{@const build = group.current}
-		{@const imageFailed = build.id != null && failedImages.has(build.id)}
+		{@const imageFailed = build.image?.url != null && failedImages.has(build.image.url)}
 		<a
 			href={resolve('/u/[username]/builds/[keyboardId]', {
 				username: userContext.username,
@@ -153,7 +155,7 @@
 					class="kc-thumb h-24 w-24 shrink-0 object-contain"
 					loading="lazy"
 					decoding="async"
-					onerror={() => build.id && failedImages.add(build.id)}
+					onerror={() => build.image?.url && failedImages.add(build.image.url)}
 				/>
 			{/if}
 			<div class="pr-4">

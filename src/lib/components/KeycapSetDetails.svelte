@@ -10,8 +10,8 @@
 		onAddKit
 	}: {
 		set: KeycapSet;
-		failedImages: Set<string>;
-		onImageError: (kitId: string) => void;
+		failedImages: ReadonlySet<string>;
+		onImageError: (url: string) => void;
 		onKitClick: (kit: KeycapKit) => void;
 		onAddKit?: () => void;
 	} = $props();
@@ -40,7 +40,7 @@
 {#if set.kits && set.kits.length > 0}
 	<div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
 		{#each set.kits as kit (kit.kitId)}
-			{@const imageFailed = failedImages.has(kit.kitId)}
+			{@const imageFailed = kit.image?.url != null && failedImages.has(kit.image.url)}
 			<button
 				type="button"
 				class="kc-card w-full overflow-hidden p-3 text-left"
@@ -53,7 +53,7 @@
 						class="kc-thumb-tile aspect-square w-full object-contain"
 						loading="lazy"
 						decoding="async"
-						onerror={() => onImageError(kit.kitId)}
+						onerror={() => kit.image?.url && onImageError(kit.image.url)}
 					/>
 				{:else}
 					<div
