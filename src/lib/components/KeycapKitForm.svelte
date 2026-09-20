@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { KeycapKit, KeycapKitInput } from '@rogueserenity/kbdb-api-client';
 	import { lookupsApi } from '$lib/api/client';
+	import { toDateInput, todayDateInput } from '$lib/format';
 
 	let {
 		initial,
@@ -43,25 +44,10 @@
 		if (orderStatus === lastOrderStatus) return;
 		lastOrderStatus = orderStatus;
 		if (!showOrderDate) orderDate = '';
+		else if (!orderDate) orderDate = todayDateInput();
 		if (!isDelivered) deliveryDate = '';
 		else if (!deliveryDate) deliveryDate = todayDateInput();
 	});
-
-	// API calendar dates parse as UTC midnight, so they must be read back in
-	// UTC to round-trip the same day.
-	function toDateInput(date: Date | undefined): string {
-		return date ? date.toISOString().slice(0, 10) : '';
-	}
-
-	// Local, unlike toDateInput: a real timestamp formatted in UTC would land
-	// on the wrong day west of UTC.
-	function todayDateInput(): string {
-		const now = new Date();
-		const year = String(now.getFullYear()).padStart(4, '0');
-		const month = String(now.getMonth() + 1).padStart(2, '0');
-		const day = String(now.getDate()).padStart(2, '0');
-		return `${year}-${month}-${day}`;
-	}
 
 	let vendors = $state<string[]>([]);
 	let orderStatuses = $state<string[]>([]);

@@ -16,6 +16,7 @@
 	import { getUserContext } from '$lib/user-context';
 	import ItemPicker, { type ItemPickerCache } from '$lib/components/ItemPicker.svelte';
 	import { X } from 'lucide-svelte';
+	import { toDateInput, todayDateInput } from '$lib/format';
 
 	let {
 		initial,
@@ -103,22 +104,6 @@
 
 	let caseMountOpen = $state(Boolean(initial?.caseMountType));
 	let stabsOpen = $state(Boolean(initial?.stabs));
-
-	// API calendar dates parse as UTC midnight, so they must be read back in
-	// UTC to round-trip the same day.
-	function toDateInput(date: Date | undefined): string {
-		return date ? date.toISOString().slice(0, 10) : '';
-	}
-
-	// Local, unlike toDateInput: a real timestamp formatted in UTC would land
-	// on the wrong day west of UTC.
-	function todayDateInput(): string {
-		const now = new Date();
-		const year = String(now.getFullYear()).padStart(4, '0');
-		const month = String(now.getMonth() + 1).padStart(2, '0');
-		const day = String(now.getDate()).padStart(2, '0');
-		return `${year}-${month}-${day}`;
-	}
 
 	type MountTypeValue = { name: string; supportsDurometer: boolean };
 	let mountTypes = $state<MountTypeValue[]>([]);

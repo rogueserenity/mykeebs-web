@@ -5,6 +5,7 @@
 	import VisibilityPicker from './VisibilityPicker.svelte';
 	import { lookupsApi } from '$lib/api/client';
 	import { X } from 'lucide-svelte';
+	import { toDateInput, todayDateInput } from '$lib/format';
 
 	let {
 		initial,
@@ -62,7 +63,9 @@
 		if (orderStatus === lastOrderStatus) return;
 		lastOrderStatus = orderStatus;
 		if (!showOrderDate) orderDate = '';
+		else if (!orderDate) orderDate = todayDateInput();
 		if (!isDelivered) deliveryDate = '';
+		else if (!deliveryDate) deliveryDate = todayDateInput();
 	});
 
 	let designOpen = $state(Boolean(initial?.design));
@@ -87,10 +90,6 @@
 		[vendor.trim() || undefined, orderStatus.trim() || undefined].filter(Boolean).join(' · ') ||
 			'Not set'
 	);
-
-	function toDateInput(date: Date | undefined): string {
-		return date ? date.toISOString().slice(0, 10) : '';
-	}
 
 	type LayoutValue = { name: string; sizes: string[] };
 
