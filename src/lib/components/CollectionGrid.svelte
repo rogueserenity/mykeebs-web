@@ -1,5 +1,6 @@
 <script lang="ts" generics="T">
 	import type { Snippet } from 'svelte';
+	import { Plus, Search } from 'lucide-svelte';
 
 	type Page = { items?: T[]; nextCursor?: string | null };
 	type SortOption = { label: string; getValue: (item: T) => string | number | undefined };
@@ -259,19 +260,7 @@
 			/>
 		{:else}
 			<button type="button" class="btn-icon" aria-label="Filter" onclick={expandFilter}>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="mx-auto h-5 w-5"
-				>
-					<circle cx="11" cy="11" r="8" />
-					<path d="m21 21-4.3-4.3" />
-				</svg>
+				<Search class="mx-auto h-5 w-5" />
 			</button>
 		{/if}
 		{#if onAdd}
@@ -281,19 +270,7 @@
 				aria-label={addLabel ?? 'Add'}
 				onclick={onAdd}
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					class="mx-auto h-5 w-5"
-				>
-					<path d="M12 5v14" />
-					<path d="M5 12h14" />
-				</svg>
+				<Plus class="mx-auto h-5 w-5" />
 			</button>
 		{/if}
 	</div>

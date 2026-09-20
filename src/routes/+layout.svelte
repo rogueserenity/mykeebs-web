@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type { ProfileSummary } from '@rogueserenity/kbdb-api-client';
+	import { Menu, X } from 'lucide-svelte';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { initAuth } from '$lib/auth/auth.svelte';
@@ -103,25 +104,11 @@
 			aria-expanded={mobileMenuOpen}
 			onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
 		>
-			<svg
-				xmlns="http://www.w3.org/2000/svg"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				class="mx-auto h-5 w-5"
-			>
-				{#if mobileMenuOpen}
-					<path d="M18 6 6 18" />
-					<path d="m6 6 12 12" />
-				{:else}
-					<path d="M4 6h16" />
-					<path d="M4 12h16" />
-					<path d="M4 18h16" />
-				{/if}
-			</svg>
+			{#if mobileMenuOpen}
+				<X class="mx-auto h-5 w-5" />
+			{:else}
+				<Menu class="mx-auto h-5 w-5" />
+			{/if}
 		</button>
 	</div>
 	<div class="app-brand">
