@@ -32,7 +32,7 @@
 		onclick={() => (open = !open)}
 	>
 		<Avatar name={displayName} imageUrl={profile.data?.avatar?.url} size="sm" />
-		<span class="font-mono text-sm">{displayName}</span>
+		<span class="profile-trigger-name font-mono text-sm">{displayName}</span>
 	</button>
 
 	{#if open}

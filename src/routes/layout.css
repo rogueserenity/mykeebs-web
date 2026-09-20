@@ -781,6 +781,31 @@ select:focus-visible {
 	background: var(--surface-hover);
 }
 
+/* A long username would otherwise widen the header past the viewport, since
+   the trigger sizes to its content. */
+.profile-trigger {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.profile-trigger-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* On a phone the avatar alone identifies the account, and the full name is
+   in the menu it opens. */
+@media (width < 25rem) {
+	.profile-trigger-name {
+		display: none;
+	}
+
+	.profile-trigger {
+		padding-right: 0.3rem;
+	}
+}
+
 .profile-menu {
 	position: absolute;
 	top: calc(100% + 0.5rem);

@@ -170,7 +170,7 @@
 			</div>
 		{/if}
 	</div>
-	<div class="ml-auto flex items-center">
+	<div class="ml-auto flex min-w-0 items-center">
 		<AuthControl />
 	</div>
 </header>
