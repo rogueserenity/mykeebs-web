@@ -31,6 +31,8 @@ export function orderStatusIcon(status: string) {
 	return key === 'all' ? undefined : statusIcons[key as StatusFilter];
 }
 
+// Capitalized to match how the API returns these ("Delivered"), and because
+// the pills' uppercasing is CSS, which a title attribute never sees.
 export function statusFilterLabel(filter: StatusFilter): string {
-	return filter === 'all' ? 'All' : filter;
+	return filter.charAt(0).toUpperCase() + filter.slice(1);
 }

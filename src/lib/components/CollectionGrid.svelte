@@ -37,21 +37,6 @@
 
 	let statusFilter = $state<StatusFilter>('all');
 
-	// Stands in for the segmented control below sm. A native <select> would
-	// work but renders as unstyled OS chrome.
-	let statusMenuOpen = $state(false);
-	let statusMenuEl = $state<HTMLDivElement | null>(null);
-
-	function closeStatusMenuOnOutsideClick(event: MouseEvent) {
-		if (statusMenuOpen && statusMenuEl && !statusMenuEl.contains(event.target as Node)) {
-			statusMenuOpen = false;
-		}
-	}
-
-	function closeStatusMenuOnEscape(event: KeyboardEvent) {
-		if (event.key === 'Escape') statusMenuOpen = false;
-	}
-
 	let items = $state<T[]>([]);
 	let loading = $state(true);
 	let loadError = $state<string | null>(null);
@@ -164,11 +149,6 @@
 	});
 </script>
 
-<svelte:window
-	onclick={statusMenuOpen ? closeStatusMenuOnOutsideClick : undefined}
-	onkeydown={statusMenuOpen ? closeStatusMenuOnEscape : undefined}
-/>
-
 {#if loading}
 	<div class="flex items-center justify-center p-16">
 		<p class="text-muted font-mono text-sm tracking-wide">Loading&hellip;</p>
@@ -179,7 +159,7 @@
 	</div>
 {:else}
 	{#if getOrderStatus}
-		<div class="mt-4 hidden justify-center sm:flex">
+		<div class="mt-4 flex justify-center px-4">
 			<div class="segmented-control" role="group" aria-label="Filter by order status">
 				{#each STATUS_FILTERS as filter (filter)}
 					{@const Icon = statusFilterIcon(filter)}
@@ -188,42 +168,14 @@
 						class="segmented-control-btn status-filter-btn"
 						class:segmented-control-btn-active={statusFilter === filter}
 						aria-pressed={statusFilter === filter}
+						title={statusFilterLabel(filter)}
 						onclick={() => (statusFilter = filter)}
 					>
 						<Icon class="h-4 w-4 shrink-0" />
-						<span>{statusFilterLabel(filter)}</span>
+						<span class="status-filter-label">{statusFilterLabel(filter)}</span>
 					</button>
 				{/each}
 			</div>
-		</div>
-		<div class="relative mt-4 px-4 sm:hidden" bind:this={statusMenuEl}>
-			<button
-				type="button"
-				class="field-select flex w-full items-center justify-between font-mono text-xs uppercase"
-				aria-haspopup="menu"
-				aria-expanded={statusMenuOpen}
-				onclick={() => (statusMenuOpen = !statusMenuOpen)}
-			>
-				{statusFilterLabel(statusFilter)}
-			</button>
-			{#if statusMenuOpen}
-				<div class="profile-menu" style="width: 100%" role="menu">
-					{#each STATUS_FILTERS as filter (filter)}
-						<button
-							type="button"
-							class="profile-menu-item font-mono text-xs uppercase"
-							class:profile-menu-item-active={statusFilter === filter}
-							role="menuitem"
-							onclick={() => {
-								statusFilter = filter;
-								statusMenuOpen = false;
-							}}
-						>
-							{statusFilterLabel(filter)}
-						</button>
-					{/each}
-				</div>
-			{/if}
 		</div>
 	{/if}
 	<div class="flex items-center justify-end gap-2 p-4 pb-0">
