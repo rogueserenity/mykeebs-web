@@ -265,6 +265,11 @@
 </CollectionGrid>
 
 <Modal open={modal.mode !== 'closed'} onClose={closeModal} obscured={viewerOpen} dirty={formDirty}>
+	{#snippet headerExtra()}
+		{#if modal.mode === 'view'}
+			<VisibilityBadge visibility={modal.sw.visibility} />
+		{/if}
+	{/snippet}
 	{#if modal.mode === 'loading'}
 		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if modal.mode === 'error'}

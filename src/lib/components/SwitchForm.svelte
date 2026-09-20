@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Switch as SwitchModel, SwitchInput } from '@rogueserenity/kbdb-api-client';
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
+	import VisibilityPicker from './VisibilityPicker.svelte';
 	import { lookupsApi } from '$lib/api/client';
 
 	let {
@@ -366,6 +367,11 @@
 		/>
 	</div>
 
+	<fieldset class="flex flex-col items-start gap-1.5">
+		<legend class="field-label mb-1.5">Visibility</legend>
+		<VisibilityPicker bind:value={visibility} />
+	</fieldset>
+
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Brand <span style="color: var(--danger)">*</span></span>
@@ -528,15 +534,6 @@
 	<label class="flex flex-col gap-1.5">
 		<span class="field-label">Notes</span>
 		<textarea class="field-input" rows="5" maxlength="1000" bind:value={notes}></textarea>
-	</label>
-
-	<label class="flex flex-col gap-1.5">
-		<span class="field-label">Visibility</span>
-		<select class="field-select w-56" bind:value={visibility}>
-			<option value={Visibility.Private}>Private</option>
-			<option value={Visibility.Authenticated}>Signed-in users</option>
-			<option value={Visibility.Public}>Public</option>
-		</select>
 	</label>
 
 	{#if validationError}

@@ -15,6 +15,7 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import BuildDetails from '$lib/components/BuildDetails.svelte';
+	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import BuildForm from '$lib/components/BuildForm.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import SwitchDetails from '$lib/components/SwitchDetails.svelte';
@@ -400,6 +401,11 @@
 	obscured={anyNestedOpen && formMode.mode !== 'edit'}
 	dirty={formDirty}
 >
+	{#snippet headerExtra()}
+		{#if selectedBuild && formMode.mode !== 'edit'}
+			<VisibilityBadge visibility={selectedBuild.visibility} />
+		{/if}
+	{/snippet}
 	{#if detailLoading}
 		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
 	{:else if detailError}

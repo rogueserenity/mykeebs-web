@@ -553,6 +553,34 @@ select:focus-visible {
 	border-color: color-mix(in srgb, var(--visibility-mixed) 35%, transparent);
 }
 
+/* Visibility picker -- a segmented control whose selected pill takes the
+   state's own color, so the form echoes the badges on the cards. */
+
+.visibility-picker-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.35rem 0.7rem;
+}
+
+.visibility-picker-btn-active.visibility-public {
+	background: color-mix(in srgb, var(--visibility-public) 16%, transparent);
+	border-color: color-mix(in srgb, var(--visibility-public) 45%, transparent);
+	color: var(--visibility-public);
+}
+
+.visibility-picker-btn-active.visibility-authenticated {
+	background: color-mix(in srgb, var(--visibility-authenticated) 16%, transparent);
+	border-color: color-mix(in srgb, var(--visibility-authenticated) 45%, transparent);
+	color: var(--visibility-authenticated);
+}
+
+.visibility-picker-btn-active.visibility-private {
+	background: color-mix(in srgb, var(--visibility-private) 18%, transparent);
+	border-color: color-mix(in srgb, var(--visibility-private) 48%, transparent);
+	color: var(--visibility-private);
+}
+
 /* Build history timeline -- vertical line with a dot per build, newest at
    top, used on the keyboard-centric build history page. */
 
