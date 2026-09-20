@@ -8,6 +8,7 @@
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import BuildForm from '$lib/components/BuildForm.svelte';
+	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
@@ -23,6 +24,9 @@
 		keyboardId: string;
 		current: BuildSummary;
 		buildCount: number;
+		// A card stands for the whole group, so a single badge would misreport
+		// a keyboard whose builds don't all share one visibility.
+		mixedVisibility: boolean;
 	};
 
 	function groupByKeyboard(builds: BuildSummary[]): KeyboardBuildGroup[] {
@@ -38,7 +42,9 @@
 				(a, b) => (b.buildDate?.getTime() ?? 0) - (a.buildDate?.getTime() ?? 0)
 			);
 			const current = sorted[0];
-			return current ? [{ keyboardId, current, buildCount: sorted.length }] : [];
+			if (!current) return [];
+			const mixedVisibility = sorted.some((build) => build.visibility !== current.visibility);
+			return [{ keyboardId, current, buildCount: sorted.length, mixedVisibility }];
 		});
 	}
 
@@ -171,9 +177,12 @@
 							.join(' · ')}
 					</p>
 				{/if}
-				{#if group.buildCount > 1}
-					<p class="text-faint mt-1 text-xs">{group.buildCount} builds</p>
-				{/if}
+				<div class="mt-1 flex flex-wrap items-center gap-2">
+					<VisibilityBadge visibility={build.visibility} mixed={group.mixedVisibility} />
+					{#if group.buildCount > 1}
+						<p class="text-faint text-xs">{group.buildCount} builds</p>
+					{/if}
+				</div>
 			</div>
 		</a>
 	{/snippet}

@@ -11,6 +11,7 @@
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeycapSetDetails from '$lib/components/KeycapSetDetails.svelte';
 	import KeycapSetForm from '$lib/components/KeycapSetForm.svelte';
@@ -384,7 +385,8 @@
 				{ label: 'Name', getValue: (set) => set.name },
 				{ label: 'Brand', getValue: (set) => set.brand },
 				{ label: 'Order status', getValue: (set) => set.orderStatus ?? undefined },
-				{ label: 'Total cost', getValue: (set) => set.totalCost ?? undefined }
+				{ label: 'Total cost', getValue: (set) => set.totalCost ?? undefined },
+				{ label: 'Visibility', getValue: (set) => set.visibility }
 			]
 		: [
 				{ label: 'Name', getValue: (set) => set.name },
@@ -416,14 +418,17 @@
 				{#if set.profile}
 					<p class="text-faint font-mono text-xs">{set.profile}</p>
 				{/if}
-				{#if formatPrice(set.totalCost, currency) || set.orderStatus}
-					<div class="flex items-center gap-2">
+				{#if formatPrice(set.totalCost, currency) || set.orderStatus || set.visibility}
+					<div class="mt-1 flex flex-wrap items-center gap-2">
 						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost, currency)}</p>
-						{#if set.orderStatus}
-							<span class="status-badge ml-auto shrink-0 {orderStatusClass(set.orderStatus)}">
-								{set.orderStatus}
-							</span>
-						{/if}
+						<div class="ml-auto flex shrink-0 items-center gap-1.5">
+							{#if set.orderStatus}
+								<span class="status-badge {orderStatusClass(set.orderStatus)}">
+									{set.orderStatus}
+								</span>
+							{/if}
+							<VisibilityBadge visibility={set.visibility} />
+						</div>
 					</div>
 				{/if}
 			</div>

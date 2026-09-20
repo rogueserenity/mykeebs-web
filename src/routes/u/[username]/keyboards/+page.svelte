@@ -10,6 +10,7 @@
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import KeyboardForm from '$lib/components/KeyboardForm.svelte';
+	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
@@ -222,7 +223,8 @@
 				{ label: 'Name', getValue: (keyboard) => keyboard.name },
 				{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
 				{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined },
-				{ label: 'Price', getValue: (keyboard) => keyboard.price ?? undefined }
+				{ label: 'Price', getValue: (keyboard) => keyboard.price ?? undefined },
+				{ label: 'Visibility', getValue: (keyboard) => keyboard.visibility }
 			]
 		: [
 				{ label: 'Name', getValue: (keyboard) => keyboard.name },
@@ -255,14 +257,17 @@
 						{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
 					</p>
 				{/if}
-				{#if formatPrice(keyboard.price, currency) || keyboard.orderStatus}
-					<div class="flex items-center gap-2">
+				{#if formatPrice(keyboard.price, currency) || keyboard.orderStatus || keyboard.visibility}
+					<div class="mt-1 flex flex-wrap items-center gap-2">
 						<p class="text-faint font-mono text-xs">{formatPrice(keyboard.price, currency)}</p>
-						{#if keyboard.orderStatus}
-							<span class="status-badge ml-auto shrink-0 {orderStatusClass(keyboard.orderStatus)}">
-								{keyboard.orderStatus}
-							</span>
-						{/if}
+						<div class="ml-auto flex shrink-0 items-center gap-1.5">
+							{#if keyboard.orderStatus}
+								<span class="status-badge {orderStatusClass(keyboard.orderStatus)}">
+									{keyboard.orderStatus}
+								</span>
+							{/if}
+							<VisibilityBadge visibility={keyboard.visibility} />
+						</div>
 					</div>
 				{/if}
 			</div>

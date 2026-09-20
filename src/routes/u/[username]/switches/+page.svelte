@@ -7,6 +7,7 @@
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import SwitchDetails from '$lib/components/SwitchDetails.svelte';
 	import SwitchForm from '$lib/components/SwitchForm.svelte';
@@ -213,7 +214,8 @@
 				{ label: 'Name', getValue: (sw) => sw.name },
 				{ label: 'Brand', getValue: (sw) => sw.brand },
 				{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined },
-				{ label: 'Price', getValue: (sw) => sw.price ?? undefined }
+				{ label: 'Price', getValue: (sw) => sw.price ?? undefined },
+				{ label: 'Visibility', getValue: (sw) => sw.visibility }
 			]
 		: [
 				{ label: 'Name', getValue: (sw) => sw.name },
@@ -244,14 +246,17 @@
 				{#if sw.type}
 					<p class="text-faint font-mono text-xs">{sw.type}</p>
 				{/if}
-				{#if formatPrice(sw.price, currency) || sw.orderStatus}
-					<div class="flex items-center gap-2">
+				{#if formatPrice(sw.price, currency) || sw.orderStatus || sw.visibility}
+					<div class="mt-1 flex flex-wrap items-center gap-2">
 						<p class="text-faint font-mono text-xs">{formatPrice(sw.price, currency)}</p>
-						{#if sw.orderStatus}
-							<span class="status-badge ml-auto shrink-0 {orderStatusClass(sw.orderStatus)}">
-								{sw.orderStatus}
-							</span>
-						{/if}
+						<div class="ml-auto flex shrink-0 items-center gap-1.5">
+							{#if sw.orderStatus}
+								<span class="status-badge {orderStatusClass(sw.orderStatus)}">
+									{sw.orderStatus}
+								</span>
+							{/if}
+							<VisibilityBadge visibility={sw.visibility} />
+						</div>
 					</div>
 				{/if}
 			</div>

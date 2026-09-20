@@ -23,6 +23,11 @@
 	--info: #6f8fa6;
 	--sold: #6b656b;
 
+	--visibility-public: #6f9e8a;
+	--visibility-authenticated: #8a86b8;
+	--visibility-private: #9a8f86;
+	--visibility-mixed: #7f7a84;
+
 	--font-display: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 	--font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
@@ -505,6 +510,47 @@ select:focus-visible {
 	color: var(--accent);
 	background: color-mix(in srgb, var(--accent) 14%, transparent);
 	border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+/* Visibility badges -- deliberately cooler/greyer than the order-status
+   palette above, since both appear on the same card. */
+
+.visibility-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	font-family: var(--font-display);
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	padding: 0.15rem 0.4rem;
+	border-radius: 999px;
+	border: 1px solid transparent;
+}
+
+.visibility-public {
+	color: var(--visibility-public);
+	background: color-mix(in srgb, var(--visibility-public) 14%, transparent);
+	border-color: color-mix(in srgb, var(--visibility-public) 35%, transparent);
+}
+
+.visibility-authenticated {
+	color: var(--visibility-authenticated);
+	background: color-mix(in srgb, var(--visibility-authenticated) 14%, transparent);
+	border-color: color-mix(in srgb, var(--visibility-authenticated) 35%, transparent);
+}
+
+.visibility-private {
+	color: var(--visibility-private);
+	background: color-mix(in srgb, var(--visibility-private) 16%, transparent);
+	border-color: color-mix(in srgb, var(--visibility-private) 38%, transparent);
+}
+
+.visibility-mixed {
+	color: var(--visibility-mixed);
+	background: color-mix(in srgb, var(--visibility-mixed) 14%, transparent);
+	border-color: color-mix(in srgb, var(--visibility-mixed) 35%, transparent);
 }
 
 /* Build history timeline -- vertical line with a dot per build, newest at
