@@ -481,6 +481,15 @@ select:focus-visible {
 	background: currentColor;
 }
 
+/* The icon stands in for the dot, which only ever carried the status color. */
+.status-badge-with-icon::before {
+	display: none;
+}
+
+.status-badge-icon-only {
+	padding: 0.2rem 0.4rem;
+}
+
 .status-ordered {
 	color: var(--warning);
 	background: color-mix(in srgb, var(--warning) 14%, transparent);
@@ -664,6 +673,13 @@ select:focus-visible {
 
 .segmented-control-btn:hover {
 	color: var(--text);
+}
+
+.status-filter-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding-inline: 0.7rem;
 }
 
 .segmented-control-btn-active {

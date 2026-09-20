@@ -1,19 +1,15 @@
 <script lang="ts" generics="T">
 	import type { Snippet } from 'svelte';
 	import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-svelte';
+	import {
+		STATUS_FILTERS,
+		statusFilterIcon,
+		statusFilterLabel,
+		type StatusFilter
+	} from '$lib/order-status';
 
 	type Page = { items?: T[]; nextCursor?: string | null };
 	type SortOption = { label: string; getValue: (item: T) => string | number | undefined };
-
-	const STATUS_FILTERS = [
-		'all',
-		'planned',
-		'ordered',
-		'shipped',
-		'delivered',
-		'cancelled'
-	] as const;
-	type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 	let {
 		userId,
@@ -54,10 +50,6 @@
 
 	function closeStatusMenuOnEscape(event: KeyboardEvent) {
 		if (event.key === 'Escape') statusMenuOpen = false;
-	}
-
-	function statusLabel(filter: StatusFilter) {
-		return filter === 'all' ? 'All statuses' : filter;
 	}
 
 	let items = $state<T[]>([]);
@@ -190,14 +182,16 @@
 		<div class="mt-4 hidden justify-center sm:flex">
 			<div class="segmented-control" role="group" aria-label="Filter by order status">
 				{#each STATUS_FILTERS as filter (filter)}
+					{@const Icon = statusFilterIcon(filter)}
 					<button
 						type="button"
-						class="segmented-control-btn"
+						class="segmented-control-btn status-filter-btn"
 						class:segmented-control-btn-active={statusFilter === filter}
 						aria-pressed={statusFilter === filter}
 						onclick={() => (statusFilter = filter)}
 					>
-						{filter}
+						<Icon class="h-4 w-4 shrink-0" />
+						<span>{statusFilterLabel(filter)}</span>
 					</button>
 				{/each}
 			</div>
@@ -210,7 +204,7 @@
 				aria-expanded={statusMenuOpen}
 				onclick={() => (statusMenuOpen = !statusMenuOpen)}
 			>
-				{statusLabel(statusFilter)}
+				{statusFilterLabel(statusFilter)}
 			</button>
 			{#if statusMenuOpen}
 				<div class="profile-menu" style="width: 100%" role="menu">
@@ -225,7 +219,7 @@
 								statusMenuOpen = false;
 							}}
 						>
-							{statusLabel(filter)}
+							{statusFilterLabel(filter)}
 						</button>
 					{/each}
 				</div>

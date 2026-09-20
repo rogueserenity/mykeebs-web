@@ -12,12 +12,13 @@
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
+	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeycapSetDetails from '$lib/components/KeycapSetDetails.svelte';
 	import KeycapSetForm from '$lib/components/KeycapSetForm.svelte';
 	import KeycapKitForm from '$lib/components/KeycapKitForm.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
-	import { formatPrice, orderStatusClass } from '$lib/format';
+	import { formatPrice } from '$lib/format';
 	import { ArrowLeft, ArrowRight } from 'lucide-svelte';
 
 	const userContext = getUserContext();
@@ -424,9 +425,7 @@
 						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost, currency)}</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
 							{#if set.orderStatus}
-								<span class="status-badge {orderStatusClass(set.orderStatus)}">
-									{set.orderStatus}
-								</span>
+								<OrderStatusBadge status={set.orderStatus} />
 							{/if}
 							<VisibilityBadge visibility={set.visibility} />
 						</div>

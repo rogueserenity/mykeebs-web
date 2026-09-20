@@ -3,6 +3,12 @@
 	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import { resolve } from '$app/paths';
+	import {
+		STATUS_FILTERS,
+		statusFilterIcon,
+		statusFilterLabel,
+		type StatusFilter
+	} from '$lib/order-status';
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
@@ -15,16 +21,6 @@
 	);
 
 	type ItemCounts = { keyboards: number; switches: number; keycapSets: number; builds: number };
-
-	const STATUS_FILTERS = [
-		'all',
-		'planned',
-		'ordered',
-		'shipped',
-		'delivered',
-		'cancelled'
-	] as const;
-	type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 	let statusFilter = $state<StatusFilter>('all');
 
@@ -40,10 +36,6 @@
 
 	function closeStatusMenuOnEscape(event: KeyboardEvent) {
 		if (event.key === 'Escape') statusMenuOpen = false;
-	}
-
-	function statusLabel(filter: StatusFilter) {
-		return filter === 'all' ? 'All statuses' : filter;
 	}
 
 	type ItemEntry = { status: string; price: number | undefined };
@@ -225,14 +217,16 @@
 	<div class="mb-4 hidden justify-center sm:flex">
 		<div class="segmented-control" role="group" aria-label="Filter by order status">
 			{#each STATUS_FILTERS as filter (filter)}
+				{@const Icon = statusFilterIcon(filter)}
 				<button
 					type="button"
-					class="segmented-control-btn"
+					class="segmented-control-btn status-filter-btn"
 					class:segmented-control-btn-active={statusFilter === filter}
 					aria-pressed={statusFilter === filter}
 					onclick={() => (statusFilter = filter)}
 				>
-					{filter}
+					<Icon class="h-4 w-4 shrink-0" />
+					<span>{statusFilterLabel(filter)}</span>
 				</button>
 			{/each}
 		</div>
@@ -245,7 +239,7 @@
 			aria-expanded={statusMenuOpen}
 			onclick={() => (statusMenuOpen = !statusMenuOpen)}
 		>
-			{statusLabel(statusFilter)}
+			{statusFilterLabel(statusFilter)}
 		</button>
 		{#if statusMenuOpen}
 			<div class="profile-menu" style="width: 100%" role="menu">
@@ -260,7 +254,7 @@
 							statusMenuOpen = false;
 						}}
 					>
-						{statusLabel(filter)}
+						{statusFilterLabel(filter)}
 					</button>
 				{/each}
 			</div>

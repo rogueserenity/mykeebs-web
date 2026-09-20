@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { formatDate, formatPrice, orderStatusClass, type PurchaseLike } from '$lib/format';
+	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
+	import OrderStatusBadge from './OrderStatusBadge.svelte';
 
 	let {
 		purchase,
@@ -10,8 +11,8 @@
 
 {#if purchase}
 	{#if purchase.orderStatus}
-		<span class="status-badge mt-2 {orderStatusClass(purchase.orderStatus)}">
-			{purchase.orderStatus}
+		<span class="mt-2 inline-block">
+			<OrderStatusBadge status={purchase.orderStatus} showLabel />
 		</span>
 	{/if}
 	<dl class="spec-list mt-4">

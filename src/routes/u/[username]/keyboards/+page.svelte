@@ -3,7 +3,7 @@
 	import type { Keyboard, KeyboardInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keyboardsApi, buildsApi } from '$lib/api/client';
-	import { formatPrice, orderStatusClass } from '$lib/format';
+	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
@@ -11,6 +11,7 @@
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import KeyboardForm from '$lib/components/KeyboardForm.svelte';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
+	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 
 	const userContext = getUserContext();
 	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
@@ -262,9 +263,7 @@
 						<p class="text-faint font-mono text-xs">{formatPrice(keyboard.price, currency)}</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
 							{#if keyboard.orderStatus}
-								<span class="status-badge {orderStatusClass(keyboard.orderStatus)}">
-									{keyboard.orderStatus}
-								</span>
+								<OrderStatusBadge status={keyboard.orderStatus} />
 							{/if}
 							<VisibilityBadge visibility={keyboard.visibility} />
 						</div>

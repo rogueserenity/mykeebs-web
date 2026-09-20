@@ -3,11 +3,12 @@
 	import type { Switch as SwitchModel, SwitchInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { switchesApi, buildsApi } from '$lib/api/client';
-	import { formatPrice, orderStatusClass } from '$lib/format';
+	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
+	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import SwitchDetails from '$lib/components/SwitchDetails.svelte';
 	import SwitchForm from '$lib/components/SwitchForm.svelte';
@@ -251,9 +252,7 @@
 						<p class="text-faint font-mono text-xs">{formatPrice(sw.price, currency)}</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
 							{#if sw.orderStatus}
-								<span class="status-badge {orderStatusClass(sw.orderStatus)}">
-									{sw.orderStatus}
-								</span>
+								<OrderStatusBadge status={sw.orderStatus} />
 							{/if}
 							<VisibilityBadge visibility={sw.visibility} />
 						</div>

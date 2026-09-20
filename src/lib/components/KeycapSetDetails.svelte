@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { KeycapKit, KeycapSet } from '@rogueserenity/kbdb-api-client';
-	import { orderStatusClass } from '$lib/format';
+	import OrderStatusBadge from './OrderStatusBadge.svelte';
 
 	let {
 		set,
@@ -70,8 +70,8 @@
 						{/if}
 					</h3>
 					{#if kit.purchase?.orderStatus}
-						<span class="status-badge shrink-0 {orderStatusClass(kit.purchase.orderStatus)}">
-							{kit.purchase.orderStatus}
+						<span class="shrink-0">
+							<OrderStatusBadge status={kit.purchase.orderStatus} showLabel />
 						</span>
 					{/if}
 				</div>
