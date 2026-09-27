@@ -5,6 +5,7 @@
 
 	let {
 		initial,
+		isPrimary = false,
 		saving,
 		error,
 		onSubmit,
@@ -15,6 +16,7 @@
 		dirty = $bindable(false)
 	}: {
 		initial?: KeycapKit;
+		isPrimary?: boolean;
 		saving: boolean;
 		error: string | null;
 		onSubmit: (input: KeycapKitInput, stagedImage?: File) => void;
@@ -30,7 +32,7 @@
 	let orderDate = $state(toDateInput(initial?.purchase?.orderDate));
 	let deliveryDate = $state(toDateInput(initial?.purchase?.deliveryDate));
 	let orderStatus = $state(initial?.purchase?.orderStatus ?? '');
-	let primary = $state(initial?.primary ?? false);
+	let primary = $state(isPrimary);
 
 	let showOrderDate = $derived(
 		orderStatus.trim() !== '' && orderStatus.trim().toLowerCase() !== 'planned'
@@ -136,7 +138,7 @@
 	const initialOrderDate = toDateInput(initial?.purchase?.orderDate);
 	const initialDeliveryDate = toDateInput(initial?.purchase?.deliveryDate);
 	const initialOrderStatus = initial?.purchase?.orderStatus ?? '';
-	const initialPrimary = initial?.primary ?? false;
+	const initialPrimary = isPrimary;
 
 	$effect(() => {
 		dirty =
@@ -188,7 +190,7 @@
 				: undefined,
 			// Omitted rather than sent as false, so saving an untouched kit never
 			// clears another kit's primary designation.
-			primary: primary || (initial?.primary ? false : undefined)
+			primary: primary || (isPrimary ? false : undefined)
 		};
 
 		onSubmit(input, stagedImage ?? undefined);

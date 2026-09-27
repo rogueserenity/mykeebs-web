@@ -2,11 +2,8 @@
 	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
 	import OrderStatusBadge from './OrderStatusBadge.svelte';
 
-	let {
-		purchase,
-		currency,
-		showPrice
-	}: { purchase: PurchaseLike | undefined; currency: string; showPrice: boolean } = $props();
+	let { purchase, showPrice }: { purchase: PurchaseLike | undefined; showPrice: boolean } =
+		$props();
 </script>
 
 {#if purchase}
@@ -30,11 +27,11 @@
 				<dd>{purchase.quantity}</dd>
 			</div>
 		{/if}
-		{#if showPrice && formatPrice(purchase.price, currency)}
+		{#if showPrice && formatPrice(purchase.price, purchase.currency)}
 			<div class="spec-row">
 				<dt>Price</dt>
 				<span class="spec-leader"></span>
-				<dd>{formatPrice(purchase.price, currency)}</dd>
+				<dd>{formatPrice(purchase.price, purchase.currency)}</dd>
 			</div>
 		{/if}
 		{#if formatDate(purchase.orderDate)}

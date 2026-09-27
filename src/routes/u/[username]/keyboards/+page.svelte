@@ -14,12 +14,7 @@
 	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 
 	const userContext = getUserContext();
-	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
-	const showPrice = $derived(
-		userContext.isOwnProfile
-			? (userContext.profile.preferences?.showPriceToMe ?? true)
-			: (userContext.profile.preferences?.showPriceToOthers ?? false)
-	);
+	const showPrice = $derived(userContext.showPrice);
 
 	type ModalState =
 		| { mode: 'view'; keyboard: Keyboard }
@@ -258,9 +253,11 @@
 						{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
 					</p>
 				{/if}
-				{#if formatPrice(keyboard.price, currency) || keyboard.orderStatus || keyboard.visibility}
+				{#if formatPrice(keyboard.price, keyboard.currency) || keyboard.orderStatus || keyboard.visibility}
 					<div class="mt-1 flex flex-wrap items-center gap-2">
-						<p class="text-faint font-mono text-xs">{formatPrice(keyboard.price, currency)}</p>
+						<p class="text-faint font-mono text-xs">
+							{formatPrice(keyboard.price, keyboard.currency)}
+						</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
 							{#if keyboard.orderStatus}
 								<OrderStatusBadge status={keyboard.orderStatus} />
@@ -296,7 +293,6 @@
 				galleryIndex = index;
 				galleryViewerOpen = true;
 			}}
-			{currency}
 			{showPrice}
 		/>
 

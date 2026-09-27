@@ -11,12 +11,7 @@
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 
 	const userContext = getUserContext();
-	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
-	const showPrice = $derived(
-		userContext.isOwnProfile
-			? (userContext.profile.preferences?.showPriceToMe ?? true)
-			: (userContext.profile.preferences?.showPriceToOthers ?? false)
-	);
+	const showPrice = $derived(userContext.showPrice);
 
 	// "Current" is the most recent buildDate; the API has no persisted
 	// current-build concept.
@@ -167,11 +162,11 @@
 			<div class="pr-4">
 				<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
 				<p class="text-muted text-sm">{build.keyboard?.brand}</p>
-				{#if formatDate(build.buildDate) || (showPrice && formatPrice(build.totalCost, currency))}
+				{#if formatDate(build.buildDate) || (showPrice && formatPrice(build.totalCost, build.currency))}
 					<p class="text-faint font-mono text-xs">
 						{[
 							formatDate(build.buildDate),
-							showPrice ? formatPrice(build.totalCost, currency) : undefined
+							showPrice ? formatPrice(build.totalCost, build.currency) : undefined
 						]
 							.filter(Boolean)
 							.join(' · ')}

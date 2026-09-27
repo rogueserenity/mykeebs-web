@@ -5,9 +5,8 @@
 	let {
 		sw,
 		onImageClick,
-		currency,
 		showPrice
-	}: { sw: SwitchModel; onImageClick: () => void; currency: string; showPrice: boolean } = $props();
+	}: { sw: SwitchModel; onImageClick: () => void; showPrice: boolean } = $props();
 
 	let imageFailed = $state(false);
 </script>
@@ -124,7 +123,7 @@
 	{#if sw.purchase}
 		<div>
 			<h3 class="section-label">Purchase</h3>
-			<PurchaseDetails purchase={sw.purchase} {currency} {showPrice} />
+			<PurchaseDetails purchase={sw.purchase} {showPrice} />
 		</div>
 	{/if}
 </div>

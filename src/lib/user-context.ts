@@ -6,6 +6,7 @@ export type UserContext = {
 	readonly username: string;
 	readonly profile: Profile;
 	readonly isOwnProfile: boolean;
+	readonly showPrice: boolean;
 };
 
 const KEY = Symbol('user-context');

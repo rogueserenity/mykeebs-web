@@ -8,7 +8,6 @@
 		onSwitchClick,
 		onKeycapKitClick,
 		onImageClick,
-		currency,
 		showPrice
 	}: {
 		build: Build;
@@ -16,7 +15,6 @@
 		onSwitchClick: (switchId: string) => void;
 		onKeycapKitClick: (keycapSetId: string, kitId: string) => void;
 		onImageClick: (index: number) => void;
-		currency: string;
 		showPrice: boolean;
 	} = $props();
 
@@ -52,9 +50,12 @@
 	{:else}
 		<h2 class="heading-lg text-faint text-2xl">Deleted keyboard</h2>
 	{/if}
-	{#if formatDate(build.buildDate) || (showPrice && formatPrice(build.totalCost, currency))}
+	{#if formatDate(build.buildDate) || (showPrice && formatPrice(build.totalCost, build.currency))}
 		<p class="text-faint mt-1 font-mono text-sm">
-			{[formatDate(build.buildDate), showPrice ? formatPrice(build.totalCost, currency) : undefined]
+			{[
+				formatDate(build.buildDate),
+				showPrice ? formatPrice(build.totalCost, build.currency) : undefined
+			]
 				.filter(Boolean)
 				.join(' · ')}
 		</p>

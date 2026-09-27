@@ -55,6 +55,14 @@
 		},
 		get isOwnProfile() {
 			return isOwnProfile;
+		},
+		// kbdb already withholds prices a non-owner may not see, but always
+		// returns them to the owner on detail reads.
+		get showPrice() {
+			return (
+				!isOwnProfile ||
+				(view.status === 'ready' && (view.profile.preferences?.showPriceToMe ?? true))
+			);
 		}
 	});
 

@@ -22,12 +22,7 @@
 	import { ArrowLeft, ArrowRight } from 'lucide-svelte';
 
 	const userContext = getUserContext();
-	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
-	const showPrice = $derived(
-		userContext.isOwnProfile
-			? (userContext.profile.preferences?.showPriceToMe ?? true)
-			: (userContext.profile.preferences?.showPriceToOthers ?? false)
-	);
+	const showPrice = $derived(userContext.showPrice);
 
 	type ModalState =
 		| { mode: 'view'; set: KeycapSet }
@@ -420,9 +415,9 @@
 				{#if set.profile}
 					<p class="text-faint font-mono text-xs">{set.profile}</p>
 				{/if}
-				{#if formatPrice(set.totalCost, currency) || set.orderStatus || set.visibility}
+				{#if formatPrice(set.totalCost, set.currency) || set.orderStatus || set.visibility}
 					<div class="mt-1 flex flex-wrap items-center gap-2">
-						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost, currency)}</p>
+						<p class="text-faint font-mono text-xs">{formatPrice(set.totalCost, set.currency)}</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
 							{#if set.orderStatus}
 								<OrderStatusBadge status={set.orderStatus} />
@@ -585,7 +580,6 @@
 			onImageError={() => kit.image?.url && failedImages.add(kit.image.url)}
 			onImageClick={() => (kitImageViewerOpen = true)}
 			purchase={kit.purchase}
-			{currency}
 			{showPrice}
 		/>
 
@@ -653,6 +647,7 @@
 		{@const kit = activeKit}
 		<KeycapKitForm
 			initial={kit}
+			isPrimary={modal.mode === 'view' && modal.set.primaryKitId === kit.kitId}
 			saving={kitSaving}
 			error={kitSaveError}
 			onSubmit={(input) => handleUpdateKit(kit.kitId, input)}

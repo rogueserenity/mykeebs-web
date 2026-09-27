@@ -22,12 +22,7 @@
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
 
 	const userContext = getUserContext();
-	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
-	const showPrice = $derived(
-		userContext.isOwnProfile
-			? (userContext.profile.preferences?.showPriceToMe ?? true)
-			: (userContext.profile.preferences?.showPriceToOthers ?? false)
-	);
+	const showPrice = $derived(userContext.showPrice);
 
 	const keyboardId = $derived(page.params.keyboardId ?? '');
 
@@ -381,9 +376,9 @@
 									<span class="status-badge status-default">Current</span>
 								{/if}
 							</div>
-							{#if showPrice && formatPrice(build.totalCost, currency)}
+							{#if showPrice && formatPrice(build.totalCost, build.currency)}
 								<p class="text-faint font-mono text-xs">
-									{formatPrice(build.totalCost, currency)}
+									{formatPrice(build.totalCost, build.currency)}
 								</p>
 							{/if}
 						</div>
@@ -436,7 +431,6 @@
 				galleryIndex = index;
 				galleryViewerOpen = true;
 			}}
-			{currency}
 			{showPrice}
 		/>
 
@@ -516,7 +510,6 @@
 				keyboardGalleryIndex = index;
 				keyboardGalleryViewerOpen = true;
 			}}
-			{currency}
 			{showPrice}
 		/>
 	{/if}
@@ -551,12 +544,7 @@
 	{:else if switchDetailError}
 		<p class="p-8 text-center text-lg" style="color: var(--danger)">{switchDetailError}</p>
 	{:else if switchDetail}
-		<SwitchDetails
-			sw={switchDetail}
-			onImageClick={() => (switchViewerOpen = true)}
-			{currency}
-			{showPrice}
-		/>
+		<SwitchDetails sw={switchDetail} onImageClick={() => (switchViewerOpen = true)} {showPrice} />
 	{/if}
 </Modal>
 
@@ -587,7 +575,6 @@
 			onImageError={() => {}}
 			onImageClick={() => (kitViewerOpen = true)}
 			purchase={kit.purchase}
-			{currency}
 			{showPrice}
 		/>
 	{/if}

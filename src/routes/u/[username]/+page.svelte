@@ -11,14 +11,7 @@
 	} from '$lib/order-status';
 
 	const userContext = getUserContext();
-	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
-	// kbdb omits price/totalCost from list responses when this is off, so
-	// summing them would show a misleading $0.00 rather than hiding the total.
-	const showPrices = $derived(
-		userContext.isOwnProfile
-			? (userContext.profile.preferences?.showPriceToMe ?? true)
-			: (userContext.profile.preferences?.showPriceToOthers ?? false)
-	);
+	const showPrices = $derived(userContext.showPrice);
 
 	type ItemCounts = { keyboards: number; switches: number; keycapSets: number; builds: number };
 
@@ -32,6 +25,7 @@
 		keycapSets: ItemEntry[];
 		builds: number;
 		buildsTotalCost: number;
+		currency: string | undefined;
 	} | null>(null);
 	let countsLoading = $state(false);
 
@@ -57,23 +51,29 @@
 		countsLoading = true;
 		try {
 			const [keyboards, switches, keycapSets, builds] = await Promise.all([
-				fetchAll<{ orderStatus?: string; price?: number }>((cursor) =>
+				fetchAll<{ orderStatus?: string; price?: number; currency?: string }>((cursor) =>
 					keyboardsApi.listKeyboards({ userId, cursor })
 				),
-				fetchAll<{ orderStatus?: string; price?: number }>((cursor) =>
+				fetchAll<{ orderStatus?: string; price?: number; currency?: string }>((cursor) =>
 					switchesApi.listSwitches({ userId, cursor })
 				),
-				fetchAll<{ orderStatus?: string | null; totalCost?: number }>((cursor) =>
+				fetchAll<{ orderStatus?: string | null; totalCost?: number; currency?: string }>((cursor) =>
 					keycapSetsApi.listKeycapSets({ userId, cursor })
 				),
-				fetchAll<{ totalCost?: number }>((cursor) => buildsApi.listBuilds({ userId, cursor }))
+				fetchAll<{ totalCost?: number; currency?: string }>((cursor) =>
+					buildsApi.listBuilds({ userId, cursor })
+				)
 			]);
 			itemStatuses = {
 				keyboards: keyboards.map((k) => ({ status: k.orderStatus ?? '', price: k.price })),
 				switches: switches.map((s) => ({ status: s.orderStatus ?? '', price: s.price })),
 				keycapSets: keycapSets.map((k) => ({ status: k.orderStatus ?? '', price: k.totalCost })),
 				builds: builds.length,
-				buildsTotalCost: builds.reduce((sum, b) => sum + (b.totalCost ?? 0), 0)
+				buildsTotalCost: builds.reduce((sum, b) => sum + (b.totalCost ?? 0), 0),
+				// Undefined when kbdb withheld every price, which hides the totals
+				// rather than showing a misleading $0.00.
+				currency: [...keyboards, ...switches, ...keycapSets, ...builds].find((i) => i.currency)
+					?.currency
 			};
 		} catch {
 			itemStatuses = null;
@@ -122,6 +122,8 @@
 				}
 			: null
 	);
+
+	const currency = $derived(itemStatuses?.currency);
 
 	const grandTotal = $derived(
 		totals ? totals.keyboards + totals.switches + totals.keycapSets : null

@@ -5,12 +5,10 @@
 	let {
 		keyboard,
 		onImageClick,
-		currency,
 		showPrice
 	}: {
 		keyboard: Keyboard;
 		onImageClick: (index: number) => void;
-		currency: string;
 		showPrice: boolean;
 	} = $props();
 
@@ -132,7 +130,7 @@
 	{#if keyboard.purchase}
 		<div>
 			<h3 class="section-label">Purchase</h3>
-			<PurchaseDetails purchase={keyboard.purchase} {currency} {showPrice} />
+			<PurchaseDetails purchase={keyboard.purchase} {showPrice} />
 		</div>
 	{/if}
 </div>

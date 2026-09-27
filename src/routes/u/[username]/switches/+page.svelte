@@ -14,12 +14,7 @@
 	import SwitchForm from '$lib/components/SwitchForm.svelte';
 
 	const userContext = getUserContext();
-	const currency = $derived(userContext.profile.preferences?.currency ?? 'USD');
-	const showPrice = $derived(
-		userContext.isOwnProfile
-			? (userContext.profile.preferences?.showPriceToMe ?? true)
-			: (userContext.profile.preferences?.showPriceToOthers ?? false)
-	);
+	const showPrice = $derived(userContext.showPrice);
 
 	type ModalState =
 		| { mode: 'view'; sw: SwitchModel }
@@ -247,9 +242,9 @@
 				{#if sw.type}
 					<p class="text-faint font-mono text-xs">{sw.type}</p>
 				{/if}
-				{#if formatPrice(sw.price, currency) || sw.orderStatus || sw.visibility}
+				{#if formatPrice(sw.price, sw.currency) || sw.orderStatus || sw.visibility}
 					<div class="mt-1 flex flex-wrap items-center gap-2">
-						<p class="text-faint font-mono text-xs">{formatPrice(sw.price, currency)}</p>
+						<p class="text-faint font-mono text-xs">{formatPrice(sw.price, sw.currency)}</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
 							{#if sw.orderStatus}
 								<OrderStatusBadge status={sw.orderStatus} />
@@ -274,7 +269,7 @@
 	{:else if modal.mode === 'error'}
 		<p class="p-8 text-center text-lg" style="color: var(--danger)">{modal.message}</p>
 	{:else if modal.mode === 'view'}
-		<SwitchDetails sw={modal.sw} onImageClick={() => (viewerOpen = true)} {currency} {showPrice} />
+		<SwitchDetails sw={modal.sw} onImageClick={() => (viewerOpen = true)} {showPrice} />
 
 		{#if userContext.isOwnProfile}
 			{@const sw = modal.sw}

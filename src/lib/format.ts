@@ -1,6 +1,7 @@
 export type PurchaseLike = {
 	vendor?: string;
 	price?: number;
+	currency?: string;
 	quantity?: number;
 	orderDate?: Date;
 	deliveryDate?: Date;
@@ -43,8 +44,11 @@ function priceFormatterFor(currency: string): Intl.NumberFormat {
 	return formatter;
 }
 
-export function formatPrice(price: number | undefined, currency: string): string | undefined {
-	return price != null ? priceFormatterFor(currency).format(price) : undefined;
+export function formatPrice(
+	price: number | undefined,
+	currency: string | undefined
+): string | undefined {
+	return price != null && currency ? priceFormatterFor(currency).format(price) : undefined;
 }
 
 // API calendar dates parse as UTC midnight, so they must be read back in UTC
