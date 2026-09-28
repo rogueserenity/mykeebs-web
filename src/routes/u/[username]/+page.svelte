@@ -9,24 +9,20 @@
 		statusFilterLabel,
 		type StatusFilter
 	} from '$lib/order-status';
+	import {
+		collectionStats,
+		countsFor,
+		totalsFor,
+		type CollectionStats,
+		type Tally
+	} from '$lib/collection-stats';
 
 	const userContext = getUserContext();
 	const showPrices = $derived(userContext.showPrice);
 
-	type ItemCounts = { keyboards: number; switches: number; keycapSets: number; builds: number };
-
 	let statusFilter = $state<StatusFilter>('all');
 
-	type ItemEntry = { status: string; price: number | undefined };
-
-	let itemStatuses = $state<{
-		keyboards: ItemEntry[];
-		switches: ItemEntry[];
-		keycapSets: ItemEntry[];
-		builds: number;
-		buildsTotalCost: number;
-		currency: string | undefined;
-	} | null>(null);
+	let stats = $state<CollectionStats | null>(null);
 	let countsLoading = $state(false);
 
 	async function fetchAll<T>(
@@ -45,43 +41,19 @@
 		return all;
 	}
 
-	// The API scopes these to what the viewer may see. Builds carry no order
-	// status, so only their count is tracked.
+	// The API scopes these to what the viewer may see.
 	async function loadCounts(userId: string) {
 		countsLoading = true;
 		try {
 			const [keyboards, switches, keycapSets, builds] = await Promise.all([
-				fetchAll<{ orderStatus?: string; price?: number; currency?: string }>((cursor) =>
-					keyboardsApi.listKeyboards({ userId, cursor })
-				),
-				fetchAll<{ purchase?: { orderStatus?: string; price?: number; currency?: string } }>(
-					(cursor) => switchesApi.listSwitches({ userId, cursor })
-				),
-				fetchAll<{ orderStatus?: string | null; totalCost?: number; currency?: string }>((cursor) =>
-					keycapSetsApi.listKeycapSets({ userId, cursor })
-				),
-				fetchAll<{ totalCost?: number; currency?: string }>((cursor) =>
-					buildsApi.listBuilds({ userId, cursor })
-				)
+				fetchAll((cursor) => keyboardsApi.listKeyboards({ userId, cursor })),
+				fetchAll((cursor) => switchesApi.listSwitches({ userId, cursor })),
+				fetchAll((cursor) => keycapSetsApi.listKeycapSets({ userId, cursor })),
+				fetchAll((cursor) => buildsApi.listBuilds({ userId, cursor }))
 			]);
-			itemStatuses = {
-				keyboards: keyboards.map((k) => ({ status: k.orderStatus ?? '', price: k.price })),
-				switches: switches.map((s) => ({
-					status: s.purchase?.orderStatus ?? '',
-					price: s.purchase?.price
-				})),
-				keycapSets: keycapSets.map((k) => ({ status: k.orderStatus ?? '', price: k.totalCost })),
-				builds: builds.length,
-				buildsTotalCost: builds.reduce((sum, b) => sum + (b.totalCost ?? 0), 0),
-				// Undefined when kbdb withheld every price, which hides the totals
-				// rather than showing a misleading $0.00.
-				currency: [
-					...[...keyboards, ...keycapSets, ...builds].map((i) => i.currency),
-					...switches.map((s) => s.purchase?.currency)
-				].find(Boolean)
-			};
+			stats = collectionStats({ keyboards, switches, keycapSets, builds });
 		} catch {
-			itemStatuses = null;
+			stats = null;
 		} finally {
 			countsLoading = false;
 		}
@@ -93,42 +65,10 @@
 
 	const profile = $derived(userContext.profile);
 
-	function countFor(entries: ItemEntry[], filter: StatusFilter): number {
-		if (filter === 'all') return entries.length;
-		return entries.filter((e) => e.status.toLowerCase() === filter).length;
-	}
+	const counts = $derived<Tally | null>(stats ? countsFor(stats, statusFilter) : null);
+	const totals = $derived<Tally | null>(stats ? totalsFor(stats, statusFilter) : null);
 
-	function priceSumFor(entries: ItemEntry[], filter: StatusFilter): number {
-		const matching =
-			filter === 'all' ? entries : entries.filter((e) => e.status.toLowerCase() === filter);
-		return matching.reduce((sum, e) => sum + (e.price ?? 0), 0);
-	}
-
-	const counts = $derived<ItemCounts | null>(
-		itemStatuses
-			? {
-					keyboards: countFor(itemStatuses.keyboards, statusFilter),
-					switches: countFor(itemStatuses.switches, statusFilter),
-					keycapSets: countFor(itemStatuses.keycapSets, statusFilter),
-					builds: statusFilter === 'all' ? itemStatuses.builds : 0
-				}
-			: null
-	);
-
-	type ItemTotals = { keyboards: number; switches: number; keycapSets: number; builds: number };
-
-	const totals = $derived<ItemTotals | null>(
-		itemStatuses
-			? {
-					keyboards: priceSumFor(itemStatuses.keyboards, statusFilter),
-					switches: priceSumFor(itemStatuses.switches, statusFilter),
-					keycapSets: priceSumFor(itemStatuses.keycapSets, statusFilter),
-					builds: statusFilter === 'all' ? itemStatuses.buildsTotalCost : 0
-				}
-			: null
-	);
-
-	const currency = $derived(itemStatuses?.currency);
+	const currency = $derived(stats?.currency);
 
 	const grandTotal = $derived(
 		totals ? totals.keyboards + totals.switches + totals.keycapSets : null

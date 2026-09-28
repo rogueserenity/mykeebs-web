@@ -1,5 +1,24 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { toDateInput, todayDateInput } from './format';
+import { formatPrice, toDateInput, todayDateInput } from './format';
+
+describe('formatPrice', () => {
+	it('formats a price in its currency', () => {
+		expect(formatPrice(31.5, 'USD')).toBe('$31.50');
+		expect(formatPrice(31.5, 'EUR')).toBe('€31.50');
+	});
+
+	it('shows nothing without a price', () => {
+		expect(formatPrice(undefined, 'USD')).toBeUndefined();
+	});
+
+	it('shows nothing rather than guess a currency', () => {
+		expect(formatPrice(31.5, undefined)).toBeUndefined();
+	});
+
+	it('still formats a zero price', () => {
+		expect(formatPrice(0, 'USD')).toBe('$0.00');
+	});
+});
 
 describe('toDateInput', () => {
 	it('is empty for an unset date', () => {
