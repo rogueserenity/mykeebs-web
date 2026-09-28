@@ -54,8 +54,8 @@
 				fetchAll<{ orderStatus?: string; price?: number; currency?: string }>((cursor) =>
 					keyboardsApi.listKeyboards({ userId, cursor })
 				),
-				fetchAll<{ orderStatus?: string; price?: number; currency?: string }>((cursor) =>
-					switchesApi.listSwitches({ userId, cursor })
+				fetchAll<{ purchase?: { orderStatus?: string; price?: number; currency?: string } }>(
+					(cursor) => switchesApi.listSwitches({ userId, cursor })
 				),
 				fetchAll<{ orderStatus?: string | null; totalCost?: number; currency?: string }>((cursor) =>
 					keycapSetsApi.listKeycapSets({ userId, cursor })
@@ -66,14 +66,19 @@
 			]);
 			itemStatuses = {
 				keyboards: keyboards.map((k) => ({ status: k.orderStatus ?? '', price: k.price })),
-				switches: switches.map((s) => ({ status: s.orderStatus ?? '', price: s.price })),
+				switches: switches.map((s) => ({
+					status: s.purchase?.orderStatus ?? '',
+					price: s.purchase?.price
+				})),
 				keycapSets: keycapSets.map((k) => ({ status: k.orderStatus ?? '', price: k.totalCost })),
 				builds: builds.length,
 				buildsTotalCost: builds.reduce((sum, b) => sum + (b.totalCost ?? 0), 0),
 				// Undefined when kbdb withheld every price, which hides the totals
 				// rather than showing a misleading $0.00.
-				currency: [...keyboards, ...switches, ...keycapSets, ...builds].find((i) => i.currency)
-					?.currency
+				currency: [
+					...[...keyboards, ...keycapSets, ...builds].map((i) => i.currency),
+					...switches.map((s) => s.purchase?.currency)
+				].find(Boolean)
 			};
 		} catch {
 			itemStatuses = null;

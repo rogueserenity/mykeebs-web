@@ -202,21 +202,21 @@
 	itemKey={(sw) => sw.id ?? ''}
 	emptyMessage="No switches yet."
 	getName={(sw) => sw.name}
-	getOrderStatus={(sw) => sw.orderStatus ?? undefined}
+	getOrderStatus={(sw) => sw.purchase?.orderStatus}
 	onAdd={userContext.isOwnProfile ? openCreate : undefined}
 	addLabel="Add switch"
 	sortOptions={userContext.isOwnProfile
 		? [
 				{ label: 'Name', getValue: (sw) => sw.name },
 				{ label: 'Brand', getValue: (sw) => sw.brand },
-				{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined },
-				{ label: 'Price', getValue: (sw) => sw.price ?? undefined },
+				{ label: 'Order status', getValue: (sw) => sw.purchase?.orderStatus },
+				{ label: 'Price', getValue: (sw) => sw.purchase?.price },
 				{ label: 'Visibility', getValue: (sw) => sw.visibility }
 			]
 		: [
 				{ label: 'Name', getValue: (sw) => sw.name },
 				{ label: 'Brand', getValue: (sw) => sw.brand },
-				{ label: 'Order status', getValue: (sw) => sw.orderStatus ?? undefined }
+				{ label: 'Order status', getValue: (sw) => sw.purchase?.orderStatus }
 			]}
 >
 	{#snippet card(sw)}
@@ -242,12 +242,14 @@
 				{#if sw.type}
 					<p class="text-faint font-mono text-xs">{sw.type}</p>
 				{/if}
-				{#if formatPrice(sw.price, sw.currency) || sw.orderStatus || sw.visibility}
+				{#if formatPrice(sw.purchase?.price, sw.purchase?.currency) || sw.purchase?.orderStatus || sw.visibility}
 					<div class="mt-1 flex flex-wrap items-center gap-2">
-						<p class="text-faint font-mono text-xs">{formatPrice(sw.price, sw.currency)}</p>
+						<p class="text-faint font-mono text-xs">
+							{formatPrice(sw.purchase?.price, sw.purchase?.currency)}
+						</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
-							{#if sw.orderStatus}
-								<OrderStatusBadge status={sw.orderStatus} />
+							{#if sw.purchase?.orderStatus}
+								<OrderStatusBadge status={sw.purchase?.orderStatus} />
 							{/if}
 							<VisibilityBadge visibility={sw.visibility} />
 						</div>

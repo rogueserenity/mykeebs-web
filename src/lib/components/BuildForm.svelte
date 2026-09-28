@@ -8,7 +8,7 @@
 		KeyboardSummary,
 		KeycapSet,
 		KeycapSetSummary,
-		SwitchSummary
+		Switch
 	} from '@rogueserenity/kbdb-api-client';
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
 	import VisibilityPicker from './VisibilityPicker.svelte';
@@ -42,7 +42,7 @@
 	const userContext = getUserContext();
 
 	const keyboardPickerCache: ItemPickerCache<KeyboardSummary> = { items: null };
-	const switchPickerCache: ItemPickerCache<SwitchSummary> = { items: null };
+	const switchPickerCache: ItemPickerCache<Switch> = { items: null };
 	const keycapSetPickerCache: ItemPickerCache<KeycapSetSummary> = { items: null };
 
 	// The picker returns only display fields; the full Keyboard is fetched for
@@ -167,7 +167,7 @@
 	let switchCountInputs = new SvelteMap<string, HTMLInputElement>();
 	let focusSwitchId = $state<string | null>(null);
 
-	function addSwitch(sw: SwitchSummary) {
+	function addSwitch(sw: Switch) {
 		const switchId = sw.id ?? '';
 		const existing = switchEntries.find((e) => e.switchId === switchId);
 		if (existing) {
