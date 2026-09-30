@@ -5,14 +5,20 @@
 	let {
 		sw,
 		onImageClick,
+		onImageError,
 		showPrice
-	}: { sw: SwitchModel; onImageClick: () => void; showPrice: boolean } = $props();
+	}: {
+		sw: SwitchModel;
+		onImageClick: () => void;
+		onImageError?: () => void;
+		showPrice: boolean;
+	} = $props();
 
-	let imageFailed = $state(false);
+	let failedUrl = $state<string | null>(null);
 </script>
 
 <div class="flex items-start gap-4 pr-8">
-	{#if sw.image?.url && !imageFailed}
+	{#if sw.image?.url && sw.image.url !== failedUrl}
 		<button
 			type="button"
 			class="shrink-0 cursor-zoom-in"
@@ -24,7 +30,10 @@
 				alt={sw.name}
 				class="kc-thumb h-24 w-24 object-contain"
 				decoding="async"
-				onerror={() => (imageFailed = true)}
+				onerror={() => {
+					failedUrl = sw.image?.url ?? null;
+					onImageError?.();
+				}}
 			/>
 		</button>
 	{/if}

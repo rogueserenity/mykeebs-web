@@ -20,8 +20,6 @@
 		| { mode: 'view'; keyboard: Keyboard }
 		| { mode: 'create' }
 		| { mode: 'edit'; keyboard: Keyboard }
-		| { mode: 'loading' }
-		| { mode: 'error'; message: string }
 		| { mode: 'closed' };
 
 	let modal = $state<ModalState>({ mode: 'closed' });
@@ -39,16 +37,24 @@
 	let confirmingDelete = $state(false);
 	let formDirty = $state(false);
 
-	async function openKeyboard(keyboardId: string) {
-		const userId = userContext.userId;
-		if (!userId) return;
+	let refetchedId: string | null = null;
 
-		modal = { mode: 'loading' };
+	function openKeyboard(keyboard: Keyboard) {
+		refetchedId = null;
+		modal = { mode: 'view', keyboard };
+	}
+
+	// List rows' presigned image URLs can expire while the page sits open.
+	async function refetchStaleImages(keyboardId: string) {
+		const userId = userContext.userId;
+		if (!userId || refetchedId === keyboardId) return;
+		refetchedId = keyboardId;
 		try {
 			const keyboard = await keyboardsApi.getKeyboard({ userId, keyboardId });
-			modal = { mode: 'view', keyboard };
+			if (modal.mode === 'view' && modal.keyboard.id === keyboardId)
+				modal = { mode: 'view', keyboard };
 		} catch {
-			modal = { mode: 'error', message: 'Could not load this keyboard.' };
+			// The broken images stay; the rest of the details are still accurate.
 		}
 	}
 
@@ -234,7 +240,7 @@
 		<button
 			type="button"
 			class="kc-card flex w-full items-start gap-3 p-4 text-left"
-			onclick={() => openKeyboard(keyboard.id ?? '')}
+			onclick={() => openKeyboard(keyboard)}
 		>
 			{#if imageUrl && !imageFailed}
 				<img
@@ -283,13 +289,11 @@
 			<VisibilityBadge visibility={modal.keyboard.visibility} />
 		{/if}
 	{/snippet}
-	{#if modal.mode === 'loading'}
-		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
-	{:else if modal.mode === 'error'}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{modal.message}</p>
-	{:else if modal.mode === 'view'}
+	{#if modal.mode === 'view'}
+		{@const viewedId = modal.keyboard.id}
 		<KeyboardDetails
 			keyboard={modal.keyboard}
+			onImageError={() => refetchStaleImages(viewedId)}
 			onImageClick={(index) => {
 				galleryIndex = index;
 				galleryViewerOpen = true;

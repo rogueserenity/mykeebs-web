@@ -20,8 +20,6 @@
 		| { mode: 'view'; sw: SwitchModel }
 		| { mode: 'create' }
 		| { mode: 'edit'; sw: SwitchModel }
-		| { mode: 'loading' }
-		| { mode: 'error'; message: string }
 		| { mode: 'closed' };
 
 	let modal = $state<ModalState>({ mode: 'closed' });
@@ -38,16 +36,23 @@
 	let confirmingDelete = $state(false);
 	let formDirty = $state(false);
 
-	async function openSwitch(switchId: string) {
-		const userId = userContext.userId;
-		if (!userId) return;
+	let refetchedId: string | null = null;
 
-		modal = { mode: 'loading' };
+	function openSwitch(sw: SwitchModel) {
+		refetchedId = null;
+		modal = { mode: 'view', sw };
+	}
+
+	// List rows' presigned image URLs can expire while the page sits open.
+	async function refetchStaleImages(switchId: string) {
+		const userId = userContext.userId;
+		if (!userId || refetchedId === switchId) return;
+		refetchedId = switchId;
 		try {
 			const sw = await switchesApi.getSwitch({ userId, switchId });
-			modal = { mode: 'view', sw };
+			if (modal.mode === 'view' && modal.sw.id === switchId) modal = { mode: 'view', sw };
 		} catch {
-			modal = { mode: 'error', message: 'Could not load this switch.' };
+			// The broken images stay; the rest of the details are still accurate.
 		}
 	}
 
@@ -224,7 +229,7 @@
 		<button
 			type="button"
 			class="kc-card flex w-full items-start gap-3 p-4 text-left"
-			onclick={() => openSwitch(sw.id ?? '')}
+			onclick={() => openSwitch(sw)}
 		>
 			{#if sw.image?.url && !imageFailed}
 				<img
@@ -266,12 +271,14 @@
 			<VisibilityBadge visibility={modal.sw.visibility} />
 		{/if}
 	{/snippet}
-	{#if modal.mode === 'loading'}
-		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
-	{:else if modal.mode === 'error'}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{modal.message}</p>
-	{:else if modal.mode === 'view'}
-		<SwitchDetails sw={modal.sw} onImageClick={() => (viewerOpen = true)} {showPrice} />
+	{#if modal.mode === 'view'}
+		{@const viewedId = modal.sw.id}
+		<SwitchDetails
+			sw={modal.sw}
+			onImageClick={() => (viewerOpen = true)}
+			onImageError={() => refetchStaleImages(viewedId)}
+			{showPrice}
+		/>
 
 		{#if userContext.isOwnProfile}
 			{@const sw = modal.sw}

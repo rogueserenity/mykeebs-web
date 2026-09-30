@@ -5,10 +5,12 @@
 	let {
 		keyboard,
 		onImageClick,
+		onImageError,
 		showPrice
 	}: {
 		keyboard: Keyboard;
 		onImageClick: (index: number) => void;
+		onImageError?: () => void;
 		showPrice: boolean;
 	} = $props();
 
@@ -47,6 +49,7 @@
 						class="h-full w-full object-contain"
 						loading="lazy"
 						decoding="async"
+						onerror={onImageError}
 					/>
 				</button>
 			{/each}
