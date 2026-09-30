@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { Switch } from '@rogueserenity/kbdb-api-client';
+import type { Keyboard, Switch } from '@rogueserenity/kbdb-api-client';
 import { collectionStats, countsFor, totalsFor } from './collection-stats';
 
 function sw(purchase: Switch['purchase']): Switch {
 	return { id: 's', brand: 'HMX', name: 'Aperol', type: 'Linear', purchase };
+}
+
+function kb(id: string, purchase: Keyboard['purchase']): Keyboard {
+	return { id, brand: 'Mode', name: 'Sonnet', purchase };
 }
 
 const empty = { keyboards: [], switches: [], keycapSets: [], builds: [] };
@@ -20,7 +24,7 @@ describe('collectionStats', () => {
 	it('takes the currency from whichever item carries a price', () => {
 		const stats = collectionStats({
 			...empty,
-			keyboards: [{ id: 'k', orderStatus: 'Delivered' }],
+			keyboards: [kb('k', { orderStatus: 'Delivered' })],
 			switches: [sw({ price: 20, currency: 'EUR' })]
 		});
 		expect(stats.currency).toBe('EUR');
@@ -29,7 +33,7 @@ describe('collectionStats', () => {
 	it('has no currency when kbdb withheld every price', () => {
 		const stats = collectionStats({
 			...empty,
-			keyboards: [{ id: 'k', orderStatus: 'Delivered' }],
+			keyboards: [kb('k', { orderStatus: 'Delivered' })],
 			switches: [sw({ orderStatus: 'Delivered' })],
 			builds: [{ id: 'b' }]
 		});
@@ -40,8 +44,8 @@ describe('collectionStats', () => {
 describe('countsFor and totalsFor', () => {
 	const stats = collectionStats({
 		keyboards: [
-			{ id: 'k1', orderStatus: 'Delivered', price: 100, currency: 'USD' },
-			{ id: 'k2', orderStatus: 'Ordered', price: 50, currency: 'USD' }
+			kb('k1', { orderStatus: 'Delivered', price: 100, currency: 'USD' }),
+			kb('k2', { orderStatus: 'Ordered', price: 50, currency: 'USD' })
 		],
 		switches: [
 			sw({ orderStatus: 'Delivered', price: 30, currency: 'USD' }),

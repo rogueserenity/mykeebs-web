@@ -5,7 +5,7 @@
 		BuildInput,
 		BuildKeycapKitEntry,
 		BuildSwitchEntry,
-		KeyboardSummary,
+		Keyboard,
 		KeycapSet,
 		KeycapSetSummary,
 		Switch
@@ -41,12 +41,10 @@
 
 	const userContext = getUserContext();
 
-	const keyboardPickerCache: ItemPickerCache<KeyboardSummary> = { items: null };
+	const keyboardPickerCache: ItemPickerCache<Keyboard> = { items: null };
 	const switchPickerCache: ItemPickerCache<Switch> = { items: null };
 	const keycapSetPickerCache: ItemPickerCache<KeycapSetSummary> = { items: null };
 
-	// The picker returns only display fields; the full Keyboard is fetched for
-	// its design.plates list.
 	type ChosenKeyboard = { id: string; brand: string; name: string; imageUrl?: string };
 	let keyboard = $state<ChosenKeyboard | undefined>(
 		initial?.keyboard
@@ -68,23 +66,19 @@
 		if (!userId) return;
 		try {
 			const full = await keyboardsApi.getKeyboard({ userId, keyboardId });
-			keyboardPlates = full.design?.plates ?? [];
+			if (keyboard?.id === keyboardId) keyboardPlates = full.design?.plates ?? [];
 		} catch {
-			keyboardPlates = [];
+			if (keyboard?.id === keyboardId) keyboardPlates = [];
 		}
 	}
 
 	$effect(() => {
-		if (keyboard) loadKeyboardPlates(keyboard.id);
+		if (initial?.keyboard) loadKeyboardPlates(initial.keyboard.id);
 	});
 
-	function pickKeyboard(summary: KeyboardSummary) {
-		keyboard = {
-			id: summary.id ?? '',
-			brand: summary.brand ?? '',
-			name: summary.name ?? '',
-			imageUrl: summary.image?.url
-		};
+	function pickKeyboard(kb: Keyboard) {
+		keyboard = { id: kb.id, brand: kb.brand, name: kb.name, imageUrl: kb.images?.[0]?.url };
+		keyboardPlates = kb.design?.plates ?? [];
 		plate = '';
 		keyboardPickerOpen = false;
 		refocusKeyboardTrigger.value = true;
@@ -564,7 +558,7 @@
 				itemKey={(kb) => kb.id ?? ''}
 				getLabel={(kb) => kb.name}
 				getSublabel={(kb) => kb.brand}
-				getImageUrl={(kb) => kb.image?.url}
+				getImageUrl={(kb) => kb.images?.[0]?.url}
 				placeholder="Search keyboards…"
 				cache={keyboardPickerCache}
 				onPick={pickKeyboard}

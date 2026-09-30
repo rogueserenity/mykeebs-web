@@ -211,38 +211,39 @@
 	itemKey={(keyboard) => keyboard.id ?? ''}
 	emptyMessage="No keyboards yet."
 	getName={(keyboard) => keyboard.name}
-	getOrderStatus={(keyboard) => keyboard.orderStatus ?? undefined}
+	getOrderStatus={(keyboard) => keyboard.purchase?.orderStatus}
 	onAdd={userContext.isOwnProfile ? openCreate : undefined}
 	addLabel="Add keyboard"
 	sortOptions={userContext.isOwnProfile
 		? [
 				{ label: 'Name', getValue: (keyboard) => keyboard.name },
 				{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
-				{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined },
-				{ label: 'Price', getValue: (keyboard) => keyboard.price ?? undefined },
+				{ label: 'Order status', getValue: (keyboard) => keyboard.purchase?.orderStatus },
+				{ label: 'Price', getValue: (keyboard) => keyboard.purchase?.price },
 				{ label: 'Visibility', getValue: (keyboard) => keyboard.visibility }
 			]
 		: [
 				{ label: 'Name', getValue: (keyboard) => keyboard.name },
 				{ label: 'Brand', getValue: (keyboard) => keyboard.brand },
-				{ label: 'Order status', getValue: (keyboard) => keyboard.orderStatus ?? undefined }
+				{ label: 'Order status', getValue: (keyboard) => keyboard.purchase?.orderStatus }
 			]}
 >
 	{#snippet card(keyboard)}
-		{@const imageFailed = keyboard.image?.url != null && failedImages.has(keyboard.image.url)}
+		{@const imageUrl = keyboard.images?.[0]?.url}
+		{@const imageFailed = imageUrl != null && failedImages.has(imageUrl)}
 		<button
 			type="button"
 			class="kc-card flex w-full items-start gap-3 p-4 text-left"
 			onclick={() => openKeyboard(keyboard.id ?? '')}
 		>
-			{#if keyboard.image?.url && !imageFailed}
+			{#if imageUrl && !imageFailed}
 				<img
-					src={keyboard.image.url}
+					src={imageUrl}
 					alt={keyboard.name}
 					class="kc-thumb h-16 w-16 shrink-0 object-contain"
 					loading="lazy"
 					decoding="async"
-					onerror={() => keyboard.image?.url && failedImages.add(keyboard.image.url)}
+					onerror={() => failedImages.add(imageUrl)}
 				/>
 			{/if}
 			<div class="min-w-0 flex-1">
@@ -253,14 +254,14 @@
 						{[keyboard.size, keyboard.layout].filter(Boolean).join(' · ')}
 					</p>
 				{/if}
-				{#if formatPrice(keyboard.price, keyboard.currency) || keyboard.orderStatus || keyboard.visibility}
+				{#if formatPrice(keyboard.purchase?.price, keyboard.purchase?.currency) || keyboard.purchase?.orderStatus || keyboard.visibility}
 					<div class="mt-1 flex flex-wrap items-center gap-2">
 						<p class="text-faint font-mono text-xs">
-							{formatPrice(keyboard.price, keyboard.currency)}
+							{formatPrice(keyboard.purchase?.price, keyboard.purchase?.currency)}
 						</p>
 						<div class="ml-auto flex shrink-0 items-center gap-1.5">
-							{#if keyboard.orderStatus}
-								<OrderStatusBadge status={keyboard.orderStatus} />
+							{#if keyboard.purchase?.orderStatus}
+								<OrderStatusBadge status={keyboard.purchase.orderStatus} />
 							{/if}
 							<VisibilityBadge visibility={keyboard.visibility} />
 						</div>

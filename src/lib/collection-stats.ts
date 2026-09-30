@@ -1,6 +1,6 @@
 import type {
 	BuildSummary,
-	KeyboardSummary,
+	Keyboard,
 	KeycapSetSummary,
 	Switch
 } from '@rogueserenity/kbdb-api-client';
@@ -20,14 +20,17 @@ export type CollectionStats = {
 export type Tally = { keyboards: number; switches: number; keycapSets: number; builds: number };
 
 export function collectionStats(lists: {
-	keyboards: KeyboardSummary[];
+	keyboards: Keyboard[];
 	switches: Switch[];
 	keycapSets: KeycapSetSummary[];
 	builds: BuildSummary[];
 }): CollectionStats {
 	const { keyboards, switches, keycapSets, builds } = lists;
 	return {
-		keyboards: keyboards.map((k) => ({ status: k.orderStatus ?? '', price: k.price })),
+		keyboards: keyboards.map((k) => ({
+			status: k.purchase?.orderStatus ?? '',
+			price: k.purchase?.price
+		})),
 		switches: switches.map((s) => ({
 			status: s.purchase?.orderStatus ?? '',
 			price: s.purchase?.price
@@ -38,8 +41,8 @@ export function collectionStats(lists: {
 		// Undefined when kbdb withheld every price, which hides the totals
 		// rather than showing a misleading $0.00.
 		currency: [
-			...[...keyboards, ...keycapSets, ...builds].map((i) => i.currency),
-			...switches.map((s) => s.purchase?.currency)
+			...[...keycapSets, ...builds].map((i) => i.currency),
+			...[...keyboards, ...switches].map((i) => i.purchase?.currency)
 		].find(Boolean)
 	};
 }
