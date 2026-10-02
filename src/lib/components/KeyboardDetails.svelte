@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import type { Keyboard } from '@rogueserenity/kbdb-api-client';
 	import PurchaseDetails from '$lib/components/PurchaseDetails.svelte';
 
@@ -13,6 +14,8 @@
 		onImageError?: () => void;
 		showPrice: boolean;
 	} = $props();
+
+	const failedUrls = new SvelteSet<string>();
 
 	function materialColorText(part: { material?: string; color?: string } | undefined) {
 		return part ? [part.color, part.material].filter(Boolean).join(' ') : undefined;
@@ -37,21 +40,26 @@
 		<h3 class="section-label">Images</h3>
 		<div class="flex flex-wrap gap-3">
 			{#each keyboard.images as image, index (image.imageId)}
-				<button
-					type="button"
-					class="kc-thumb h-20 w-20 shrink-0 overflow-hidden"
-					aria-label="View full size image"
-					onclick={() => onImageClick(index)}
-				>
-					<img
-						src={image.url}
-						alt={keyboard.name}
-						class="h-full w-full object-contain"
-						loading="lazy"
-						decoding="async"
-						onerror={onImageError}
-					/>
-				</button>
+				{#if !failedUrls.has(image.url)}
+					<button
+						type="button"
+						class="kc-thumb h-20 w-20 shrink-0 overflow-hidden"
+						aria-label="View full size image"
+						onclick={() => onImageClick(index)}
+					>
+						<img
+							src={image.url}
+							alt={keyboard.name}
+							class="h-full w-full object-contain"
+							loading="lazy"
+							decoding="async"
+							onerror={() => {
+								failedUrls.add(image.url);
+								onImageError?.();
+							}}
+						/>
+					</button>
+				{/if}
 			{/each}
 		</div>
 	</div>

@@ -8,7 +8,7 @@
 	} from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keycapSetsApi, buildsApi } from '$lib/api/client';
-	import { staleImageRefetcher, withFreshKitImageUrls } from '$lib/stale-images';
+	import { anyImageFailed, staleImageRefetcher, withFreshKitImageUrls } from '$lib/stale-images';
 	import { primaryKitImageUrl } from '$lib/keycap-set';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
@@ -100,7 +100,12 @@
 	function openSet(set: KeycapSet) {
 		staleImages.reset();
 		modal = { mode: 'view', set };
-		if (set.kits?.some((kit) => kit.image?.url && failedImages.has(kit.image.url)))
+		if (
+			anyImageFailed(
+				set.kits?.map((kit) => kit.image?.url),
+				failedImages
+			)
+		)
 			staleImages.refetch(set.id);
 	}
 

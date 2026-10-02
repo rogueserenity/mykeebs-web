@@ -62,3 +62,10 @@ export function updateWhere<T>(
 ): T[] {
 	return items.map((item) => (matches(item) ? update(item) : item));
 }
+
+export function anyImageFailed(
+	urls: (string | undefined)[] | undefined,
+	failedImages: ReadonlySet<string>
+): boolean {
+	return urls?.some((url) => url !== undefined && failedImages.has(url)) ?? false;
+}

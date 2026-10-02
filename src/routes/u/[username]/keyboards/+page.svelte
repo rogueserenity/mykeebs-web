@@ -3,7 +3,11 @@
 	import type { Keyboard, KeyboardInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keyboardsApi, buildsApi } from '$lib/api/client';
-	import { staleImageRefetcher, withFreshKeyboardImageUrls } from '$lib/stale-images';
+	import {
+		anyImageFailed,
+		staleImageRefetcher,
+		withFreshKeyboardImageUrls
+	} from '$lib/stale-images';
 	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
@@ -50,6 +54,13 @@
 	function openKeyboard(keyboard: Keyboard) {
 		staleImages.reset();
 		modal = { mode: 'view', keyboard };
+		if (
+			anyImageFailed(
+				keyboard.images?.map((image) => image.url),
+				failedImages
+			)
+		)
+			staleImages.refetch(keyboard.id);
 	}
 
 	function openCreate() {

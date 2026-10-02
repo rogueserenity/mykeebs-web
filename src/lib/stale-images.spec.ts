@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Keyboard, KeycapSet, Switch } from '@rogueserenity/kbdb-api-client';
 import {
+	anyImageFailed,
 	staleImageRefetcher,
 	updateWhere,
 	withFreshKeyboardImageUrls,
@@ -192,5 +193,22 @@ describe('updateWhere', () => {
 				(row) => ({ ...row, url: 'new' })
 			)
 		).toEqual(rows);
+	});
+});
+
+describe('anyImageFailed', () => {
+	const failed = new Set(['dead.png']);
+
+	it('is true when any of the URLs already failed to load', () => {
+		expect(anyImageFailed(['ok.png', 'dead.png'], failed)).toBe(true);
+	});
+
+	it('is false when none did, skipping missing images', () => {
+		expect(anyImageFailed(['ok.png', undefined], failed)).toBe(false);
+	});
+
+	it('is false for an item with no images', () => {
+		expect(anyImageFailed([], failed)).toBe(false);
+		expect(anyImageFailed(undefined, failed)).toBe(false);
 	});
 });

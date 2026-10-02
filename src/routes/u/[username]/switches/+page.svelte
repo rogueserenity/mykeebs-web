@@ -3,7 +3,7 @@
 	import type { Switch as SwitchModel, SwitchInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { switchesApi, buildsApi } from '$lib/api/client';
-	import { staleImageRefetcher, withFreshSwitchImageUrl } from '$lib/stale-images';
+	import { anyImageFailed, staleImageRefetcher, withFreshSwitchImageUrl } from '$lib/stale-images';
 	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
@@ -49,6 +49,7 @@
 	function openSwitch(sw: SwitchModel) {
 		staleImages.reset();
 		modal = { mode: 'view', sw };
+		if (anyImageFailed([sw.image?.url], failedImages)) staleImages.refetch(sw.id);
 	}
 
 	function openCreate() {
