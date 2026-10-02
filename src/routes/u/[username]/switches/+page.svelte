@@ -3,6 +3,7 @@
 	import type { Switch as SwitchModel, SwitchInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { switchesApi, buildsApi } from '$lib/api/client';
+	import { staleImageRefetcher, withFreshSwitchImageUrl } from '$lib/stale-images';
 	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
@@ -36,24 +37,18 @@
 	let confirmingDelete = $state(false);
 	let formDirty = $state(false);
 
-	let refetchedId: string | null = null;
+	const staleImages = staleImageRefetcher(
+		(switchId) => switchesApi.getSwitch({ userId: userContext.userId, switchId }),
+		(fresh, id) => {
+			grid?.updateItem(id, (row) => withFreshSwitchImageUrl(row, fresh));
+			if (modal.mode === 'view' && modal.sw.id === id)
+				modal = { mode: 'view', sw: withFreshSwitchImageUrl(modal.sw, fresh) };
+		}
+	);
 
 	function openSwitch(sw: SwitchModel) {
-		refetchedId = null;
+		staleImages.reset();
 		modal = { mode: 'view', sw };
-	}
-
-	// List rows' presigned image URLs can expire while the page sits open.
-	async function refetchStaleImages(switchId: string) {
-		const userId = userContext.userId;
-		if (!userId || refetchedId === switchId) return;
-		refetchedId = switchId;
-		try {
-			const sw = await switchesApi.getSwitch({ userId, switchId });
-			if (modal.mode === 'view' && modal.sw.id === switchId) modal = { mode: 'view', sw };
-		} catch {
-			// The broken images stay; the rest of the details are still accurate.
-		}
 	}
 
 	function openCreate() {
@@ -276,7 +271,7 @@
 		<SwitchDetails
 			sw={modal.sw}
 			onImageClick={() => (viewerOpen = true)}
-			onImageError={() => refetchStaleImages(viewedId)}
+			onImageError={() => staleImages.refetch(viewedId)}
 			{showPrice}
 		/>
 

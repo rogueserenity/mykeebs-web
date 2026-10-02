@@ -56,8 +56,9 @@
 		get isOwnProfile() {
 			return isOwnProfile;
 		},
-		// kbdb already withholds prices a non-owner may not see, but always
-		// returns them to the owner on detail reads.
+		// kbdb withholds prices a non-owner may not see, and list reads honour
+		// the owner's showPriceToMe, but single-item reads (e.g. after a save)
+		// always return them to the owner.
 		get showPrice() {
 			return (
 				!isOwnProfile ||

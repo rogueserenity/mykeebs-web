@@ -3,6 +3,7 @@
 	import type { Keyboard, KeyboardInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keyboardsApi, buildsApi } from '$lib/api/client';
+	import { staleImageRefetcher, withFreshKeyboardImageUrls } from '$lib/stale-images';
 	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
@@ -37,25 +38,18 @@
 	let confirmingDelete = $state(false);
 	let formDirty = $state(false);
 
-	let refetchedId: string | null = null;
+	const staleImages = staleImageRefetcher(
+		(keyboardId) => keyboardsApi.getKeyboard({ userId: userContext.userId, keyboardId }),
+		(fresh, id) => {
+			grid?.updateItem(id, (row) => withFreshKeyboardImageUrls(row, fresh));
+			if (modal.mode === 'view' && modal.keyboard.id === id)
+				modal = { mode: 'view', keyboard: withFreshKeyboardImageUrls(modal.keyboard, fresh) };
+		}
+	);
 
 	function openKeyboard(keyboard: Keyboard) {
-		refetchedId = null;
+		staleImages.reset();
 		modal = { mode: 'view', keyboard };
-	}
-
-	// List rows' presigned image URLs can expire while the page sits open.
-	async function refetchStaleImages(keyboardId: string) {
-		const userId = userContext.userId;
-		if (!userId || refetchedId === keyboardId) return;
-		refetchedId = keyboardId;
-		try {
-			const keyboard = await keyboardsApi.getKeyboard({ userId, keyboardId });
-			if (modal.mode === 'view' && modal.keyboard.id === keyboardId)
-				modal = { mode: 'view', keyboard };
-		} catch {
-			// The broken images stay; the rest of the details are still accurate.
-		}
 	}
 
 	function openCreate() {
@@ -293,7 +287,7 @@
 		{@const viewedId = modal.keyboard.id}
 		<KeyboardDetails
 			keyboard={modal.keyboard}
-			onImageError={() => refetchStaleImages(viewedId)}
+			onImageError={() => staleImages.refetch(viewedId)}
 			onImageClick={(index) => {
 				galleryIndex = index;
 				galleryViewerOpen = true;

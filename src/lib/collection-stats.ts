@@ -1,9 +1,4 @@
-import type {
-	BuildSummary,
-	Keyboard,
-	KeycapSetSummary,
-	Switch
-} from '@rogueserenity/kbdb-api-client';
+import type { BuildSummary, Keyboard, KeycapSet, Switch } from '@rogueserenity/kbdb-api-client';
 import type { StatusFilter } from '$lib/order-status';
 
 type Entry = { status: string; price: number | undefined };
@@ -22,7 +17,7 @@ export type Tally = { keyboards: number; switches: number; keycapSets: number; b
 export function collectionStats(lists: {
 	keyboards: Keyboard[];
 	switches: Switch[];
-	keycapSets: KeycapSetSummary[];
+	keycapSets: KeycapSet[];
 	builds: BuildSummary[];
 }): CollectionStats {
 	const { keyboards, switches, keycapSets, builds } = lists;

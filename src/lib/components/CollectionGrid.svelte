@@ -1,4 +1,5 @@
 <script lang="ts" generics="T">
+	import { updateWhere } from '$lib/stale-images';
 	import type { Snippet } from 'svelte';
 	import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-svelte';
 	import {
@@ -140,6 +141,10 @@
 	}
 
 	// Lets parents reload without remounting, which would reset filter/sort/search.
+	export function updateItem(key: string, update: (item: T) => T) {
+		items = updateWhere(items, (item) => itemKey(item) === key, update);
+	}
+
 	export async function refresh() {
 		await load();
 	}

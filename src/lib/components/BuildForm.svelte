@@ -7,12 +7,13 @@
 		BuildSwitchEntry,
 		Keyboard,
 		KeycapSet,
-		KeycapSetSummary,
 		Switch
 	} from '@rogueserenity/kbdb-api-client';
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
 	import VisibilityPicker from './VisibilityPicker.svelte';
 	import { lookupsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
+	import { primaryKitImageUrl } from '$lib/keycap-set';
+	import { kitKey, type StaleBuildRefs } from '$lib/build-refs';
 	import { getUserContext } from '$lib/user-context';
 	import ItemPicker, { type ItemPickerCache } from '$lib/components/ItemPicker.svelte';
 	import { X } from 'lucide-svelte';
@@ -22,6 +23,7 @@
 		initial,
 		saving,
 		error,
+		staleRefs = null,
 		onSubmit,
 		onCancel,
 		onImageUpload,
@@ -32,6 +34,7 @@
 		initial?: Build;
 		saving: boolean;
 		error: string | null;
+		staleRefs?: StaleBuildRefs | null;
 		onSubmit: (input: BuildInput, stagedImages?: File[]) => void;
 		onCancel: () => void;
 		onImageUpload?: (file: File) => Promise<void>;
@@ -43,7 +46,16 @@
 
 	const keyboardPickerCache: ItemPickerCache<Keyboard> = { items: null };
 	const switchPickerCache: ItemPickerCache<Switch> = { items: null };
-	const keycapSetPickerCache: ItemPickerCache<KeycapSetSummary> = { items: null };
+	const keycapSetPickerCache: ItemPickerCache<KeycapSet> = { items: null };
+
+	// A save rejected for stale references means the cached picker lists are
+	// out of date too, so the next pick loads them fresh.
+	$effect(() => {
+		if (!staleRefs) return;
+		keyboardPickerCache.items = null;
+		switchPickerCache.items = null;
+		keycapSetPickerCache.items = null;
+	});
 
 	type ChosenKeyboard = { id: string; brand: string; name: string; imageUrl?: string };
 	let keyboard = $state<ChosenKeyboard | undefined>(
@@ -208,8 +220,6 @@
 		refocusSwitchTrigger.value = true;
 	}
 
-	// Two-step pick: listKeycapSets doesn't include kits[], so the chosen
-	// set's kits are fetched separately.
 	type KeycapKitEntryDisplay = {
 		keycapSetId: string;
 		kitId: string;
@@ -229,24 +239,10 @@
 	let keycapSetPickerOpen = $state(false);
 	const refocusKeycapKitTrigger = { value: false };
 	let kitPickerSet = $state<KeycapSet | null>(null);
-	let kitPickerError = $state<string | null>(null);
-	let kitPickerLoading = $state(false);
 
-	async function pickKeycapSet(summary: KeycapSetSummary) {
-		const userId = userContext.userId;
-		if (!userId || !summary.id) return;
-
+	function pickKeycapSet(set: KeycapSet) {
 		keycapSetPickerOpen = false;
-		kitPickerError = null;
-		kitPickerLoading = true;
-		kitPickerSet = null;
-		try {
-			kitPickerSet = await keycapSetsApi.getKeycapSet({ userId, keycapSetId: summary.id });
-		} catch {
-			kitPickerError = 'Could not load this keycap set.';
-		} finally {
-			kitPickerLoading = false;
-		}
+		kitPickerSet = set;
 	}
 
 	// Cleared in place, never reassigned: SvelteSet's own reactivity covers
@@ -529,7 +525,10 @@
 	<div class="flex flex-col gap-1.5">
 		<span class="field-label">Keyboard <span style="color: var(--danger)">*</span></span>
 		{#if keyboard && !keyboardPickerOpen}
-			<div class="kc-card flex items-center gap-3 p-3">
+			<div
+				class="kc-card flex items-center gap-3 p-3"
+				style:border-color={staleRefs?.keyboardId === keyboard.id ? 'var(--danger)' : undefined}
+			>
 				{#if keyboard.imageUrl}
 					<img
 						src={keyboard.imageUrl}
@@ -541,6 +540,9 @@
 				<div class="min-w-0 flex-1">
 					<p class="truncate text-sm font-medium">{keyboard.name}</p>
 					<p class="text-muted truncate text-xs">{keyboard.brand}</p>
+					{#if staleRefs?.keyboardId === keyboard.id}
+						{@render staleNote()}
+					{/if}
 				</div>
 				<button
 					type="button"
@@ -678,7 +680,11 @@
 		{#if switchEntries.length > 0}
 			<ul class="flex flex-col gap-2">
 				{#each switchEntries as entry (entry.switchId)}
-					<li class="kc-card flex items-center gap-3 p-2">
+					{@const stale = staleRefs?.switchIds.has(entry.switchId)}
+					<li
+						class="kc-card flex items-center gap-3 p-2"
+						style:border-color={stale ? 'var(--danger)' : undefined}
+					>
 						{#if entry.imageUrl}
 							<img
 								src={entry.imageUrl}
@@ -688,7 +694,12 @@
 								decoding="async"
 							/>
 						{/if}
-						<span class="min-w-0 flex-1 truncate text-sm">{entry.label}</span>
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm">{entry.label}</p>
+							{#if stale}
+								{@render staleNote()}
+							{/if}
+						</div>
 						<input
 							type="number"
 							class="field-input w-20"
@@ -752,7 +763,11 @@
 		{#if keycapKitEntries.length > 0}
 			<ul class="flex flex-col gap-2">
 				{#each keycapKitEntries as entry (entry.keycapSetId + entry.kitId)}
-					<li class="kc-card flex items-center gap-3 p-2">
+					{@const stale = staleRefs?.kitKeys.has(kitKey(entry.keycapSetId, entry.kitId))}
+					<li
+						class="kc-card flex items-center gap-3 p-2"
+						style:border-color={stale ? 'var(--danger)' : undefined}
+					>
 						{#if entry.imageUrl}
 							<img
 								src={entry.imageUrl}
@@ -762,7 +777,12 @@
 								decoding="async"
 							/>
 						{/if}
-						<span class="min-w-0 flex-1 truncate text-sm">{entry.label}</span>
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm">{entry.label}</p>
+							{#if stale}
+								{@render staleNote()}
+							{/if}
+						</div>
 						<button
 							type="button"
 							class="btn-icon h-7 w-7 text-xs"
@@ -775,11 +795,7 @@
 				{/each}
 			</ul>
 		{/if}
-		{#if kitPickerLoading}
-			<p class="text-muted text-sm">Loading kits&hellip;</p>
-		{:else if kitPickerError}
-			<p class="text-sm" style="color: var(--danger)">{kitPickerError}</p>
-		{:else if kitPickerSet}
+		{#if kitPickerSet}
 			{@const set = kitPickerSet}
 			<div class="flex flex-col gap-2">
 				<p class="text-muted text-sm">Pick kits from "{set.name}":</p>
@@ -857,7 +873,7 @@
 				itemKey={(set) => set.id ?? ''}
 				getLabel={(set) => set.name}
 				getSublabel={(set) => set.brand}
-				getImageUrl={(set) => set.primaryKitImage?.url}
+				getImageUrl={primaryKitImageUrl}
 				placeholder="Search keycap sets…"
 				cache={keycapSetPickerCache}
 				onPick={pickKeycapSet}
@@ -901,6 +917,10 @@
 	{#if validationError}
 		<p class="text-sm" style="color: var(--danger)">{validationError}</p>
 	{/if}
+	{#snippet staleNote()}
+		<p class="text-xs" style="color: var(--danger)">No longer in your collection</p>
+	{/snippet}
+
 	{#if error}
 		<p class="text-sm" style="color: var(--danger)">{error}</p>
 	{/if}

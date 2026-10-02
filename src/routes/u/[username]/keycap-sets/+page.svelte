@@ -8,6 +8,8 @@
 	} from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keycapSetsApi, buildsApi } from '$lib/api/client';
+	import { staleImageRefetcher, withFreshKitImageUrls } from '$lib/stale-images';
+	import { primaryKitImageUrl } from '$lib/keycap-set';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
@@ -28,8 +30,6 @@
 		| { mode: 'view'; set: KeycapSet }
 		| { mode: 'create' }
 		| { mode: 'edit'; set: KeycapSet }
-		| { mode: 'loading' }
-		| { mode: 'error'; message: string }
 		| { mode: 'closed' };
 
 	// Kits are named by id and looked up fresh from the current set on each
@@ -88,17 +88,20 @@
 
 	let hasMultipleKits = $derived(modal.mode === 'view' ? (modal.set.kits?.length ?? 0) > 1 : false);
 
-	async function openSet(keycapSetId: string) {
-		const userId = userContext.userId;
-		if (!userId) return;
-
-		modal = { mode: 'loading' };
-		try {
-			const set = await keycapSetsApi.getKeycapSet({ userId, keycapSetId });
-			modal = { mode: 'view', set };
-		} catch {
-			modal = { mode: 'error', message: 'Could not load this keycap set.' };
+	const staleImages = staleImageRefetcher(
+		(keycapSetId) => keycapSetsApi.getKeycapSet({ userId: userContext.userId, keycapSetId }),
+		(fresh, id) => {
+			grid?.updateItem(id, (row) => withFreshKitImageUrls(row, fresh));
+			if (modal.mode === 'view' && modal.set.id === id)
+				modal = { mode: 'view', set: withFreshKitImageUrls(modal.set, fresh) };
 		}
+	);
+
+	function openSet(set: KeycapSet) {
+		staleImages.reset();
+		modal = { mode: 'view', set };
+		if (set.kits?.some((kit) => kit.image?.url && failedImages.has(kit.image.url)))
+			staleImages.refetch(set.id);
 	}
 
 	function openCreate() {
@@ -392,21 +395,21 @@
 			]}
 >
 	{#snippet card(set)}
-		{@const imageFailed =
-			set.primaryKitImage?.url != null && failedImages.has(set.primaryKitImage.url)}
+		{@const imageUrl = primaryKitImageUrl(set)}
+		{@const imageFailed = imageUrl != null && failedImages.has(imageUrl)}
 		<button
 			type="button"
 			class="kc-card flex w-full items-start gap-3 overflow-hidden p-3 text-left"
-			onclick={() => openSet(set.id ?? '')}
+			onclick={() => openSet(set)}
 		>
-			{#if set.primaryKitImage?.url && !imageFailed}
+			{#if imageUrl && !imageFailed}
 				<img
-					src={set.primaryKitImage.url}
+					src={imageUrl}
 					alt={set.name}
 					class="kc-thumb h-16 w-16 shrink-0 object-contain"
 					loading="lazy"
 					decoding="async"
-					onerror={() => set.primaryKitImage?.url && failedImages.add(set.primaryKitImage.url)}
+					onerror={() => failedImages.add(imageUrl)}
 				/>
 			{/if}
 			<div class="min-w-0 flex-1">
@@ -442,18 +445,18 @@
 			<VisibilityBadge visibility={modal.set.visibility} />
 		{/if}
 	{/snippet}
-	{#if modal.mode === 'loading'}
-		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
-	{:else if modal.mode === 'error'}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{modal.message}</p>
-	{:else if modal.mode === 'view'}
+	{#if modal.mode === 'view'}
 		{@const set = modal.set}
 		<KeycapSetDetails
 			{set}
 			{failedImages}
-			onImageError={(url) => failedImages.add(url)}
+			onImageError={(url) => {
+				failedImages.add(url);
+				staleImages.refetch(set.id);
+			}}
 			onKitClick={openViewKit}
 			onAddKit={userContext.isOwnProfile ? openAddKit : undefined}
+			{showPrice}
 		/>
 
 		{#if userContext.isOwnProfile}
@@ -577,7 +580,10 @@
 			name={kit.name}
 			imageUrl={kit.image?.url}
 			{imageFailed}
-			onImageError={() => kit.image?.url && failedImages.add(kit.image.url)}
+			onImageError={() => {
+				if (kit.image?.url) failedImages.add(kit.image.url);
+				if (modal.mode === 'view') staleImages.refetch(modal.set.id);
+			}}
 			onImageClick={() => (kitImageViewerOpen = true)}
 			purchase={kit.purchase}
 			{showPrice}

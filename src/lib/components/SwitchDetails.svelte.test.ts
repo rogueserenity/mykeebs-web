@@ -1,0 +1,39 @@
+import { page } from 'vitest/browser';
+import { describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-svelte';
+import type { Switch } from '@rogueserenity/kbdb-api-client';
+import SwitchDetails from './SwitchDetails.svelte';
+
+const BROKEN = 'data:image/png;base64,bm90IGFuIGltYWdl';
+const FRESH =
+	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+function sw(url: string): Switch {
+	return { id: 'sw', brand: 'HMX', name: 'Aperol', type: 'Linear', image: { url } };
+}
+
+describe('SwitchDetails.svelte', () => {
+	it('hides an image that fails to load and reports it', async () => {
+		const onImageError = vi.fn();
+		render(SwitchDetails, { sw: sw(BROKEN), onImageClick: vi.fn(), onImageError, showPrice: true });
+
+		await vi.waitFor(() => expect(onImageError).toHaveBeenCalledOnce());
+		await expect.element(page.getByRole('img', { name: 'Aperol' })).not.toBeInTheDocument();
+	});
+
+	it('shows the image again once a refetch brings a fresh URL', async () => {
+		const onImageError = vi.fn();
+		const { rerender } = render(SwitchDetails, {
+			sw: sw(BROKEN),
+			onImageClick: vi.fn(),
+			onImageError,
+			showPrice: true
+		});
+		await vi.waitFor(() => expect(onImageError).toHaveBeenCalledOnce());
+
+		await rerender({ sw: sw(FRESH) });
+
+		await expect.element(page.getByRole('img', { name: 'Aperol' })).toBeInTheDocument();
+		expect(onImageError).toHaveBeenCalledOnce();
+	});
+});

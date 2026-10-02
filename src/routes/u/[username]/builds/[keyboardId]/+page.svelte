@@ -10,6 +10,11 @@
 	} from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { buildsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
+	import {
+		STALE_REFS_MESSAGE,
+		staleBuildRefsFromError,
+		type StaleBuildRefs
+	} from '$lib/build-refs';
 	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import Modal from '$lib/components/Modal.svelte';
@@ -76,6 +81,7 @@
 	let formMode = $state<FormMode>({ mode: 'closed' });
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
+	let staleRefs = $state<StaleBuildRefs | null>(null);
 	let deleting = $state(false);
 	let deleteError = $state<string | null>(null);
 	let confirmingDelete = $state(false);
@@ -122,6 +128,7 @@
 
 	function closeModal() {
 		selectedBuild = null;
+		staleRefs = null;
 		detailError = null;
 		detailLoading = false;
 		galleryViewerOpen = false;
@@ -135,6 +142,7 @@
 
 	function openEdit(build: Build) {
 		saveError = null;
+		staleRefs = null;
 		formDirty = false;
 		formMode = { mode: 'edit', build };
 	}
@@ -152,13 +160,14 @@
 			formMode = { mode: 'closed' };
 			formDirty = false;
 		} catch (err) {
+			staleRefs = await staleBuildRefsFromError(err, input);
 			if (err instanceof ResponseError) {
 				const body = await err.response.json().catch(() => null);
 				console.error('updateBuild failed', err.response.status, body);
 			} else {
 				console.error('updateBuild failed', err);
 			}
-			saveError = 'Could not save your changes.';
+			saveError = staleRefs ? STALE_REFS_MESSAGE : 'Could not save your changes.';
 		} finally {
 			saving = false;
 		}
@@ -411,6 +420,7 @@
 			initial={build}
 			{saving}
 			error={saveError}
+			{staleRefs}
 			onSubmit={(input) => handleUpdate(build.id, input)}
 			onCancel={() => {
 				formMode = { mode: 'closed' };

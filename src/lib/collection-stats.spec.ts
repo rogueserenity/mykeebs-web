@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Keyboard, Switch } from '@rogueserenity/kbdb-api-client';
+import type { Keyboard, KeycapSet, Switch } from '@rogueserenity/kbdb-api-client';
 import { collectionStats, countsFor, totalsFor } from './collection-stats';
 
 function sw(purchase: Switch['purchase']): Switch {
@@ -8,6 +8,10 @@ function sw(purchase: Switch['purchase']): Switch {
 
 function kb(id: string, purchase: Keyboard['purchase']): Keyboard {
 	return { id, brand: 'Mode', name: 'Sonnet', purchase };
+}
+
+function set(purchase: Pick<KeycapSet, 'orderStatus' | 'totalCost' | 'currency'>): KeycapSet {
+	return { id: 'c', brand: 'GMK', name: 'Olivia', ...purchase };
 }
 
 const empty = { keyboards: [], switches: [], keycapSets: [], builds: [] };
@@ -51,7 +55,7 @@ describe('countsFor and totalsFor', () => {
 			sw({ orderStatus: 'Delivered', price: 30, currency: 'USD' }),
 			sw({ orderStatus: 'Shipped', price: 20, currency: 'USD' })
 		],
-		keycapSets: [{ id: 'c', orderStatus: 'Delivered', totalCost: 120, currency: 'USD' }],
+		keycapSets: [set({ orderStatus: 'Delivered', totalCost: 120, currency: 'USD' })],
 		builds: [{ id: 'b', totalCost: 400, currency: 'USD' }]
 	});
 

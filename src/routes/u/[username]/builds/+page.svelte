@@ -3,6 +3,11 @@
 	import type { BuildInput, BuildSummary } from '@rogueserenity/kbdb-api-client';
 	import { resolve } from '$app/paths';
 	import { buildsApi } from '$lib/api/client';
+	import {
+		STALE_REFS_MESSAGE,
+		staleBuildRefsFromError,
+		type StaleBuildRefs
+	} from '$lib/build-refs';
 	import { formatDate, formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
@@ -68,16 +73,19 @@
 	let grid = $state<ReturnType<typeof CollectionGrid<KeyboardBuildGroup>> | null>(null);
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
+	let staleRefs = $state<StaleBuildRefs | null>(null);
 	let formDirty = $state(false);
 
 	function closeModal() {
 		formMode = { mode: 'closed' };
 		saveError = null;
+		staleRefs = null;
 		formDirty = false;
 	}
 
 	function openCreate() {
 		saveError = null;
+		staleRefs = null;
 		formDirty = false;
 		formMode = { mode: 'create' };
 	}
@@ -99,8 +107,9 @@
 			}
 			await grid?.refresh();
 			closeModal();
-		} catch {
-			saveError = 'Could not create this build.';
+		} catch (err) {
+			staleRefs = await staleBuildRefsFromError(err, input);
+			saveError = staleRefs ? STALE_REFS_MESSAGE : 'Could not create this build.';
 		} finally {
 			saving = false;
 		}
@@ -188,6 +197,7 @@
 		<BuildForm
 			{saving}
 			error={saveError}
+			{staleRefs}
 			onSubmit={handleCreate}
 			onCancel={closeModal}
 			bind:dirty={formDirty}

@@ -1,20 +1,25 @@
 <script lang="ts">
 	import type { KeycapKit, KeycapSet } from '@rogueserenity/kbdb-api-client';
 	import OrderStatusBadge from './OrderStatusBadge.svelte';
+	import { formatPrice } from '$lib/format';
 
 	let {
 		set,
 		failedImages,
 		onImageError,
 		onKitClick,
-		onAddKit
+		onAddKit,
+		showPrice
 	}: {
 		set: KeycapSet;
 		failedImages: ReadonlySet<string>;
 		onImageError: (url: string) => void;
 		onKitClick: (kit: KeycapKit) => void;
 		onAddKit?: () => void;
+		showPrice: boolean;
 	} = $props();
+
+	const totalCost = $derived(showPrice ? formatPrice(set.totalCost, set.currency) : undefined);
 </script>
 
 <div class="pr-8">
@@ -29,6 +34,16 @@
 		<p class="text-muted mt-2 text-sm">{set.notes}</p>
 	{/if}
 </div>
+
+{#if totalCost}
+	<dl class="spec-list mt-6 sm:w-1/2">
+		<div class="spec-row">
+			<dt>Total cost</dt>
+			<span class="spec-leader"></span>
+			<dd>{totalCost}</dd>
+		</div>
+	</dl>
+{/if}
 
 <div class="mt-6 flex items-center justify-between">
 	<h3 class="section-label">Kits</h3>
