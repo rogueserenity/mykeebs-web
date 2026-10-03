@@ -226,17 +226,17 @@
 			topHousing !== initialTopHousing ||
 			bottomHousing !== initialBottomHousing ||
 			stem !== initialStem ||
-			actuation !== initialActuation ||
-			bottomOut !== initialBottomOut ||
+			actuation != initialActuation ||
+			bottomOut != initialBottomOut ||
 			springMaterial !== initialSpringMaterial ||
-			preTravel !== initialPreTravel ||
-			totalTravel !== initialTotalTravel ||
+			preTravel != initialPreTravel ||
+			totalTravel != initialTotalTravel ||
 			vendor !== initialVendor ||
-			price !== initialPrice ||
+			price != initialPrice ||
 			orderDate !== initialOrderDate ||
 			deliveryDate !== initialDeliveryDate ||
 			orderStatus !== initialOrderStatus ||
-			quantity !== initialQuantity ||
+			quantity != initialQuantity ||
 			notes !== initialNotes ||
 			visibility !== initialVisibility ||
 			stagedImage != null;

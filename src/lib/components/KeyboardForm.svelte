@@ -262,12 +262,12 @@
 			weightMaterial !== initialWeightMaterial ||
 			weightColor !== initialWeightColor ||
 			JSON.stringify([...plates].sort()) !== JSON.stringify(initialPlates) ||
-			thickness !== initialThickness ||
+			thickness != initialThickness ||
 			firmware !== initialFirmware ||
 			assembly !== initialAssembly ||
 			connectivity !== initialConnectivity ||
 			vendor !== initialVendor ||
-			price !== initialPrice ||
+			price != initialPrice ||
 			orderDate !== initialOrderDate ||
 			deliveryDate !== initialDeliveryDate ||
 			orderStatus !== initialOrderStatus ||

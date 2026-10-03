@@ -375,6 +375,46 @@ describe('SwitchForm.svelte', () => {
 		});
 	});
 
+	describe('cleared number fields', () => {
+		const withoutNumbers: SwitchModel = {
+			...sw,
+			force: undefined,
+			spring: { material: 'Stainless steel' },
+			purchase: { vendor: 'NovelKeys' }
+		};
+
+		it.each([
+			'Actuation force (g)',
+			'Bottom-out force (g)',
+			'Pre-travel (mm)',
+			'Total travel (mm)',
+			'Price',
+			'Quantity'
+		])('%s leaves the form clean once typed into and cleared', async (label) => {
+			renderForm({ initial: withoutNumbers });
+
+			await page.getByLabelText(label).fill('5');
+			await expect.element(dirty()).toHaveTextContent('true');
+			await page.getByLabelText(label).fill('');
+
+			await expect.element(dirty()).toHaveTextContent('false');
+		});
+
+		it('drops cleared numbers rather than keeping the old values', async () => {
+			const { onSubmit } = renderForm({ initial: sw });
+
+			await page.getByLabelText('Actuation force (g)').fill('');
+			await page.getByLabelText('Pre-travel (mm)').fill('');
+			await page.getByLabelText('Quantity').fill('');
+			await submit('Save changes');
+
+			const [input] = submitted(onSubmit);
+			expect(input.force?.actuation).toBeNullable();
+			expect(input.spring?.preTravel).toBeNullable();
+			expect(input.purchase?.quantity).toBeNullable();
+		});
+	});
+
 	it("doesn't submit on Enter in a text field", async () => {
 		const { onSubmit } = renderForm({ initial: sw });
 

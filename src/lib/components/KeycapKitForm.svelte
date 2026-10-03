@@ -144,7 +144,7 @@
 		dirty =
 			name !== initialName ||
 			vendor !== initialVendor ||
-			price !== initialPrice ||
+			price != initialPrice ||
 			orderDate !== initialOrderDate ||
 			deliveryDate !== initialDeliveryDate ||
 			orderStatus !== initialOrderStatus ||

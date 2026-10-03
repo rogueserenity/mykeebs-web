@@ -369,7 +369,7 @@
 			durometer !== initialDurometer ||
 			stabsName !== initialStabsName ||
 			stabsMountType !== initialStabsMountType ||
-			stabsPrice !== initialStabsPrice ||
+			stabsPrice != initialStabsPrice ||
 			foam !== initialFoam ||
 			buildDate !== initialBuildDate ||
 			notes !== initialNotes ||

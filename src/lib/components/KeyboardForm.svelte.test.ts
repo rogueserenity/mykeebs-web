@@ -402,6 +402,40 @@ describe('KeyboardForm.svelte', () => {
 		});
 	});
 
+	describe('cleared number fields', () => {
+		it.each(['Thickness (mm)', 'Price'])(
+			'%s leaves the form clean once typed into and cleared',
+			async (label) => {
+				renderForm();
+				await openSection(label === 'Price' ? 'Purchase' : 'PCB');
+
+				await page.getByLabelText(label).fill('5');
+				await expect.element(dirty()).toHaveTextContent('true');
+				await page.getByLabelText(label).fill('');
+
+				await expect.element(dirty()).toHaveTextContent('false');
+			}
+		);
+
+		it('drops a cleared price rather than keeping the old value', async () => {
+			const { onSubmit } = renderForm({ initial: keyboard });
+
+			await page.getByLabelText('Price').fill('');
+			await submit('Save changes');
+
+			expect(submitted(onSubmit)[0].purchase?.price).toBeNullable();
+		});
+
+		it('drops a cleared thickness rather than keeping the old value', async () => {
+			const { onSubmit } = renderForm({ initial: keyboard });
+
+			await page.getByLabelText('Thickness (mm)').fill('');
+			await submit('Save changes');
+
+			expect(submitted(onSubmit)[0].pcb?.thickness).toBeNullable();
+		});
+	});
+
 	it("doesn't submit on Enter in a text field", async () => {
 		const { onSubmit } = renderForm({ initial: keyboard });
 

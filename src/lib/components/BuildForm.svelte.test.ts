@@ -83,3 +83,42 @@ describe('BuildForm.svelte stale references', () => {
 		await expect.element(page.getByText(NOTE)).not.toBeInTheDocument();
 	});
 });
+
+describe('BuildForm.svelte cleared stabilizer price', () => {
+	function renderWithStabs(stabs: Build['stabs']) {
+		const onSubmit = vi.fn();
+		render(BuildFormWithUser, {
+			formProps: {
+				initial: { ...build, stabs },
+				saving: false,
+				error: null,
+				staleRefs: null,
+				onSubmit,
+				onCancel: vi.fn()
+			}
+		});
+		return onSubmit;
+	}
+
+	it('leaves the form clean once the price is typed into and cleared', async () => {
+		renderWithStabs({ name: 'Durock V2' });
+		const dirty = page.getByTestId('dirty');
+		const price = page.getByLabelText('Price');
+
+		await price.fill('15');
+		await expect.element(dirty).toHaveTextContent('true');
+		await price.fill('');
+
+		await expect.element(dirty).toHaveTextContent('false');
+	});
+
+	it('drops a cleared price rather than keeping the old value', async () => {
+		const onSubmit = renderWithStabs({ name: 'Durock V2', price: 15 });
+
+		await page.getByLabelText('Price').fill('');
+		await page.getByRole('button', { name: 'Save changes' }).click();
+
+		await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+		expect(onSubmit.mock.calls[0][0].stabs?.price).toBeNullable();
+	});
+});
