@@ -127,7 +127,7 @@ describe('SwitchForm.svelte', () => {
 		await fillRequired();
 		await page.getByLabelText('Manufacturer').fill(' Huano ');
 		await page.getByLabelText('Pins').selectOptions('3');
-		await page.getByRole('checkbox').click();
+		await page.getByLabelText('Factory lubed').click();
 		await page.getByRole('radio', { name: 'Signed in' }).click();
 
 		await openSection('Construction');
@@ -201,10 +201,25 @@ describe('SwitchForm.svelte', () => {
 	it('sends factory lubed as absent rather than false once unticked', async () => {
 		const { onSubmit } = renderForm({ initial: sw });
 
-		await page.getByRole('checkbox').click();
+		await page.getByLabelText('Factory lubed').click();
 		await submit('Save changes');
 
 		expect(submitted(onSubmit)[0].factoryLubed).toBeUndefined();
+	});
+
+	it('labels the pins select and the factory lubed checkbox separately', async () => {
+		renderForm();
+
+		await expect.element(page.getByRole('combobox', { name: 'Pins' })).toBeInTheDocument();
+		await expect.element(page.getByRole('checkbox', { name: 'Factory lubed' })).toBeInTheDocument();
+	});
+
+	it('ticks factory lubed when its text is clicked', async () => {
+		renderForm();
+
+		await page.getByText('Factory lubed').click();
+
+		await expect.element(page.getByRole('checkbox', { name: 'Factory lubed' })).toBeChecked();
 	});
 
 	it('summarizes each section and opens the ones an existing switch fills', async () => {

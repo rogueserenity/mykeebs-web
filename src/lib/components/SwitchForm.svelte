@@ -26,6 +26,8 @@
 		dirty?: boolean;
 	} = $props();
 
+	const uid = $props.id();
+
 	let brand = $state(initial?.brand ?? '');
 	let manufacturer = $state(initial?.manufacturer ?? '');
 	let name = $state(initial?.name ?? '');
@@ -397,20 +399,20 @@
 			<input type="text" class="field-input" bind:value={manufacturer} autocomplete="off" />
 		</label>
 
-		<label class="flex flex-col gap-1.5">
-			<span class="field-label">Pins</span>
+		<div class="flex flex-col gap-1.5">
+			<label class="field-label" for="{uid}-pins">Pins</label>
 			<div class="flex items-center gap-3">
-				<select class="field-select w-24 shrink-0" bind:value={pins}>
+				<select id="{uid}-pins" class="field-select w-24 shrink-0" bind:value={pins}>
 					<option value="">—</option>
 					<option value="3">3-pin</option>
 					<option value="5">5-pin</option>
 				</select>
-				<span class="flex items-center gap-2 whitespace-nowrap">
+				<label class="flex items-center gap-2 whitespace-nowrap">
 					<input type="checkbox" class="field-checkbox" bind:checked={factoryLubed} />
 					<span class="text-sm">Factory lubed</span>
-				</span>
+				</label>
 			</div>
-		</label>
+		</div>
 	</div>
 
 	<details class="field-group" bind:open={constructionOpen}>
