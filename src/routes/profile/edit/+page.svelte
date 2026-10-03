@@ -45,7 +45,7 @@
 			username = p.username;
 			discordUsername = p.discordUsername ?? '';
 			bio = p.bio ?? '';
-			discoverable = p.discoverable ?? false;
+			discoverable = p.discoverable;
 			links = (p.links ?? []).map((l) => ({ ...l }));
 			currency = p.preferences?.currency ?? 'USD';
 			showPriceToMe = p.preferences?.showPriceToMe ?? true;

@@ -8,7 +8,7 @@
 	setUserContext({
 		userId: 'user-1',
 		username: 'tester',
-		profile: { userId: 'user-1', username: 'tester' },
+		profile: { userId: 'user-1', username: 'tester', discoverable: true },
 		isOwnProfile: true,
 		showPrice: true
 	});

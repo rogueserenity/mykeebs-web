@@ -1,17 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import type { ProfileSummary } from '@rogueserenity/kbdb-api-client';
 	import { Menu, X } from 'lucide-svelte';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { initAuth } from '$lib/auth/auth.svelte';
 	import { initProfile, profile } from '$lib/profile/profile.svelte';
-	import { profilesApi } from '$lib/api/client';
 	import AuthControl from '$lib/auth/AuthControl.svelte';
-	import Avatar from '$lib/components/Avatar.svelte';
+	import BuilderSearch from '$lib/components/BuilderSearch.svelte';
 	import { setProfileSubNavContext, type ProfileSubNavContext } from '$lib/profile-subnav-context';
 
 	let { children } = $props();
@@ -36,56 +33,6 @@
 			{ href: resolve('/discover'), label: 'Discover' }
 		].filter((item) => item !== null)
 	);
-
-	let searchQuery = $state('');
-	let searchResults = $state<ProfileSummary[]>([]);
-	let searchOpen = $state(false);
-	let searchLoading = $state(false);
-	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-
-	function onSearchInput() {
-		clearTimeout(debounceTimer);
-		if (!searchQuery.trim()) {
-			searchToken++;
-			searchResults = [];
-			searchOpen = false;
-			searchLoading = false;
-			return;
-		}
-		debounceTimer = setTimeout(runSearch, 250);
-	}
-
-	// Guards against a stale search overwriting a newer one's result.
-	let searchToken = 0;
-
-	async function runSearch() {
-		const username = searchQuery.trim();
-		if (!username) return;
-		const token = ++searchToken;
-		searchLoading = true;
-		try {
-			const result = await profilesApi.listProfiles({ username, limit: 6 });
-			if (token !== searchToken) return;
-			searchResults = result.items ?? [];
-			searchOpen = true;
-		} catch {
-			if (token !== searchToken) return;
-			searchResults = [];
-		} finally {
-			if (token === searchToken) searchLoading = false;
-		}
-	}
-
-	function goToProfile(username: string) {
-		searchQuery = '';
-		searchResults = [];
-		searchOpen = false;
-		goto(resolve('/u/[username]', { username }));
-	}
-
-	function closeSearchSoon() {
-		setTimeout(() => (searchOpen = false), 150);
-	}
 
 	let mobileMenuOpen = $state(false);
 	$effect(() => {
@@ -127,49 +74,7 @@
 			{/each}
 		</nav>
 	</div>
-	<div class="relative hidden md:block">
-		<input
-			type="search"
-			class="field-input w-56"
-			placeholder="Find a builder…"
-			bind:value={searchQuery}
-			oninput={onSearchInput}
-			onfocus={() => searchResults.length > 0 && (searchOpen = true)}
-			onblur={closeSearchSoon}
-		/>
-		{#if searchOpen}
-			<div
-				class="absolute top-full right-0 z-50 mt-1 w-64 overflow-hidden rounded-md"
-				style="background: var(--surface); border: 1px solid var(--border)"
-			>
-				{#if searchLoading}
-					<p class="text-muted p-3 text-sm">Searching&hellip;</p>
-				{:else if searchResults.length === 0}
-					<p class="text-muted p-3 text-sm">No builders match that search.</p>
-				{:else}
-					{#each searchResults as summary (summary.userId)}
-						<button
-							type="button"
-							class="user-card flex w-full items-center gap-2 p-2 text-left"
-							onclick={() => goToProfile(summary.username ?? '')}
-						>
-							<Avatar name={summary.username ?? '?'} imageUrl={summary.avatar?.url} size="sm" />
-							<div class="min-w-0 flex-1">
-								<p class="heading-lg truncate text-sm" title={summary.username}>
-									@{summary.username}
-								</p>
-								{#if summary.discordUsername}
-									<p class="text-faint truncate font-mono text-xs" title={summary.discordUsername}>
-										{summary.discordUsername}
-									</p>
-								{/if}
-							</div>
-						</button>
-					{/each}
-				{/if}
-			</div>
-		{/if}
-	</div>
+	<BuilderSearch class="hidden md:block" />
 	<div class="ml-auto flex min-w-0 items-center">
 		<AuthControl />
 	</div>

@@ -1,16 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import type { ProfileSummary } from '@rogueserenity/kbdb-api-client';
+	import type { Profile } from '@rogueserenity/kbdb-api-client';
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
 
 	let query = $state('');
-	let results = $state<ProfileSummary[]>([]);
+	let results = $state<Profile[]>([]);
 	let nextCursor = $state<string | null>(null);
+	// kbdb only accepts a cursor with the filter it came from, which can differ
+	// from the box's text while a debounced search is pending.
+	let resultsFilter: string | undefined;
 	let loading = $state(false);
 	let loadingMore = $state(false);
 	let loadError = $state<string | null>(null);
+	let loadMoreError = $state<string | null>(null);
 
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -26,12 +30,15 @@
 		const token = ++loadToken;
 		const username = query.trim() || undefined;
 		loading = true;
+		loadingMore = false;
 		loadError = null;
+		loadMoreError = null;
 		try {
 			const page = await profilesApi.listProfiles({ username });
 			if (token !== loadToken) return;
 			results = page.items ?? [];
 			nextCursor = page.nextCursor ?? null;
+			resultsFilter = username;
 		} catch {
 			if (token !== loadToken) return;
 			loadError = 'Could not load the directory.';
@@ -46,9 +53,10 @@
 		if (!nextCursor) return;
 		const token = loadToken;
 		loadingMore = true;
+		loadMoreError = null;
 		try {
 			const page = await profilesApi.listProfiles({
-				username: query.trim() || undefined,
+				username: resultsFilter,
 				cursor: nextCursor
 			});
 			if (token !== loadToken) return;
@@ -56,7 +64,7 @@
 			nextCursor = page.nextCursor ?? null;
 		} catch {
 			if (token !== loadToken) return;
-			loadError = 'Could not load more results.';
+			loadMoreError = 'Could not load more results.';
 		} finally {
 			if (token === loadToken) loadingMore = false;
 		}
@@ -104,9 +112,12 @@
 					</div>
 				</a>
 			{/each}
+			{#if loadMoreError}
+				<p class="text-center text-sm" style="color: var(--danger)">{loadMoreError}</p>
+			{/if}
 			{#if nextCursor}
 				<button type="button" class="btn mx-auto mt-2" disabled={loadingMore} onclick={loadMore}>
-					{loadingMore ? 'Loading…' : 'Load more'}
+					{loadingMore ? 'Loading…' : loadMoreError ? 'Try again' : 'Load more'}
 				</button>
 			{/if}
 		{/if}

@@ -44,7 +44,7 @@
 
 	setUserContext({
 		get userId() {
-			return view.status === 'ready' ? (view.profile.userId ?? '') : '';
+			return view.status === 'ready' ? view.profile.userId : '';
 		},
 		get username() {
 			return view.status === 'ready' ? view.profile.username : '';
