@@ -1,9 +1,6 @@
 import { ResponseError, type BuildInput } from '@rogueserenity/kbdb-api-client';
 
-// Items a build save referenced that kbdb says are no longer in the owner's
-// collection, e.g. a kit deleted in another tab while the form was open.
-// Keyed by id, not by the index kbdb reports, so the flags still point at the
-// right entries after the user edits the form.
+// Keyed by id, not kbdb's index, so the flags survive edits to the form.
 export type StaleBuildRefs = {
 	keyboardId: string | null;
 	switchIds: Set<string>;

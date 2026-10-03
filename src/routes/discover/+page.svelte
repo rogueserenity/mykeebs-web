@@ -23,7 +23,6 @@
 		debounceTimer = setTimeout(runSearch, 250);
 	}
 
-	// Guards against a stale search overwriting a newer one's result.
 	let loadToken = 0;
 
 	async function runSearch() {

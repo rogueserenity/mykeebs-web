@@ -95,7 +95,7 @@
 	);
 
 	// Registered for the root layout's hamburger menu, which shows these below
-	// md where the tab strip is hidden. Cleared on destroy.
+	// md where the tab strip is hidden.
 	$effect(() => {
 		if (!profileSubNav || view.status !== 'ready') return;
 		const username = view.profile.username;

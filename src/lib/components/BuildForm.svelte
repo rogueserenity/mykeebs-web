@@ -48,8 +48,7 @@
 	const switchPickerCache: ItemPickerCache<Switch> = { items: null };
 	const keycapSetPickerCache: ItemPickerCache<KeycapSet> = { items: null };
 
-	// A save rejected for stale references means the cached picker lists are
-	// out of date too, so the next pick loads them fresh.
+	// A stale-reference rejection means the cached picker lists are stale too.
 	$effect(() => {
 		if (!staleRefs) return;
 		keyboardPickerCache.items = null;

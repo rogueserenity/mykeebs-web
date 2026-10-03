@@ -112,7 +112,6 @@
 		});
 	});
 
-	// Guards against a stale load() overwriting a newer one's result.
 	let loadToken = 0;
 
 	async function load() {

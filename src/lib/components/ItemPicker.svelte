@@ -39,7 +39,6 @@
 	let loading = $state(cache?.items == null);
 	let loadError = $state<string | null>(null);
 
-	// Guards against a stale load overwriting a newer one's result.
 	let loadToken = 0;
 	let filterText = $state('');
 	let searchInput = $state<HTMLInputElement | null>(null);
