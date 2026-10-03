@@ -39,7 +39,7 @@ describe('collectionStats', () => {
 			...empty,
 			keyboards: [kb('k', { orderStatus: 'Delivered' })],
 			switches: [sw({ orderStatus: 'Delivered' })],
-			builds: [{ id: 'b' }]
+			builds: [{ id: 'b', keyboardId: 'kb' }]
 		});
 		expect(stats.currency).toBeUndefined();
 	});
@@ -56,7 +56,7 @@ describe('countsFor and totalsFor', () => {
 			sw({ orderStatus: 'Shipped', price: 20, currency: 'USD' })
 		],
 		keycapSets: [set({ orderStatus: 'Delivered', totalCost: 120, currency: 'USD' })],
-		builds: [{ id: 'b', totalCost: 400, currency: 'USD' }]
+		builds: [{ id: 'b', keyboardId: 'kb', totalCost: 400, currency: 'USD' }]
 	});
 
 	it('counts and sums everything under all', () => {

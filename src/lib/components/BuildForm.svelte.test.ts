@@ -14,6 +14,7 @@ vi.mock('$lib/api/client', () => ({
 
 const build: Build = {
 	id: 'b',
+	keyboardId: 'kb',
 	visibility: Visibility.Private,
 	keyboard: { id: 'kb', brand: 'Bowl', name: 'Manta' },
 	switches: [

@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Keyboard, KeycapSet, Switch } from '@rogueserenity/kbdb-api-client';
+import type { Build, Keyboard, KeycapSet, Switch } from '@rogueserenity/kbdb-api-client';
 import {
 	anyImageFailed,
+	perItemImageRefetcher,
 	staleImageRefetcher,
 	updateWhere,
-	withFreshKeyboardImageUrls,
+	withFreshImageUrls,
 	withFreshKitImageUrls,
 	withFreshSwitchImageUrl
 } from './stale-images';
@@ -65,7 +66,7 @@ describe('staleImageRefetcher', () => {
 	});
 });
 
-describe('withFreshKeyboardImageUrls', () => {
+describe('withFreshImageUrls', () => {
 	const keyboard = (name: string, images: [string, string][]): Keyboard => ({
 		id: 'k',
 		brand: 'KBDFans',
@@ -83,7 +84,7 @@ describe('withFreshKeyboardImageUrls', () => {
 			['a', 'a-new']
 		]);
 
-		expect(withFreshKeyboardImageUrls(shown, fresh)).toEqual(
+		expect(withFreshImageUrls(shown, fresh)).toEqual(
 			keyboard('Agar (edited)', [
 				['a', 'a-new'],
 				['b', 'b-new']
@@ -95,9 +96,7 @@ describe('withFreshKeyboardImageUrls', () => {
 		const shown = keyboard('Agar', [['a', 'a-old']]);
 		const fresh = keyboard('Agar', [['c', 'c-new']]);
 
-		expect(withFreshKeyboardImageUrls(shown, fresh).images).toEqual([
-			{ imageId: 'a', url: 'a-old' }
-		]);
+		expect(withFreshImageUrls(shown, fresh).images).toEqual([{ imageId: 'a', url: 'a-old' }]);
 	});
 });
 
@@ -210,5 +209,91 @@ describe('anyImageFailed', () => {
 	it('is false for an item with no images', () => {
 		expect(anyImageFailed([], failed)).toBe(false);
 		expect(anyImageFailed(undefined, failed)).toBe(false);
+	});
+});
+
+describe('perItemImageRefetcher', () => {
+	function setup(minIntervalMs = 60_000) {
+		let clock = 0;
+		const fetchItem = vi.fn(async (id: string) => ({ id }));
+		const onFresh = vi.fn();
+		const refetch = perItemImageRefetcher(fetchItem, onFresh, minIntervalMs, () => clock);
+		return { refetch, fetchItem, onFresh, advance: (ms: number) => (clock += ms) };
+	}
+
+	it('hands each freshly fetched item to onFresh', async () => {
+		const { refetch, onFresh } = setup();
+
+		await refetch('b1');
+
+		expect(onFresh).toHaveBeenCalledWith({ id: 'b1' }, 'b1');
+	});
+
+	it('fetches an item once, however many of its images fail at once', async () => {
+		const { refetch, fetchItem } = setup();
+
+		await Promise.all([refetch('b1'), refetch('b1'), refetch('b1')]);
+
+		expect(fetchItem).toHaveBeenCalledTimes(1);
+	});
+
+	it('fetches different items independently', async () => {
+		const { refetch, fetchItem } = setup();
+
+		await Promise.all([refetch('b1'), refetch('b2')]);
+
+		expect(fetchItem).toHaveBeenCalledTimes(2);
+	});
+
+	it("won't fetch the same item again within the interval, so a broken image can't loop", async () => {
+		const { refetch, fetchItem, advance } = setup(60_000);
+
+		await refetch('b1');
+		advance(59_999);
+		await refetch('b1');
+
+		expect(fetchItem).toHaveBeenCalledTimes(1);
+	});
+
+	it('fetches the same item again once the interval has passed', async () => {
+		const { refetch, fetchItem, advance } = setup(60_000);
+
+		await refetch('b1');
+		advance(60_000);
+		await refetch('b1');
+
+		expect(fetchItem).toHaveBeenCalledTimes(2);
+	});
+
+	it('swallows a failed fetch without calling onFresh', async () => {
+		const onFresh = vi.fn();
+		const refetch = perItemImageRefetcher(async () => {
+			throw new Error('network');
+		}, onFresh);
+
+		await expect(refetch('b1')).resolves.toBeUndefined();
+		expect(onFresh).not.toHaveBeenCalled();
+	});
+});
+
+describe('withFreshImageUrls on a build', () => {
+	it('takes fresh URLs by image id and leaves everything else as shown', () => {
+		const shown: Build = {
+			id: 'b',
+			keyboardId: 'kb',
+			notes: 'edited',
+			images: [{ imageId: 'i1', url: 'old' }]
+		};
+		const fresh: Build = {
+			id: 'b',
+			keyboardId: 'kb',
+			notes: 'stale',
+			images: [{ imageId: 'i1', url: 'new' }]
+		};
+
+		expect(withFreshImageUrls(shown, fresh)).toEqual({
+			...shown,
+			images: [{ imageId: 'i1', url: 'new' }]
+		});
 	});
 });

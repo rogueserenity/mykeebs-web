@@ -3,11 +3,7 @@
 	import type { Keyboard, KeyboardInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keyboardsApi, buildsApi } from '$lib/api/client';
-	import {
-		anyImageFailed,
-		staleImageRefetcher,
-		withFreshKeyboardImageUrls
-	} from '$lib/stale-images';
+	import { anyImageFailed, staleImageRefetcher, withFreshImageUrls } from '$lib/stale-images';
 	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
@@ -45,9 +41,9 @@
 	const staleImages = staleImageRefetcher(
 		(keyboardId) => keyboardsApi.getKeyboard({ userId: userContext.userId, keyboardId }),
 		(fresh, id) => {
-			grid?.updateItem(id, (row) => withFreshKeyboardImageUrls(row, fresh));
+			grid?.updateItem(id, (row) => withFreshImageUrls(row, fresh));
 			if (modal.mode === 'view' && modal.keyboard.id === id)
-				modal = { mode: 'view', keyboard: withFreshKeyboardImageUrls(modal.keyboard, fresh) };
+				modal = { mode: 'view', keyboard: withFreshImageUrls(modal.keyboard, fresh) };
 		}
 	);
 

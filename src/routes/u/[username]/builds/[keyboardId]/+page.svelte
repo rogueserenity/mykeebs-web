@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type {
 		Build,
 		BuildInput,
-		BuildSummary,
 		Keyboard,
 		Switch as SwitchModel
 	} from '@rogueserenity/kbdb-api-client';
@@ -16,6 +16,9 @@
 		type StaleBuildRefs
 	} from '$lib/build-refs';
 	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
+	import { perItemImageRefetcher, updateWhere, withFreshImageUrls } from '$lib/stale-images';
+	import { newestFirst } from '$lib/build-groups';
+	import { primaryBuildImageUrl } from '$lib/build';
 	import { getUserContext } from '$lib/user-context';
 	import Modal from '$lib/components/Modal.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -34,11 +37,26 @@
 	type ViewState =
 		| { status: 'loading' }
 		| { status: 'error'; message: string }
-		| { status: 'ready'; keyboard: Keyboard | null; builds: BuildSummary[] };
+		| { status: 'ready'; keyboard: Keyboard | null; builds: Build[] };
 
 	let view = $state<ViewState>({ status: 'loading' });
 
-	// Guards against a stale load() overwriting a newer one's result.
+	const failedImages = new SvelteSet<string>();
+	const refetchStaleImages = perItemImageRefetcher(
+		(buildId) => buildsApi.getBuild({ userId: userContext.userId, buildId }),
+		(fresh, buildId) => {
+			if (view.status !== 'ready') return;
+			view = {
+				...view,
+				builds: updateWhere(
+					view.builds,
+					(build) => build.id === buildId,
+					(build) => withFreshImageUrls(build, fresh)
+				)
+			};
+		}
+	);
+
 	let loadToken = 0;
 
 	async function load(userId: string, kId: string) {
@@ -50,7 +68,7 @@
 				fetchBuildsForKeyboard(userId, kId)
 			]);
 			if (token !== loadToken) return;
-			builds.sort((a, b) => (b.buildDate?.getTime() ?? 0) - (a.buildDate?.getTime() ?? 0));
+			builds.sort(newestFirst);
 			view = { status: 'ready', keyboard, builds };
 		} catch {
 			if (token !== loadToken) return;
@@ -58,8 +76,8 @@
 		}
 	}
 
-	async function fetchBuildsForKeyboard(userId: string, kId: string): Promise<BuildSummary[]> {
-		const builds: BuildSummary[] = [];
+	async function fetchBuildsForKeyboard(userId: string, kId: string): Promise<Build[]> {
+		const builds: Build[] = [];
 		let cursor: string | undefined;
 		do {
 			const pageResult = await buildsApi.listBuilds({ userId, keyboardId: kId, cursor });
@@ -356,26 +374,31 @@
 	{:else}
 		<ol class="kc-build-timeline mt-8 px-4">
 			{#each builds as build, index (build.id)}
+				{@const imageUrl = primaryBuildImageUrl(build)}
 				<li class="kc-build-timeline-item">
 					<button
 						type="button"
 						class="kc-build-timeline-dot"
 						class:kc-build-timeline-dot-current={index === 0}
 						aria-hidden="true"
-						onclick={() => openBuild(build.id ?? '')}
+						onclick={() => openBuild(build.id)}
 					></button>
 					<button
 						type="button"
 						class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
-						onclick={() => openBuild(build.id ?? '')}
+						onclick={() => openBuild(build.id)}
 					>
-						{#if build.image?.url}
+						{#if imageUrl && !failedImages.has(imageUrl)}
 							<img
-								src={build.image.url}
+								src={imageUrl}
 								alt={keyboard?.name ?? 'Build'}
 								class="kc-thumb h-20 w-20 shrink-0 object-contain"
 								loading="lazy"
 								decoding="async"
+								onerror={() => {
+									failedImages.add(imageUrl);
+									refetchStaleImages(build.id);
+								}}
 							/>
 						{/if}
 						<div>

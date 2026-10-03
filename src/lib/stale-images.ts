@@ -1,9 +1,6 @@
-import type { Keyboard, KeycapSet, Switch } from '@rogueserenity/kbdb-api-client';
+import type { KeycapSet, Switch } from '@rogueserenity/kbdb-api-client';
 
-// List rows' presigned image URLs can expire while a page sits open, so a
-// details view built from a row refetches the item once when an image fails.
-// Only the image URLs are taken from the refetch: the shown item may have been
-// edited since the request went out, and a late response mustn't undo that.
+// Callers copy only image URLs from the refetch, so a late response can't undo an edit.
 export function staleImageRefetcher<T>(
 	fetchItem: (id: string) => Promise<T>,
 	onFresh: (item: T, id: string) => void
@@ -28,7 +25,9 @@ export function staleImageRefetcher<T>(
 	};
 }
 
-export function withFreshKeyboardImageUrls(current: Keyboard, fresh: Keyboard): Keyboard {
+type WithImages = { images?: { imageId: string; url: string }[] };
+
+export function withFreshImageUrls<T extends WithImages>(current: T, fresh: T): T {
 	const urls = new Map(fresh.images?.map((image) => [image.imageId, image.url]));
 	return {
 		...current,
@@ -52,6 +51,29 @@ export function withFreshKitImageUrls(current: KeycapSet, fresh: KeycapSet): Key
 			const url = urls.get(kit.kitId);
 			return kit.image && url ? { ...kit, image: { ...kit.image, url } } : kit;
 		})
+	};
+}
+
+// Throttled per item so an image that's broken, not expired, can't refetch in a loop.
+export function perItemImageRefetcher<T>(
+	fetchItem: (id: string) => Promise<T>,
+	onFresh: (item: T, id: string) => void,
+	minIntervalMs = 60_000,
+	now: () => number = Date.now
+) {
+	const lastFetched = new Map<string, number>();
+
+	return async function refetch(id: string) {
+		const last = lastFetched.get(id);
+		if (last !== undefined && now() - last < minIntervalMs) return;
+		lastFetched.set(id, now());
+		let item: T;
+		try {
+			item = await fetchItem(id);
+		} catch {
+			return;
+		}
+		onFresh(item, id);
 	};
 }
 

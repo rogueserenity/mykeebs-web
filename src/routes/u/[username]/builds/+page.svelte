@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import type { BuildInput, BuildSummary } from '@rogueserenity/kbdb-api-client';
+	import type { Build, BuildInput } from '@rogueserenity/kbdb-api-client';
 	import { resolve } from '$app/paths';
 	import { buildsApi } from '$lib/api/client';
+	import { groupByKeyboard, type KeyboardBuildGroup } from '$lib/build-groups';
+	import { primaryBuildImageUrl } from '$lib/build';
+	import { perItemImageRefetcher, withFreshImageUrls } from '$lib/stale-images';
 	import {
 		STALE_REFS_MESSAGE,
 		staleBuildRefsFromError,
@@ -18,42 +21,12 @@
 	const userContext = getUserContext();
 	const showPrice = $derived(userContext.showPrice);
 
-	// "Current" is the most recent buildDate; the API has no persisted
-	// current-build concept.
-	type KeyboardBuildGroup = {
-		keyboardId: string;
-		current: BuildSummary;
-		buildCount: number;
-		// A card stands for the whole group, so a single badge would misreport
-		// a keyboard whose builds don't all share one visibility.
-		mixedVisibility: boolean;
-	};
-
-	function groupByKeyboard(builds: BuildSummary[]): KeyboardBuildGroup[] {
-		const groups: Record<string, BuildSummary[]> = {};
-		for (const build of builds) {
-			const keyboardId = build.keyboardId;
-			if (!keyboardId) continue;
-			(groups[keyboardId] ??= []).push(build);
-		}
-
-		return Object.entries(groups).flatMap(([keyboardId, groupBuilds]) => {
-			const sorted = [...groupBuilds].sort(
-				(a, b) => (b.buildDate?.getTime() ?? 0) - (a.buildDate?.getTime() ?? 0)
-			);
-			const current = sorted[0];
-			if (!current) return [];
-			const mixedVisibility = sorted.some((build) => build.visibility !== current.visibility);
-			return [{ keyboardId, current, buildCount: sorted.length, mixedVisibility }];
-		});
-	}
-
 	async function fetchGroupedBuilds(userId: string, cursor: string | undefined) {
 		// Grouping needs every build up front, so the full paginated set is
 		// fetched here and handed back as one synthetic page.
 		if (cursor) return { items: [], nextCursor: undefined };
 
-		const allBuilds: BuildSummary[] = [];
+		const allBuilds: Build[] = [];
 		let nextCursor: string | undefined;
 		do {
 			const page = await buildsApi.listBuilds({ userId, cursor: nextCursor });
@@ -69,6 +42,15 @@
 	// Keyed by URL, not item id: the API hands back a freshly signed URL when
 	// the old one expires, so a new key retries instead of staying hidden.
 	let failedImages = new SvelteSet<string>();
+	const refetchStaleImages = perItemImageRefetcher(
+		(buildId) => buildsApi.getBuild({ userId: userContext.userId, buildId }),
+		(fresh, buildId) =>
+			grid?.updateItem(fresh.keyboardId, (group) =>
+				group.current.id === buildId
+					? { ...group, current: withFreshImageUrls(group.current, fresh) }
+					: group
+			)
+	);
 	let formMode = $state<FormMode>({ mode: 'closed' });
 	let grid = $state<ReturnType<typeof CollectionGrid<KeyboardBuildGroup>> | null>(null);
 	let saving = $state(false);
@@ -150,7 +132,8 @@
 >
 	{#snippet card(group)}
 		{@const build = group.current}
-		{@const imageFailed = build.image?.url != null && failedImages.has(build.image.url)}
+		{@const imageUrl = primaryBuildImageUrl(build)}
+		{@const imageFailed = imageUrl != null && failedImages.has(imageUrl)}
 		<a
 			href={resolve('/u/[username]/builds/[keyboardId]', {
 				username: userContext.username,
@@ -158,14 +141,17 @@
 			})}
 			class="kc-card flex w-full items-center gap-3 overflow-hidden p-3 text-left"
 		>
-			{#if build.image?.url && !imageFailed}
+			{#if imageUrl && !imageFailed}
 				<img
-					src={build.image.url}
+					src={imageUrl}
 					alt={build.keyboard?.name ?? 'Build'}
 					class="kc-thumb h-24 w-24 shrink-0 object-contain"
 					loading="lazy"
 					decoding="async"
-					onerror={() => build.image?.url && failedImages.add(build.image.url)}
+					onerror={() => {
+						failedImages.add(imageUrl);
+						refetchStaleImages(build.id);
+					}}
 				/>
 			{/if}
 			<div class="pr-4">
