@@ -14,7 +14,7 @@
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
-	import { blockingBuildIdsFromError } from '$lib/delete-blocked';
+	import { blockingBuildIdsFromError, blockingBuildLabels } from '$lib/delete-blocked';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -213,7 +213,9 @@
 			const buildIds = await blockingBuildIdsFromError(err);
 			if (buildIds) {
 				if (buildIds.length > 0) {
-					blockingBuilds = await resolveBuildNames(userId, buildIds);
+					blockingBuilds = await blockingBuildLabels(buildIds, (buildId) =>
+						buildsApi.getBuild({ userId, buildId })
+					);
 				} else {
 					deleteError = 'This keycap set is still used by one or more builds.';
 				}
@@ -223,19 +225,6 @@
 		} finally {
 			deleting = false;
 		}
-	}
-
-	async function resolveBuildNames(userId: string, buildIds: string[]): Promise<string[]> {
-		return Promise.all(
-			buildIds.map(async (buildId) => {
-				try {
-					const build = await buildsApi.getBuild({ userId, buildId });
-					return build.keyboard.name;
-				} catch {
-					return 'a build';
-				}
-			})
-		);
 	}
 
 	function openAddKit() {
@@ -361,7 +350,9 @@
 			const buildIds = await blockingBuildIdsFromError(err);
 			if (buildIds) {
 				if (buildIds.length > 0) {
-					kitBlockingBuilds = await resolveBuildNames(userId, buildIds);
+					kitBlockingBuilds = await blockingBuildLabels(buildIds, (buildId) =>
+						buildsApi.getBuild({ userId, buildId })
+					);
 				} else {
 					kitDeleteError = 'This kit is still used by one or more builds.';
 				}

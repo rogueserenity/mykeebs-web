@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ResponseError } from '@rogueserenity/kbdb-api-client';
-import { blockingBuildIdsFromError } from './delete-blocked';
+import { ResponseError, type Build } from '@rogueserenity/kbdb-api-client';
+import { blockingBuildIdsFromError, blockingBuildLabels } from './delete-blocked';
 
 function problem(status: number, body: unknown): ResponseError {
 	return new ResponseError(
@@ -35,5 +35,36 @@ describe('blockingBuildIdsFromError', () => {
 	it('is null for any other failure', async () => {
 		expect(await blockingBuildIdsFromError(problem(404, { status: 404 }))).toBeNull();
 		expect(await blockingBuildIdsFromError(new Error('network'))).toBeNull();
+	});
+});
+
+describe('blockingBuildLabels', () => {
+	const build = (id: string, buildDate?: Date): Build => ({
+		id,
+		keyboard: { id: 'kb', brand: 'KBDFans', name: 'Agar' },
+		buildDate
+	});
+
+	it('tells builds of the same keyboard apart by build date', async () => {
+		const builds: Record<string, Build> = {
+			'b-1': build('b-1', new Date('2026-09-12')),
+			'b-2': build('b-2', new Date('2026-06-26'))
+		};
+
+		const labels = await blockingBuildLabels(['b-1', 'b-2'], async (id) => builds[id]);
+
+		expect(labels).toEqual(['Agar (Sep 12, 2026)', 'Agar (Jun 26, 2026)']);
+	});
+
+	it('falls back to the keyboard name for an undated build', async () => {
+		expect(await blockingBuildLabels(['b'], async () => build('b'))).toEqual(['Agar']);
+	});
+
+	it("still lists a build it couldn't read", async () => {
+		const labels = await blockingBuildLabels(['b'], async () => {
+			throw new Error('404');
+		});
+
+		expect(labels).toEqual(['a build']);
 	});
 });

@@ -9,7 +9,7 @@
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
-	import { blockingBuildIdsFromError } from '$lib/delete-blocked';
+	import { blockingBuildIdsFromError, blockingBuildLabels } from '$lib/delete-blocked';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import KeyboardForm from '$lib/components/KeyboardForm.svelte';
@@ -188,17 +188,9 @@
 			const buildIds = await blockingBuildIdsFromError(err);
 			if (buildIds) {
 				if (buildIds.length > 0) {
-					const names = await Promise.all(
-						buildIds.map(async (buildId) => {
-							try {
-								const build = await buildsApi.getBuild({ userId, buildId });
-								return build.keyboard.name;
-							} catch {
-								return 'a build';
-							}
-						})
+					blockingBuilds = await blockingBuildLabels(buildIds, (buildId) =>
+						buildsApi.getBuild({ userId, buildId })
 					);
-					blockingBuilds = names;
 				} else {
 					deleteError = 'This keyboard is still used by one or more builds.';
 				}
