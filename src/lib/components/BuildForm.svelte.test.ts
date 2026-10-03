@@ -185,3 +185,17 @@ describe('BuildForm.svelte switch rows', () => {
 		}
 	});
 });
+
+describe('BuildForm.svelte remove buttons', () => {
+	it('names each remove button after its row and removes only that row', async () => {
+		renderForm(null);
+
+		await page.getByRole('button', { name: 'Remove Oil King (Gateron)' }).click();
+		await page.getByRole('button', { name: 'Remove 8008 2 — Aesthetic' }).click();
+
+		await expect.element(page.getByText('Oil King (Gateron)')).not.toBeInTheDocument();
+		await expect.element(page.getByText('8008 2 — Aesthetic')).not.toBeInTheDocument();
+		await expect.element(page.getByText('Aperol (HMX)')).toBeInTheDocument();
+		await expect.element(page.getByText('8008 2 — Base')).toBeInTheDocument();
+	});
+});

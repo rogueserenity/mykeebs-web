@@ -714,7 +714,7 @@
 						<button
 							type="button"
 							class="btn-icon h-7 w-7 text-xs"
-							aria-label="Remove switch"
+							aria-label="Remove {entry.label}"
 							onclick={() => removeSwitch(entry.switchId)}
 						>
 							<X class="h-3.5 w-3.5" />
@@ -789,7 +789,7 @@
 						<button
 							type="button"
 							class="btn-icon h-7 w-7 text-xs"
-							aria-label="Remove keycap kit"
+							aria-label="Remove {entry.label}"
 							onclick={() => removeKeycapKit(entry.keycapSetId, entry.kitId)}
 						>
 							<X class="h-3.5 w-3.5" />
