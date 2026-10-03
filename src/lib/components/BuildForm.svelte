@@ -705,6 +705,7 @@
 						<input
 							type="number"
 							class="field-input w-20"
+							aria-label="Count of {entry.label}"
 							min="1"
 							step="1"
 							bind:value={entry.count}

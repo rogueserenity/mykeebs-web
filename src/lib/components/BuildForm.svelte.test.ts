@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import { Visibility, type Build } from '@rogueserenity/kbdb-api-client';
 import { kitKey, type StaleBuildRefs } from '$lib/build-refs';
 import BuildFormWithUser from './test-support/BuildFormWithUser.svelte';
+import '../../routes/layout.css';
 
 vi.mock('$lib/api/client', () => ({
 	lookupsApi: { getLookup: vi.fn(async () => ({ values: [] })) },
@@ -139,13 +140,12 @@ describe('BuildForm.svelte switch counts', () => {
 		return onSubmit;
 	}
 
-	const countFor = (name: string) =>
-		page.getByRole('listitem').filter({ hasText: name }).getByRole('spinbutton');
+	const countFor = (label: string) => page.getByRole('spinbutton', { name: `Count of ${label}` });
 
 	it('refuses to save a switch whose count was cleared', async () => {
 		const onSubmit = renderBuild();
 
-		await countFor('Oil King').fill('');
+		await countFor('Oil King (Gateron)').fill('');
 		await page.getByRole('button', { name: 'Save changes' }).click();
 
 		await expect
@@ -157,9 +157,9 @@ describe('BuildForm.svelte switch counts', () => {
 	it('saves once every switch has a count again', async () => {
 		const onSubmit = renderBuild();
 
-		await countFor('Oil King').fill('');
+		await countFor('Oil King (Gateron)').fill('');
 		await page.getByRole('button', { name: 'Save changes' }).click();
-		await countFor('Oil King').fill('6');
+		await countFor('Oil King (Gateron)').fill('6');
 		await page.getByRole('button', { name: 'Save changes' }).click();
 
 		await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
@@ -170,5 +170,18 @@ describe('BuildForm.svelte switch counts', () => {
 		await expect
 			.element(page.getByText('Every switch needs a count of at least 1.'))
 			.not.toBeInTheDocument();
+	});
+});
+
+describe('BuildForm.svelte switch rows', () => {
+	it('names each count field after its switch and keeps the switch name visible', async () => {
+		renderForm(null);
+
+		for (const label of ['Aperol (HMX)', 'Oil King (Gateron)']) {
+			await expect
+				.element(page.getByRole('spinbutton', { name: `Count of ${label}` }))
+				.toBeInTheDocument();
+			await expect.element(page.getByText(label)).toBeVisible();
+		}
 	});
 });
