@@ -13,6 +13,8 @@
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
+	import { blockingBuildIdsFromError } from '$lib/delete-blocked';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -197,20 +199,19 @@
 		else if (modal.mode === 'edit') modal = { mode: 'edit', set };
 	}
 
-	async function deleteSet(keycapSetId: string, onDelete?: 'detach') {
+	async function deleteSet(keycapSetId: string) {
 		const userId = userContext.userId;
 		if (!userId) return;
 
 		deleting = true;
 		deleteError = null;
 		try {
-			await keycapSetsApi.deleteKeycapSet({ userId, keycapSetId, onDelete });
+			await keycapSetsApi.deleteKeycapSet({ userId, keycapSetId });
 			await grid?.refresh();
 			closeModal();
 		} catch (err) {
-			if (err instanceof ResponseError && err.response.status === 409) {
-				const body = await err.response.json().catch(() => null);
-				const buildIds: string[] = body?.blockingBuildIds ?? [];
+			const buildIds = await blockingBuildIdsFromError(err);
+			if (buildIds) {
 				if (buildIds.length > 0) {
 					blockingBuilds = await resolveBuildNames(userId, buildIds);
 				} else {
@@ -229,7 +230,7 @@
 			buildIds.map(async (buildId) => {
 				try {
 					const build = await buildsApi.getBuild({ userId, buildId });
-					return build.keyboard?.name ?? 'Untitled build';
+					return build.keyboard.name;
 				} catch {
 					return 'a build';
 				}
@@ -344,7 +345,7 @@
 		await refreshViewedSet(keycapSetId);
 	}
 
-	async function deleteKit(kitId: string, onDelete?: 'detach') {
+	async function deleteKit(kitId: string) {
 		const userId = userContext.userId;
 		if (modal.mode !== 'view' || !userId) return;
 		const keycapSetId = modal.set.id;
@@ -352,14 +353,13 @@
 		kitDeleting = true;
 		kitDeleteError = null;
 		try {
-			await keycapSetsApi.deleteKeycapKit({ userId, keycapSetId, kitId, onDelete });
+			await keycapSetsApi.deleteKeycapKit({ userId, keycapSetId, kitId });
 			await refreshViewedSet(keycapSetId);
 			closeKitModal();
 			confirmingKitDelete = null;
 		} catch (err) {
-			if (err instanceof ResponseError && err.response.status === 409) {
-				const body = await err.response.json().catch(() => null);
-				const buildIds: string[] = body?.blockingBuildIds ?? [];
+			const buildIds = await blockingBuildIdsFromError(err);
+			if (buildIds) {
 				if (buildIds.length > 0) {
 					kitBlockingBuilds = await resolveBuildNames(userId, buildIds);
 				} else {
@@ -471,25 +471,7 @@
 			>
 				<button type="button" class="btn" onclick={() => openEdit(set)}>Edit set</button>
 				{#if blockingBuilds}
-					<span class="text-sm" style="color: var(--danger)">
-						Used in: {blockingBuilds.join(', ')}.
-					</span>
-					<button
-						type="button"
-						class="btn"
-						disabled={deleting}
-						onclick={() => deleteSet(set.id ?? '', 'detach')}
-					>
-						{deleting ? 'Removing…' : 'Remove from builds & delete'}
-					</button>
-					<button
-						type="button"
-						class="btn"
-						disabled={deleting}
-						onclick={() => (blockingBuilds = null)}
-					>
-						Cancel
-					</button>
+					<DeleteBlocked builds={blockingBuilds} onCancel={() => (blockingBuilds = null)} />
 				{:else if confirmingDelete}
 					<span class="text-sm">Delete "{set.name}"?</span>
 					<button
@@ -601,25 +583,7 @@
 			>
 				<button type="button" class="btn" onclick={() => openEditKit(kit.kitId)}>Edit kit</button>
 				{#if kitBlockingBuilds}
-					<span class="text-sm" style="color: var(--danger)">
-						Used in: {kitBlockingBuilds.join(', ')}.
-					</span>
-					<button
-						type="button"
-						class="btn"
-						disabled={kitDeleting}
-						onclick={() => deleteKit(kit.kitId, 'detach')}
-					>
-						{kitDeleting ? 'Removing…' : 'Remove from builds & delete'}
-					</button>
-					<button
-						type="button"
-						class="btn"
-						disabled={kitDeleting}
-						onclick={() => (kitBlockingBuilds = null)}
-					>
-						Cancel
-					</button>
+					<DeleteBlocked builds={kitBlockingBuilds} onCancel={() => (kitBlockingBuilds = null)} />
 				{:else if confirmingKitDelete === kit.kitId}
 					<span class="text-sm">Delete "{kit.name}"?</span>
 					<button

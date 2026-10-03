@@ -14,9 +14,9 @@ export function newestFirst(a: Build, b: Build): number {
 export function groupByKeyboard(builds: Build[]): KeyboardBuildGroup[] {
 	const groups = new Map<string, Build[]>();
 	for (const build of builds) {
-		const group = groups.get(build.keyboardId);
+		const group = groups.get(build.keyboard.id);
 		if (group) group.push(build);
-		else groups.set(build.keyboardId, [build]);
+		else groups.set(build.keyboard.id, [build]);
 	}
 
 	return [...groups].map(([keyboardId, groupBuilds]) => {

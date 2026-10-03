@@ -1,0 +1,24 @@
+import { page } from 'vitest/browser';
+import { describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-svelte';
+import DeleteBlocked from './DeleteBlocked.svelte';
+
+describe('DeleteBlocked.svelte', () => {
+	it('names the builds that block the delete', async () => {
+		render(DeleteBlocked, { builds: ['Manta', 'Owlab Spring'], onCancel: vi.fn() });
+
+		await expect
+			.element(page.getByText('Used in: Manta, Owlab Spring. Remove it from those builds first.'))
+			.toBeInTheDocument();
+	});
+
+	it('offers only Cancel, never a way to delete anyway', async () => {
+		const onCancel = vi.fn();
+		render(DeleteBlocked, { builds: ['Manta'], onCancel });
+
+		await expect.element(page.getByRole('button')).toHaveTextContent('Cancel');
+		await page.getByRole('button').click();
+
+		expect(onCancel).toHaveBeenCalled();
+	});
+});

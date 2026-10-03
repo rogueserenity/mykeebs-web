@@ -8,6 +8,8 @@
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
+	import { blockingBuildIdsFromError } from '$lib/delete-blocked';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -157,26 +159,25 @@
 		await refreshEditingSwitch(switchId);
 	}
 
-	async function deleteSwitch(switchId: string, onDelete?: 'detach') {
+	async function deleteSwitch(switchId: string) {
 		const userId = userContext.userId;
 		if (!userId) return;
 
 		deleting = true;
 		deleteError = null;
 		try {
-			await switchesApi.deleteSwitch({ userId, switchId, onDelete });
+			await switchesApi.deleteSwitch({ userId, switchId });
 			await grid?.refresh();
 			closeModal();
 		} catch (err) {
-			if (err instanceof ResponseError && err.response.status === 409) {
-				const body = await err.response.json().catch(() => null);
-				const buildIds: string[] = body?.blockingBuildIds ?? [];
+			const buildIds = await blockingBuildIdsFromError(err);
+			if (buildIds) {
 				if (buildIds.length > 0) {
 					const names = await Promise.all(
 						buildIds.map(async (buildId) => {
 							try {
 								const build = await buildsApi.getBuild({ userId, buildId });
-								return build.keyboard?.name ?? 'Untitled build';
+								return build.keyboard.name;
 							} catch {
 								return 'a build';
 							}
@@ -284,25 +285,7 @@
 			>
 				<button type="button" class="btn" onclick={() => openEdit(sw)}>Edit</button>
 				{#if blockingBuilds}
-					<span class="text-sm" style="color: var(--danger)">
-						Used in: {blockingBuilds.join(', ')}.
-					</span>
-					<button
-						type="button"
-						class="btn"
-						disabled={deleting}
-						onclick={() => deleteSwitch(sw.id ?? '', 'detach')}
-					>
-						{deleting ? 'Removing…' : 'Remove from builds & delete'}
-					</button>
-					<button
-						type="button"
-						class="btn"
-						disabled={deleting}
-						onclick={() => (blockingBuilds = null)}
-					>
-						Cancel
-					</button>
+					<DeleteBlocked builds={blockingBuilds} onCancel={() => (blockingBuilds = null)} />
 				{:else if confirmingDelete}
 					<span class="text-sm">Delete "{sw.name}"?</span>
 					<button

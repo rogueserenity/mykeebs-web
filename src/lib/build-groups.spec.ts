@@ -8,7 +8,12 @@ function build(
 	date?: string,
 	visibility: Visibility = Visibility.Public
 ): Build {
-	return { id, keyboardId, buildDate: date ? new Date(date) : undefined, visibility };
+	return {
+		id,
+		keyboard: { id: keyboardId, brand: 'Bowl', name: 'Manta' },
+		buildDate: date ? new Date(date) : undefined,
+		visibility
+	};
 }
 
 describe('groupByKeyboard', () => {
@@ -46,16 +51,6 @@ describe('groupByKeyboard', () => {
 			['kb-1', true],
 			['kb-2', false]
 		]);
-	});
-
-	it("keeps a deleted keyboard's builds together by their keyboard id", () => {
-		const groups = groupByKeyboard([
-			{ ...build('a', 'gone', '2026-01-01'), keyboard: undefined },
-			{ ...build('b', 'gone', '2026-02-01'), keyboard: undefined }
-		]);
-
-		expect(groups).toHaveLength(1);
-		expect(groups[0].buildCount).toBe(2);
 	});
 
 	it('is empty when there are no builds', () => {

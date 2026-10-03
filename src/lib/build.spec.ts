@@ -5,7 +5,7 @@ import { primaryBuildImageUrl } from './build';
 function build(urls?: string[]): Build {
 	return {
 		id: 'b',
-		keyboardId: 'kb',
+		keyboard: { id: 'kb', brand: 'Bowl', name: 'Manta' },
 		images: urls?.map((url, i) => ({ imageId: `i${i}`, url }))
 	};
 }

@@ -19,37 +19,31 @@
 	} = $props();
 
 	const sortedKeycapKits = $derived(
-		build.keycapKits
-			? [...build.keycapKits].sort((a, b) =>
-					(a.keycapSet?.name ?? '').localeCompare(b.keycapSet?.name ?? '')
-				)
-			: []
+		[...(build.keycapSets ?? [])]
+			.sort((a, b) => a.name.localeCompare(b.name))
+			.flatMap((set) => set.kits.map((kit) => ({ set, kit })))
 	);
 </script>
 
 <div class="pr-8">
-	{#if build.keyboard}
-		<button
-			type="button"
-			class="flex items-center gap-3 text-left"
-			onclick={() => onKeyboardClick(build.keyboard!.id)}
-		>
-			{#if build.keyboard.imageUrl}
-				<img
-					src={build.keyboard.imageUrl}
-					alt={build.keyboard.name}
-					class="kc-thumb h-16 w-16 shrink-0 object-contain"
-					decoding="async"
-				/>
-			{/if}
-			<div>
-				<h2 class="heading-lg text-2xl hover:underline">{build.keyboard.name}</h2>
-				<p class="text-muted">{build.keyboard.brand}</p>
-			</div>
-		</button>
-	{:else}
-		<h2 class="heading-lg text-faint text-2xl">Deleted keyboard</h2>
-	{/if}
+	<button
+		type="button"
+		class="flex items-center gap-3 text-left"
+		onclick={() => onKeyboardClick(build.keyboard.id)}
+	>
+		{#if build.keyboard.imageUrl}
+			<img
+				src={build.keyboard.imageUrl}
+				alt={build.keyboard.name}
+				class="kc-thumb h-16 w-16 shrink-0 object-contain"
+				decoding="async"
+			/>
+		{/if}
+		<div>
+			<h2 class="heading-lg text-2xl hover:underline">{build.keyboard.name}</h2>
+			<p class="text-muted">{build.keyboard.brand}</p>
+		</div>
+	</button>
 	{#if formatDate(build.buildDate) || (showPrice && formatPrice(build.totalCost, build.currency))}
 		<p class="text-faint mt-1 font-mono text-sm">
 			{[
@@ -136,28 +130,24 @@
 			<ul class="space-y-2 text-sm">
 				{#each build.switches as entry, index (index)}
 					<li>
-						{#if entry._switch}
-							<button
-								type="button"
-								class="flex items-center gap-2 text-left hover:underline"
-								onclick={() => onSwitchClick(entry._switch!.id)}
+						<button
+							type="button"
+							class="flex items-center gap-2 text-left hover:underline"
+							onclick={() => onSwitchClick(entry._switch.id)}
+						>
+							{#if entry._switch.imageUrl}
+								<img
+									src={entry._switch.imageUrl}
+									alt={entry._switch.name}
+									class="kc-thumb h-8 w-8 shrink-0 object-contain"
+									loading="lazy"
+									decoding="async"
+								/>
+							{/if}
+							<span class="font-mono"
+								>{entry.count}x {entry._switch.name} ({entry._switch.brand})</span
 							>
-								{#if entry._switch.imageUrl}
-									<img
-										src={entry._switch.imageUrl}
-										alt={entry._switch.name}
-										class="kc-thumb h-8 w-8 shrink-0 object-contain"
-										loading="lazy"
-										decoding="async"
-									/>
-								{/if}
-								<span class="font-mono"
-									>{entry.count}x {entry._switch.name} ({entry._switch.brand})</span
-								>
-							</button>
-						{:else}
-							<span class="text-faint">{entry.count}x Deleted switch</span>
-						{/if}
+						</button>
 					</li>
 				{/each}
 			</ul>
@@ -168,28 +158,24 @@
 		<div>
 			<h3 class="section-label">Keycap kits</h3>
 			<ul class="space-y-2 text-sm">
-				{#each sortedKeycapKits as entry, index (entry.keycapSet ? `${entry.keycapSet.id}-${entry.kitId}` : index)}
+				{#each sortedKeycapKits as { set, kit } (`${set.id}-${kit.kitId}`)}
 					<li>
-						{#if entry.keycapSet && entry.kitName}
-							<button
-								type="button"
-								class="flex items-center gap-2 text-left hover:underline"
-								onclick={() => onKeycapKitClick(entry.keycapSet!.id, entry.kitId)}
-							>
-								{#if entry.kitImageUrl}
-									<img
-										src={entry.kitImageUrl}
-										alt={entry.kitName}
-										class="kc-thumb h-8 w-8 shrink-0 object-contain"
-										loading="lazy"
-										decoding="async"
-									/>
-								{/if}
-								<span class="font-mono">{entry.keycapSet.name} &mdash; {entry.kitName}</span>
-							</button>
-						{:else}
-							<span class="text-faint">Deleted keycap kit</span>
-						{/if}
+						<button
+							type="button"
+							class="flex items-center gap-2 text-left hover:underline"
+							onclick={() => onKeycapKitClick(set.id, kit.kitId)}
+						>
+							{#if kit.imageUrl}
+								<img
+									src={kit.imageUrl}
+									alt={kit.name}
+									class="kc-thumb h-8 w-8 shrink-0 object-contain"
+									loading="lazy"
+									decoding="async"
+								/>
+							{/if}
+							<span class="font-mono">{set.name} &mdash; {kit.name}</span>
+						</button>
 					</li>
 				{/each}
 			</ul>

@@ -14,19 +14,21 @@ vi.mock('$lib/api/client', () => ({
 
 const build: Build = {
 	id: 'b',
-	keyboardId: 'kb',
 	visibility: Visibility.Private,
 	keyboard: { id: 'kb', brand: 'Bowl', name: 'Manta' },
 	switches: [
 		{ _switch: { id: 'sw-a', brand: 'HMX', name: 'Aperol', type: 'Linear' }, count: 70 },
 		{ _switch: { id: 'sw-b', brand: 'Gateron', name: 'Oil King', type: 'Linear' }, count: 4 }
 	],
-	keycapKits: [
-		{ keycapSet: { id: 'set-1', brand: 'GMK', name: '8008 2' }, kitId: 'base', kitName: 'Base' },
+	keycapSets: [
 		{
-			keycapSet: { id: 'set-1', brand: 'GMK', name: '8008 2' },
-			kitId: 'aesthetic',
-			kitName: 'Aesthetic'
+			id: 'set-1',
+			brand: 'GMK',
+			name: '8008 2',
+			kits: [
+				{ kitId: 'base', name: 'Base' },
+				{ kitId: 'aesthetic', name: 'Aesthetic' }
+			]
 		}
 	]
 };

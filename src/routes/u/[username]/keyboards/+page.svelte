@@ -8,6 +8,8 @@
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
+	import { blockingBuildIdsFromError } from '$lib/delete-blocked';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import KeyboardForm from '$lib/components/KeyboardForm.svelte';
@@ -172,26 +174,25 @@
 		await refreshEditingKeyboard(keyboardId);
 	}
 
-	async function deleteKeyboard(keyboardId: string, onDelete?: 'detach') {
+	async function deleteKeyboard(keyboardId: string) {
 		const userId = userContext.userId;
 		if (!userId) return;
 
 		deleting = true;
 		deleteError = null;
 		try {
-			await keyboardsApi.deleteKeyboard({ userId, keyboardId, onDelete });
+			await keyboardsApi.deleteKeyboard({ userId, keyboardId });
 			await grid?.refresh();
 			closeModal();
 		} catch (err) {
-			if (err instanceof ResponseError && err.response.status === 409) {
-				const body = await err.response.json().catch(() => null);
-				const buildIds: string[] = body?.blockingBuildIds ?? [];
+			const buildIds = await blockingBuildIdsFromError(err);
+			if (buildIds) {
 				if (buildIds.length > 0) {
 					const names = await Promise.all(
 						buildIds.map(async (buildId) => {
 							try {
 								const build = await buildsApi.getBuild({ userId, buildId });
-								return build.keyboard?.name ?? 'Untitled build';
+								return build.keyboard.name;
 							} catch {
 								return 'a build';
 							}
@@ -310,25 +311,7 @@
 			>
 				<button type="button" class="btn" onclick={() => openEdit(keyboard)}>Edit</button>
 				{#if blockingBuilds}
-					<span class="text-sm" style="color: var(--danger)">
-						Used in: {blockingBuilds.join(', ')}.
-					</span>
-					<button
-						type="button"
-						class="btn"
-						disabled={deleting}
-						onclick={() => deleteKeyboard(keyboard.id ?? '', 'detach')}
-					>
-						{deleting ? 'Removing…' : 'Remove from builds & delete'}
-					</button>
-					<button
-						type="button"
-						class="btn"
-						disabled={deleting}
-						onclick={() => (blockingBuilds = null)}
-					>
-						Cancel
-					</button>
+					<DeleteBlocked builds={blockingBuilds} onCancel={() => (blockingBuilds = null)} />
 				{:else if confirmingDelete}
 					<span class="text-sm">Delete "{keyboard.name}"?</span>
 					<button

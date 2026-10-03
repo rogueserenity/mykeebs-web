@@ -158,14 +158,12 @@
 
 	type SwitchEntry = { switchId: string; count: number; label: string; imageUrl?: string };
 	let switchEntries = $state<SwitchEntry[]>(
-		(initial?.switches ?? [])
-			.filter((entry) => entry._switch)
-			.map((entry) => ({
-				switchId: entry._switch!.id,
-				count: entry.count,
-				label: `${entry._switch!.name} (${entry._switch!.brand})`,
-				imageUrl: entry._switch!.imageUrl
-			}))
+		(initial?.switches ?? []).map((entry) => ({
+			switchId: entry._switch.id,
+			count: entry.count,
+			label: `${entry._switch.name} (${entry._switch.brand})`,
+			imageUrl: entry._switch.imageUrl
+		}))
 	);
 	let switchPickerOpen = $state(false);
 	const refocusSwitchTrigger = { value: false };
@@ -226,14 +224,14 @@
 		imageUrl?: string;
 	};
 	let keycapKitEntries = $state<KeycapKitEntryDisplay[]>(
-		(initial?.keycapKits ?? [])
-			.filter((entry) => entry.keycapSet && entry.kitName)
-			.map((entry) => ({
-				keycapSetId: entry.keycapSet!.id,
-				kitId: entry.kitId,
-				label: `${entry.keycapSet!.name} — ${entry.kitName}`,
-				imageUrl: entry.kitImageUrl
+		(initial?.keycapSets ?? []).flatMap((set) =>
+			set.kits.map((kit) => ({
+				keycapSetId: set.id,
+				kitId: kit.kitId,
+				label: `${set.name} — ${kit.name}`,
+				imageUrl: kit.imageUrl
 			}))
+		)
 	);
 	let keycapSetPickerOpen = $state(false);
 	const refocusKeycapKitTrigger = { value: false };
@@ -349,7 +347,7 @@
 		}
 	}
 
-	const initialKeyboardId = initial?.keyboard?.id ?? '';
+	const initialKeyboardId = initial?.keyboard.id ?? '';
 	const initialPlate = initial?.plate ?? '';
 	const initialCaseMountType = initial?.caseMountType?.type ?? '';
 	const initialDurometer = initial?.caseMountType?.durometer ?? '';

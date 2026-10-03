@@ -45,7 +45,7 @@
 	const refetchStaleImages = perItemImageRefetcher(
 		(buildId) => buildsApi.getBuild({ userId: userContext.userId, buildId }),
 		(fresh, buildId) =>
-			grid?.updateItem(fresh.keyboardId, (group) =>
+			grid?.updateItem(fresh.keyboard.id, (group) =>
 				group.current.id === buildId
 					? { ...group, current: withFreshImageUrls(group.current, fresh) }
 					: group
@@ -121,11 +121,11 @@
 	fetchPage={fetchGroupedBuilds}
 	itemKey={(group) => group.keyboardId}
 	emptyMessage="No builds yet."
-	getName={(group) => group.current.keyboard?.name}
+	getName={(group) => group.current.keyboard.name}
 	onAdd={userContext.isOwnProfile ? openCreate : undefined}
 	addLabel="Add build"
 	sortOptions={[
-		{ label: 'Name', getValue: (group) => group.current.keyboard?.name },
+		{ label: 'Name', getValue: (group) => group.current.keyboard.name },
 		{ label: 'Build Date', getValue: (group) => group.current.buildDate?.getTime() },
 		{ label: 'Total cost', getValue: (group) => group.current.totalCost ?? undefined }
 	]}
@@ -144,7 +144,7 @@
 			{#if imageUrl && !imageFailed}
 				<img
 					src={imageUrl}
-					alt={build.keyboard?.name ?? 'Build'}
+					alt={build.keyboard.name}
 					class="kc-thumb h-24 w-24 shrink-0 object-contain"
 					loading="lazy"
 					decoding="async"
@@ -155,8 +155,8 @@
 				/>
 			{/if}
 			<div class="pr-4">
-				<h2 class="heading-lg text-lg">{build.keyboard?.name ?? 'Unknown keyboard'}</h2>
-				<p class="text-muted text-sm">{build.keyboard?.brand}</p>
+				<h2 class="heading-lg text-lg">{build.keyboard.name}</h2>
+				<p class="text-muted text-sm">{build.keyboard.brand}</p>
 				{#if formatDate(build.buildDate) || (showPrice && formatPrice(build.totalCost, build.currency))}
 					<p class="text-faint font-mono text-xs">
 						{[

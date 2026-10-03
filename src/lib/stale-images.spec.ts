@@ -280,13 +280,13 @@ describe('withFreshImageUrls on a build', () => {
 	it('takes fresh URLs by image id and leaves everything else as shown', () => {
 		const shown: Build = {
 			id: 'b',
-			keyboardId: 'kb',
+			keyboard: { id: 'kb', brand: 'Bowl', name: 'Manta' },
 			notes: 'edited',
 			images: [{ imageId: 'i1', url: 'old' }]
 		};
 		const fresh: Build = {
 			id: 'b',
-			keyboardId: 'kb',
+			keyboard: { id: 'kb', brand: 'Bowl', name: 'Manta' },
 			notes: 'stale',
 			images: [{ imageId: 'i1', url: 'new' }]
 		};

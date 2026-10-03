@@ -6,7 +6,7 @@ function kit(kitId: string, url?: string): KeycapKit {
 	return { kitId, name: kitId, image: url ? { url } : undefined };
 }
 
-function set(primaryKitId: string | null | undefined, kits?: KeycapKit[]): KeycapSet {
+function set(primaryKitId: string | undefined, kits?: KeycapKit[]): KeycapSet {
 	return { id: 's', brand: 'GMK', name: 'Olivia', primaryKitId, kits };
 }
 
@@ -18,7 +18,6 @@ describe('primaryKitImageUrl', () => {
 	});
 
 	it('is undefined when no primary kit is set', () => {
-		expect(primaryKitImageUrl(set(null, [kit('base', 'b.png')]))).toBeUndefined();
 		expect(primaryKitImageUrl(set(undefined, [kit('base', 'b.png')]))).toBeUndefined();
 	});
 
