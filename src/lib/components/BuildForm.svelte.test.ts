@@ -122,3 +122,53 @@ describe('BuildForm.svelte cleared stabilizer price', () => {
 		expect(onSubmit.mock.calls[0][0].stabs?.price).toBeNullable();
 	});
 });
+
+describe('BuildForm.svelte switch counts', () => {
+	function renderBuild() {
+		const onSubmit = vi.fn();
+		render(BuildFormWithUser, {
+			formProps: {
+				initial: build,
+				saving: false,
+				error: null,
+				staleRefs: null,
+				onSubmit,
+				onCancel: vi.fn()
+			}
+		});
+		return onSubmit;
+	}
+
+	const countFor = (name: string) =>
+		page.getByRole('listitem').filter({ hasText: name }).getByRole('spinbutton');
+
+	it('refuses to save a switch whose count was cleared', async () => {
+		const onSubmit = renderBuild();
+
+		await countFor('Oil King').fill('');
+		await page.getByRole('button', { name: 'Save changes' }).click();
+
+		await expect
+			.element(page.getByText('Every switch needs a count of at least 1.'))
+			.toBeInTheDocument();
+		expect(onSubmit).not.toHaveBeenCalled();
+	});
+
+	it('saves once every switch has a count again', async () => {
+		const onSubmit = renderBuild();
+
+		await countFor('Oil King').fill('');
+		await page.getByRole('button', { name: 'Save changes' }).click();
+		await countFor('Oil King').fill('6');
+		await page.getByRole('button', { name: 'Save changes' }).click();
+
+		await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+		expect(onSubmit.mock.calls[0][0].switches).toEqual([
+			{ _switch: 'sw-a', count: 70 },
+			{ _switch: 'sw-b', count: 6 }
+		]);
+		await expect
+			.element(page.getByText('Every switch needs a count of at least 1.'))
+			.not.toBeInTheDocument();
+	});
+});

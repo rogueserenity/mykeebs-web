@@ -400,6 +400,11 @@
 			return;
 		}
 
+		if (switchEntries.some((e) => e.count == null || e.count < 1)) {
+			validationError = 'Every switch needs a count of at least 1.';
+			return;
+		}
+
 		const hasCaseMountType = caseMountType.trim() || durometer.trim();
 		const hasStabs = stabsName.trim() || stabsMountType.trim() || stabsPrice != null;
 
