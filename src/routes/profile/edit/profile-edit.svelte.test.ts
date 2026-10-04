@@ -47,3 +47,20 @@ describe('Profile edit page links', () => {
 		await expect.element(page.getByRole('button', { name: 'Remove link 3' })).toBeInTheDocument();
 	});
 });
+
+describe('Profile edit page link fields', () => {
+	it('labels each link field by its position', async () => {
+		render(ProfileEditPage);
+
+		await expect.element(page.getByRole('textbox', { name: 'Link 1 label' })).toHaveValue('GitHub');
+		await expect
+			.element(page.getByRole('textbox', { name: 'Link 1 URL' }))
+			.toHaveValue('https://github.com/rogueserenity');
+		await expect
+			.element(page.getByRole('textbox', { name: 'Link 2 label' }))
+			.toHaveValue('Mastodon');
+		await expect
+			.element(page.getByRole('textbox', { name: 'Link 2 URL' }))
+			.toHaveValue('https://example.social/@rogue');
+	});
+});

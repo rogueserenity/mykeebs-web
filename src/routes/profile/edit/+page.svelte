@@ -268,6 +268,7 @@
 						<input
 							type="text"
 							class="field-input w-1/3"
+							aria-label="Link {index + 1} label"
 							placeholder="Label"
 							maxlength="32"
 							bind:value={link.name}
@@ -275,6 +276,7 @@
 						<input
 							type="url"
 							class="field-input flex-1 font-mono"
+							aria-label="Link {index + 1} URL"
 							placeholder="https://…"
 							bind:value={link.url}
 						/>
