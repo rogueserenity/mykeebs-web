@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ResponseError, type Build } from '@rogueserenity/kbdb-api-client';
-import { blockingBuildIdsFromError, blockingBuildLabels } from './delete-blocked';
+import { blockingBuildIdsFromError, blockingBuildLabels, deleteFailure } from './delete-blocked';
 
 function problem(status: number, body: unknown): ResponseError {
 	return new ResponseError(
@@ -66,5 +66,37 @@ describe('blockingBuildLabels', () => {
 		});
 
 		expect(labels).toEqual(['a build']);
+	});
+});
+
+describe('deleteFailure', () => {
+	const messages = { stillUsed: 'Still used.', failed: 'Could not delete.' };
+	const build = (name: string): Build =>
+		({ id: name, keyboard: { id: 'k', brand: 'B', name } }) as Build;
+
+	it('names the builds that block the delete', async () => {
+		const err = problem(409, { status: 409, blocking_build_ids: ['b-1', 'b-2'] });
+		const getBuild = async (id: string) => build(id === 'b-1' ? 'Manta' : 'Agar');
+
+		expect(await deleteFailure(err, getBuild, messages)).toEqual({
+			blockingBuilds: ['Manta', 'Agar']
+		});
+	});
+
+	it('says the item is still used when the conflict names no builds', async () => {
+		const err = problem(409, { status: 409 });
+
+		expect(await deleteFailure(err, async () => build('x'), messages)).toEqual({
+			error: 'Still used.'
+		});
+	});
+
+	it('falls back to a plain failure for anything else', async () => {
+		expect(await deleteFailure(problem(500, {}), async () => build('x'), messages)).toEqual({
+			error: 'Could not delete.'
+		});
+		expect(await deleteFailure(new Error('network'), async () => build('x'), messages)).toEqual({
+			error: 'Could not delete.'
+		});
 	});
 });

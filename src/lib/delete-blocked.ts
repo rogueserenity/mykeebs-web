@@ -24,3 +24,16 @@ export function blockingBuildLabels(
 		buildIds.map((buildId) => getBuild(buildId).then(blockingBuildLabel, () => 'a build'))
 	);
 }
+
+export type DeleteFailure = { blockingBuilds: string[] } | { error: string };
+
+export async function deleteFailure(
+	err: unknown,
+	getBuild: (buildId: string) => Promise<Build>,
+	messages: { stillUsed: string; failed: string }
+): Promise<DeleteFailure> {
+	const buildIds = await blockingBuildIdsFromError(err);
+	if (!buildIds) return { error: messages.failed };
+	if (buildIds.length === 0) return { error: messages.stillUsed };
+	return { blockingBuilds: await blockingBuildLabels(buildIds, getBuild) };
+}

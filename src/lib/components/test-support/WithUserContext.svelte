@@ -2,14 +2,19 @@
 	import type { Component } from 'svelte';
 	import { setUserContext } from '$lib/user-context';
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let { component: Inner }: { component: Component<any> } = $props();
+	let {
+		component: Inner,
+		isOwnProfile = true
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	}: { component: Component<any>; isOwnProfile?: boolean } = $props();
 
 	setUserContext({
 		userId: 'user-1',
 		username: 'rogue.serenity',
 		profile: { userId: 'user-1', username: 'rogue.serenity', discoverable: true },
-		isOwnProfile: true,
+		get isOwnProfile() {
+			return isOwnProfile;
+		},
 		showPrice: true
 	});
 </script>

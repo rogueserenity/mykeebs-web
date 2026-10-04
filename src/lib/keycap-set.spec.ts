@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { KeycapKit, KeycapSet } from '@rogueserenity/kbdb-api-client';
-import { primaryKitImageUrl } from './keycap-set';
+import { adjacentKitId, primaryKitImageUrl } from './keycap-set';
 
 function kit(kitId: string, url?: string): KeycapKit {
 	return { kitId, name: kitId, image: url ? { url } : undefined };
@@ -31,5 +31,25 @@ describe('primaryKitImageUrl', () => {
 
 	it('is undefined when the set has no kits', () => {
 		expect(primaryKitImageUrl(set('base'))).toBeUndefined();
+	});
+});
+
+describe('adjacentKitId', () => {
+	const three = set(undefined, [kit('base'), kit('novs'), kit('alphas')]);
+
+	it('steps forward and back through the kits', () => {
+		expect(adjacentKitId(three, 'base', 1)).toBe('novs');
+		expect(adjacentKitId(three, 'novs', -1)).toBe('base');
+	});
+
+	it('wraps around at either end', () => {
+		expect(adjacentKitId(three, 'alphas', 1)).toBe('base');
+		expect(adjacentKitId(three, 'base', -1)).toBe('alphas');
+	});
+
+	it('has nowhere to go with fewer than two kits or an unknown kit', () => {
+		expect(adjacentKitId(set(undefined, [kit('base')]), 'base', 1)).toBeNull();
+		expect(adjacentKitId(set(undefined, undefined), 'base', 1)).toBeNull();
+		expect(adjacentKitId(three, 'gone', 1)).toBeNull();
 	});
 });

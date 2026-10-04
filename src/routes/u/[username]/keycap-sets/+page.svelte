@@ -10,12 +10,13 @@
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
 	import { keycapSetsApi, buildsApi } from '$lib/api/client';
 	import { anyImageFailed, staleImageRefetcher, withFreshKitImageUrls } from '$lib/stale-images';
-	import { primaryKitImageUrl } from '$lib/keycap-set';
+	import { adjacentKitId, primaryKitImageUrl } from '$lib/keycap-set';
 	import { getUserContext } from '$lib/user-context';
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
-	import { blockingBuildIdsFromError, blockingBuildLabels } from '$lib/delete-blocked';
+	import { deleteFailure } from '$lib/delete-blocked';
+	import { uploadToSignedUrl } from '$lib/upload';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -76,12 +77,8 @@
 
 	function stepKit(delta: 1 | -1) {
 		if (modal.mode !== 'view' || kitModal.mode !== 'view') return;
-		const kits = modal.set.kits;
-		const currentKitId = kitModal.kitId;
-		if (!kits || kits.length < 2) return;
-		const index = kits.findIndex((kit) => kit.kitId === currentKitId);
-		if (index === -1) return;
-		kitModal = { mode: 'view', kitId: kits[(index + delta + kits.length) % kits.length].kitId };
+		const kitId = adjacentKitId(modal.set, kitModal.kitId, delta);
+		if (kitId) kitModal = { mode: 'view', kitId };
 	}
 
 	function handleKitNavKeydown(event: KeyboardEvent) {
@@ -211,18 +208,16 @@
 			await grid?.refresh();
 			closeModal();
 		} catch (err) {
-			const buildIds = await blockingBuildIdsFromError(err);
-			if (buildIds) {
-				if (buildIds.length > 0) {
-					blockingBuilds = await blockingBuildLabels(buildIds, (buildId) =>
-						buildsApi.getBuild({ userId, buildId })
-					);
-				} else {
-					deleteError = 'This keycap set is still used by one or more builds.';
+			const failure = await deleteFailure(
+				err,
+				(buildId) => buildsApi.getBuild({ userId, buildId }),
+				{
+					stillUsed: 'This keycap set is still used by one or more builds.',
+					failed: 'Could not delete this keycap set.'
 				}
-			} else {
-				deleteError = 'Could not delete this keycap set.';
-			}
+			);
+			if ('blockingBuilds' in failure) blockingBuilds = failure.blockingBuilds;
+			else deleteError = failure.error;
 		} finally {
 			deleting = false;
 		}
@@ -312,12 +307,7 @@
 			kitId,
 			imageUploadRequest: { contentType: file.type }
 		});
-		const put = await fetch(uploadUrl, {
-			method: 'PUT',
-			headers: { 'Content-Type': file.type },
-			body: file
-		});
-		if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+		await uploadToSignedUrl(uploadUrl, file);
 	}
 
 	async function handleKitImageUpload(kitId: string, file: File) {
@@ -348,18 +338,16 @@
 			closeKitModal();
 			confirmingKitDelete = null;
 		} catch (err) {
-			const buildIds = await blockingBuildIdsFromError(err);
-			if (buildIds) {
-				if (buildIds.length > 0) {
-					kitBlockingBuilds = await blockingBuildLabels(buildIds, (buildId) =>
-						buildsApi.getBuild({ userId, buildId })
-					);
-				} else {
-					kitDeleteError = 'This kit is still used by one or more builds.';
+			const failure = await deleteFailure(
+				err,
+				(buildId) => buildsApi.getBuild({ userId, buildId }),
+				{
+					stillUsed: 'This kit is still used by one or more builds.',
+					failed: 'Could not delete this kit.'
 				}
-			} else {
-				kitDeleteError = 'Could not delete this kit.';
-			}
+			);
+			if ('blockingBuilds' in failure) kitBlockingBuilds = failure.blockingBuilds;
+			else kitDeleteError = failure.error;
 		} finally {
 			kitDeleting = false;
 		}
