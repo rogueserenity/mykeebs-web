@@ -41,4 +41,19 @@ describe('root layout', () => {
 
 		await expect.element(page.getByRole('main')).toHaveFocus();
 	});
+
+	it('names the site navigation and marks the current page', async () => {
+		await page.viewport(1024, 768);
+		try {
+			renderLayout();
+
+			await expect
+				.element(
+					page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Discover' })
+				)
+				.toHaveAttribute('aria-current', 'page');
+		} finally {
+			await page.viewport(414, 896);
+		}
+	});
 });

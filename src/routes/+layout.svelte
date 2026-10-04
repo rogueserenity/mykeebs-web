@@ -64,11 +64,12 @@
 		mykeebs
 	</div>
 	<div class="hidden md:block">
-		<nav class="app-nav">
+		<nav class="app-nav" aria-label="Main">
 			{#each navItems as item (item.href)}
 				<a
 					href={item.href}
 					class="nav-key {page.url.pathname.startsWith(item.href) ? 'is-active' : ''}"
+					aria-current={page.url.pathname.startsWith(item.href) ? 'page' : undefined}
 				>
 					{item.label}
 				</a>
@@ -82,11 +83,12 @@
 </header>
 {#if mobileMenuOpen}
 	<div class="app-mobile-menu md:hidden">
-		<nav class="flex flex-col gap-1">
+		<nav class="flex flex-col gap-1" aria-label="Main">
 			{#each navItems as item (item.href)}
 				<a
 					href={item.href}
 					class="nav-key {page.url.pathname.startsWith(item.href) ? 'is-active' : ''}"
+					aria-current={page.url.pathname.startsWith(item.href) ? 'page' : undefined}
 				>
 					{item.label}
 				</a>
@@ -94,10 +96,14 @@
 		</nav>
 		{#if profileSubNav.items.length > 0}
 			<div class="profile-menu-divider"></div>
-			<nav class="flex flex-col gap-1">
+			<nav class="flex flex-col gap-1" aria-label="Profile">
 				{#each profileSubNav.items as item (item.route)}
 					{@const href = resolve(item.route, { username: item.username })}
-					<a {href} class="nav-key {page.url.pathname === href ? 'is-active' : ''}">
+					<a
+						{href}
+						class="nav-key {page.url.pathname === href ? 'is-active' : ''}"
+						aria-current={page.url.pathname === href ? 'page' : undefined}
+					>
 						{item.label}
 					</a>
 				{/each}

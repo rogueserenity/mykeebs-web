@@ -1,3 +1,4 @@
+import { page } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { createRawSnippet } from 'svelte';
@@ -77,5 +78,27 @@ describe('user layout titles', () => {
 		render(UserLayout, { children });
 
 		await title('Not found · mykeebs');
+	});
+});
+
+describe('user layout tabs', () => {
+	const children = createRawSnippet(() => ({ render: () => '<div></div>' }));
+
+	it('names the tab strip and marks the current tab', async () => {
+		vi.mocked(profilesApi.getProfile).mockResolvedValue({
+			userId: 'user-1',
+			username: 'rogue.serenity',
+			discoverable: true
+		} as never);
+
+		render(UserLayout, { children });
+
+		const tabs = page.getByRole('navigation', { name: 'Profile' });
+		await expect
+			.element(tabs.getByRole('link', { name: 'Overview' }))
+			.toHaveAttribute('aria-current', 'page');
+		await expect
+			.element(tabs.getByRole('link', { name: 'Keyboards' }))
+			.not.toHaveAttribute('aria-current');
 	});
 });

@@ -145,9 +145,13 @@
 		</div>
 
 		<div class="mt-6 hidden border-b pb-2 md:block" style="border-color: var(--border)">
-			<nav class="app-nav">
+			<nav class="app-nav" aria-label="Profile">
 				{#each subNavItems as item (item.href)}
-					<a href={item.href} class="nav-key {page.url.pathname === item.href ? 'is-active' : ''}">
+					<a
+						href={item.href}
+						class="nav-key {page.url.pathname === item.href ? 'is-active' : ''}"
+						aria-current={page.url.pathname === item.href ? 'page' : undefined}
+					>
 						{item.label}
 					</a>
 				{/each}
