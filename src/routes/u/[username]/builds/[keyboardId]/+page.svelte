@@ -19,6 +19,9 @@
 	import { formatDate, formatPrice, type PurchaseLike } from '$lib/format';
 	import { perItemImageRefetcher, updateWhere, withFreshImageUrls } from '$lib/stale-images';
 	import { newestFirst } from '$lib/build-groups';
+	import { fetchAllPages } from '$lib/pagination';
+	import { stepIndex } from '$lib/step-index';
+	import { uploadToSignedUrl } from '$lib/upload';
 	import { primaryBuildImageUrl } from '$lib/build';
 	import { getUserContext } from '$lib/user-context';
 	import Modal from '$lib/components/Modal.svelte';
@@ -70,7 +73,7 @@
 		try {
 			const [keyboard, builds] = await Promise.all([
 				keyboardsApi.getKeyboard({ userId, keyboardId: kId }).catch(() => null),
-				fetchBuildsForKeyboard(userId, kId)
+				fetchAllPages((cursor) => buildsApi.listBuilds({ userId, keyboardId: kId, cursor }))
 			]);
 			if (token !== loadToken) return;
 			builds.sort(newestFirst);
@@ -79,17 +82,6 @@
 			if (token !== loadToken) return;
 			view = { status: 'error', message: 'Could not load builds for this keyboard.' };
 		}
-	}
-
-	async function fetchBuildsForKeyboard(userId: string, kId: string): Promise<Build[]> {
-		const builds: Build[] = [];
-		let cursor: string | undefined;
-		do {
-			const pageResult = await buildsApi.listBuilds({ userId, keyboardId: kId, cursor });
-			builds.push(...(pageResult.items ?? []));
-			cursor = pageResult.nextCursor ?? undefined;
-		} while (cursor);
-		return builds;
 	}
 
 	$effect(() => {
@@ -214,12 +206,7 @@
 			buildId,
 			imageUploadRequest: { contentType: file.type }
 		});
-		const put = await fetch(uploadUrl, {
-			method: 'PUT',
-			headers: { 'Content-Type': file.type },
-			body: file
-		});
-		if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+		await uploadToSignedUrl(uploadUrl, file);
 	}
 
 	async function handleImageUpload(buildId: string, file: File) {
@@ -524,12 +511,10 @@
 		alt="Build"
 		onClose={() => (galleryViewerOpen = false)}
 		onPrev={selectedBuild.images.length > 1
-			? () =>
-					(galleryIndex =
-						(galleryIndex - 1 + selectedBuild!.images!.length) % selectedBuild!.images!.length)
+			? () => (galleryIndex = stepIndex(galleryIndex, -1, selectedBuild!.images!.length))
 			: undefined}
 		onNext={selectedBuild.images.length > 1
-			? () => (galleryIndex = (galleryIndex + 1) % selectedBuild!.images!.length)
+			? () => (galleryIndex = stepIndex(galleryIndex, 1, selectedBuild!.images!.length))
 			: undefined}
 	/>
 {/if}
@@ -564,12 +549,19 @@
 		onClose={() => (keyboardGalleryViewerOpen = false)}
 		onPrev={keyboardDetail.images.length > 1
 			? () =>
-					(keyboardGalleryIndex =
-						(keyboardGalleryIndex - 1 + keyboardDetail!.images!.length) %
-						keyboardDetail!.images!.length)
+					(keyboardGalleryIndex = stepIndex(
+						keyboardGalleryIndex,
+						-1,
+						keyboardDetail!.images!.length
+					))
 			: undefined}
 		onNext={keyboardDetail.images.length > 1
-			? () => (keyboardGalleryIndex = (keyboardGalleryIndex + 1) % keyboardDetail!.images!.length)
+			? () =>
+					(keyboardGalleryIndex = stepIndex(
+						keyboardGalleryIndex,
+						1,
+						keyboardDetail!.images!.length
+					))
 			: undefined}
 	/>
 {/if}
