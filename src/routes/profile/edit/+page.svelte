@@ -9,10 +9,9 @@
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import { X } from 'lucide-svelte';
+	import { cleanLinks, USERNAME_RULES, usernameLooksValid } from '$lib/profile/profile-input';
+	import { uploadToSignedUrl } from '$lib/upload';
 
-	// Mirrors ProfileInput.username in kbdb's schema: 3-32 chars, lowercase
-	// alphanumeric, single separators only, no leading/trailing separator.
-	const USERNAME_PATTERN = /^(?=.{3,32}$)[a-z0-9]+(?:[._-][a-z0-9]+)*$/;
 	const MAX_LINKS = 5;
 
 	// For browsers without Intl.supportedValuesOf (older Safari).
@@ -62,9 +61,7 @@
 	let formError = $state<string | null>(null);
 	let usernameError = $state<string | null>(null);
 
-	let usernameLooksValid = $derived(
-		USERNAME_PATTERN.test(username) && !username.startsWith('user-')
-	);
+	let usernameValid = $derived(usernameLooksValid(username));
 
 	function addLink() {
 		if (links.length < MAX_LINKS) links = [...links, { name: '', url: '' }];
@@ -85,23 +82,17 @@
 		formError = null;
 		usernameError = null;
 
-		if (!usernameLooksValid) {
-			usernameError =
-				'3–32 chars: lowercase letters, digits, hyphen, period, underscore. No leading/trailing or consecutive periods/hyphens/underscores. Cannot start with "user-".';
+		if (!usernameValid) {
+			usernameError = USERNAME_RULES;
 			return;
 		}
 
-		const cleanedLinks = links
-			.map((l) => ({ name: l.name.trim(), url: l.url.trim() }))
-			.filter((l) => l.name || l.url);
-		if (cleanedLinks.some((l) => !l.name || !l.url)) {
-			formError = 'Each link needs both a name and a URL.';
+		const cleaned = cleanLinks(links);
+		if ('error' in cleaned) {
+			formError = cleaned.error;
 			return;
 		}
-		if (cleanedLinks.some((l) => !/^https:\/\//i.test(l.url))) {
-			formError = 'Link URLs must start with https://.';
-			return;
-		}
+		const cleanedLinks = cleaned.links;
 
 		const input: ProfileInput = {
 			username,
@@ -146,12 +137,7 @@
 				identifier: auth.user.id,
 				imageUploadRequest: { contentType: file.type }
 			});
-			const put = await fetch(uploadUrl, {
-				method: 'PUT',
-				headers: { 'Content-Type': file.type },
-				body: file
-			});
-			if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+			await uploadToSignedUrl(uploadUrl, file);
 			await refreshProfile();
 		} catch {
 			avatarError = 'Could not upload that image.';
@@ -240,7 +226,7 @@
 					autocomplete="off"
 				/>
 				<span class="text-faint text-xs">
-					Your profile will be at /u/{usernameLooksValid ? username : 'username'}
+					Your profile will be at /u/{usernameValid ? username : 'username'}
 				</span>
 				{#if usernameError}
 					<span class="text-xs" style="color: var(--danger)">{usernameError}</span>
@@ -342,7 +328,7 @@
 					<span class="text-sm">Make my profile discoverable</span>
 				</label>
 				<p class="text-faint -mt-2 text-xs">
-					Others can find you in Discover and view /u/{usernameLooksValid ? username : 'username'}.
+					Others can find you in Discover and view /u/{usernameValid ? username : 'username'}.
 					Individual builds still use their own visibility setting.
 				</p>
 			</div>

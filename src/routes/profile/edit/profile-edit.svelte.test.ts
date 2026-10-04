@@ -1,22 +1,32 @@
-import { page } from 'vitest/browser';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { page, userEvent } from 'vitest/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
-import type { Profile } from '@rogueserenity/kbdb-api-client';
+import { ResponseError, type Profile } from '@rogueserenity/kbdb-api-client';
+import { goto } from '$app/navigation';
+import { profilesApi } from '$lib/api/client';
+import { refreshProfile, saveProfile } from '$lib/profile/profile.svelte';
 import ProfileEditPage from './+page.svelte';
 
 const existing = vi.hoisted((): Profile => ({
 	userId: 'user-1',
 	username: 'rogue.serenity',
 	discoverable: true,
+	discordUsername: 'rogue#1',
+	bio: 'No, I am a meat popsicle.',
+	preferences: { currency: 'EUR', showPriceToMe: false, showPriceToOthers: true },
+	avatar: { url: 'https://img.example/avatar.png' },
 	links: [
 		{ name: 'GitHub', url: 'https://github.com/rogueserenity' },
 		{ name: 'Mastodon', url: 'https://example.social/@rogue' }
 	]
 }));
 
-vi.mock('$lib/auth/auth.svelte', () => ({
-	auth: { status: 'signed-in', user: { id: 'user-1', email: null } }
+const authState = vi.hoisted(() => ({
+	status: 'signed-in',
+	user: { id: 'user-1', email: null } as { id: string; email: null } | null
 }));
+
+vi.mock('$lib/auth/auth.svelte', () => ({ auth: authState }));
 const profileState = vi.hoisted(() => ({ status: 'ready', data: undefined as unknown }));
 
 vi.mock('$lib/profile/profile.svelte', () => ({
@@ -24,12 +34,21 @@ vi.mock('$lib/profile/profile.svelte', () => ({
 	saveProfile: vi.fn(),
 	refreshProfile: vi.fn()
 }));
-vi.mock('$lib/api/client', () => ({ profilesApi: {} }));
+vi.mock('$lib/api/client', () => ({
+	profilesApi: { setProfileImage: vi.fn(), deleteProfileImage: vi.fn() }
+}));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 
 beforeEach(() => {
+	vi.clearAllMocks();
+	authState.status = 'signed-in';
+	authState.user = { id: 'user-1', email: null };
 	profileState.status = 'ready';
 	profileState.data = existing;
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
 });
 
 describe('Profile edit page links', () => {
@@ -86,5 +105,225 @@ describe('Profile edit page title', () => {
 		render(ProfileEditPage);
 
 		await vi.waitFor(() => expect(document.title).toBe('Set up profile · mykeebs'));
+	});
+});
+
+const save = vi.mocked(saveProfile);
+const api = vi.mocked(profilesApi);
+
+function conflict(type: string): ResponseError {
+	return new ResponseError(
+		new Response(JSON.stringify({ type, status: 409 }), {
+			status: 409,
+			headers: { 'Content-Type': 'application/problem+json' }
+		})
+	);
+}
+
+const usernameField = () => page.getByLabelText(/^Username/);
+const saveButton = () => page.getByRole('button', { name: 'Save changes' });
+
+describe('Profile edit page states', () => {
+	it('waits while auth or the profile is loading', async () => {
+		profileState.status = 'loading';
+		render(ProfileEditPage);
+
+		await expect.element(page.getByText('Loading…')).toBeInTheDocument();
+	});
+
+	it('asks a signed-out visitor to sign in', async () => {
+		authState.status = 'signed-out';
+		authState.user = null;
+		render(ProfileEditPage);
+
+		await expect.element(page.getByText('Sign in to edit your profile.')).toBeInTheDocument();
+	});
+
+	it('says so when the profile fails to load', async () => {
+		profileState.status = 'error';
+		render(ProfileEditPage);
+
+		await expect.element(page.getByText('Could not load your profile.')).toBeInTheDocument();
+	});
+
+	it('fills the form from the existing profile', async () => {
+		render(ProfileEditPage);
+
+		await expect.element(usernameField()).toHaveValue('rogue.serenity');
+		await expect.element(page.getByLabelText('Discord username')).toHaveValue('rogue#1');
+		await expect.element(page.getByLabelText('Bio')).toHaveValue('No, I am a meat popsicle.');
+		await expect.element(page.getByLabelText('Currency')).toHaveValue('EUR');
+		await expect.element(page.getByLabelText('Show prices to me')).not.toBeChecked();
+		await expect.element(page.getByLabelText('Show prices to others')).toBeChecked();
+		await expect.element(page.getByLabelText('Make my profile discoverable')).toBeChecked();
+	});
+
+	it('sets up a new profile without a photo or cancel until it is saved', async () => {
+		profileState.status = 'none';
+		profileState.data = undefined;
+		render(ProfileEditPage);
+
+		await expect
+			.element(page.getByRole('heading', { name: "Let's set up your profile" }))
+			.toBeInTheDocument();
+		await expect.element(page.getByRole('button', { name: 'Change photo' })).toBeDisabled();
+		await expect.element(page.getByRole('button', { name: 'Create profile' })).toBeInTheDocument();
+		await expect.element(page.getByRole('button', { name: 'Cancel' })).not.toBeInTheDocument();
+	});
+});
+
+describe('Profile edit page saving', () => {
+	it('saves the trimmed profile and goes to it', async () => {
+		save.mockResolvedValue({ ...existing, username: 'rogue.serenity' });
+		render(ProfileEditPage);
+
+		await page.getByLabelText('Discord username').fill('  ');
+		await page.getByLabelText('Bio').fill('  Clacky.  ');
+		await page.getByRole('button', { name: 'Add link' }).click();
+		await saveButton().click();
+
+		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/u/rogue.serenity'));
+		expect(save).toHaveBeenCalledWith({
+			username: 'rogue.serenity',
+			discoverable: true,
+			discordUsername: undefined,
+			bio: 'Clacky.',
+			links: existing.links,
+			preferences: { currency: 'EUR', showPriceToMe: false, showPriceToOthers: true }
+		});
+	});
+
+	it('shows where the profile will live as the username is typed', async () => {
+		render(ProfileEditPage);
+
+		await usernameField().fill('keeb.fan');
+
+		await expect.element(page.getByText('Your profile will be at /u/keeb.fan')).toBeInTheDocument();
+	});
+
+	it('refuses an invalid username', async () => {
+		render(ProfileEditPage);
+
+		await usernameField().fill('Not Valid');
+		await saveButton().click();
+
+		await expect.element(page.getByText(/^3–32 chars/)).toBeInTheDocument();
+		expect(save).not.toHaveBeenCalled();
+	});
+
+	it('refuses a link with no URL', async () => {
+		render(ProfileEditPage);
+
+		await page.getByRole('textbox', { name: 'Link 2 URL' }).fill('');
+		await saveButton().click();
+
+		await expect
+			.element(page.getByText('Each link needs both a name and a URL.'))
+			.toBeInTheDocument();
+		expect(save).not.toHaveBeenCalled();
+	});
+
+	it('refuses a link that is not https', async () => {
+		render(ProfileEditPage);
+
+		await page.getByRole('textbox', { name: 'Link 2 URL' }).fill('http://example.social/@rogue');
+		await saveButton().click();
+
+		await expect.element(page.getByText('Link URLs must start with https://.')).toBeInTheDocument();
+		expect(save).not.toHaveBeenCalled();
+	});
+
+	it('says when the username is taken', async () => {
+		save.mockRejectedValue(conflict('https://kbdb.dev/problems/username-unavailable'));
+		render(ProfileEditPage);
+
+		await saveButton().click();
+
+		await expect.element(page.getByText('That username is already taken.')).toBeInTheDocument();
+	});
+
+	it('says when the profile changed elsewhere', async () => {
+		save.mockRejectedValue(conflict('https://kbdb.dev/problems/version-conflict'));
+		render(ProfileEditPage);
+
+		await saveButton().click();
+
+		await expect
+			.element(page.getByText('Your profile was changed elsewhere. Reload and try again.'))
+			.toBeInTheDocument();
+	});
+
+	it('says when the save fails for any other reason', async () => {
+		save.mockRejectedValue(new Error('network'));
+		render(ProfileEditPage);
+
+		await saveButton().click();
+
+		await expect.element(page.getByText('Could not save your profile.')).toBeInTheDocument();
+	});
+
+	it('cancels back to the profile', async () => {
+		render(ProfileEditPage);
+
+		await page.getByRole('button', { name: 'Cancel' }).click();
+
+		expect(goto).toHaveBeenCalledWith('/u/rogue.serenity');
+	});
+});
+
+describe('Profile edit page photo', () => {
+	const fileInput = () => page.elementLocator(document.querySelector('input[type="file"]')!);
+	const png = new File(['png'], 'me.png', { type: 'image/png' });
+
+	it('uploads a new photo and refreshes the profile', async () => {
+		const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+		vi.stubGlobal('fetch', fetchMock);
+		api.setProfileImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/me' } as never);
+		render(ProfileEditPage);
+
+		await userEvent.upload(fileInput(), png);
+
+		await vi.waitFor(() => expect(refreshProfile).toHaveBeenCalled());
+		expect(api.setProfileImage).toHaveBeenCalledWith({
+			identifier: 'user-1',
+			imageUploadRequest: { contentType: 'image/png' }
+		});
+		expect(fetchMock).toHaveBeenCalledWith(
+			'https://bucket.example/me',
+			expect.objectContaining({ method: 'PUT' })
+		);
+	});
+
+	it('says so when the upload fails', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => new Response(null, { status: 403 }))
+		);
+		api.setProfileImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/me' } as never);
+		render(ProfileEditPage);
+
+		await userEvent.upload(fileInput(), png);
+
+		await expect.element(page.getByText('Could not upload that image.')).toBeInTheDocument();
+		expect(refreshProfile).not.toHaveBeenCalled();
+	});
+
+	it('removes the photo and refreshes the profile', async () => {
+		api.deleteProfileImage.mockResolvedValue(undefined);
+		render(ProfileEditPage);
+
+		await page.getByRole('button', { name: 'Remove', exact: true }).click();
+
+		await vi.waitFor(() => expect(refreshProfile).toHaveBeenCalled());
+		expect(api.deleteProfileImage).toHaveBeenCalledWith({ identifier: 'user-1' });
+	});
+
+	it('says so when removing the photo fails', async () => {
+		api.deleteProfileImage.mockRejectedValue(new Error('network'));
+		render(ProfileEditPage);
+
+		await page.getByRole('button', { name: 'Remove', exact: true }).click();
+
+		await expect.element(page.getByText('Could not remove your photo.')).toBeInTheDocument();
 	});
 });
