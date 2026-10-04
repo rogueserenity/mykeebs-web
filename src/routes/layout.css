@@ -10,21 +10,21 @@
 	--border-strong: #47414a;
 
 	--text: #ede7dd;
-	--text-muted: #9c9499;
-	--text-faint: #6b656b;
+	--text-muted: #a49da1;
+	--text-faint: #908a90;
 
 	--accent: #e8a33d;
 	--accent-strong: #f3b65a;
 	--accent-ink: #2a1c04;
 
-	--danger: #c1554a;
+	--danger: #d58b83;
 	--success: #7c9473;
 	--warning: #d6a94a;
-	--info: #6f8fa6;
+	--info: #87a2b5;
 
-	--visibility-public: #6f9e8a;
-	--visibility-authenticated: #8a86b8;
-	--visibility-private: #9a8f86;
+	--visibility-public: #82ab99;
+	--visibility-authenticated: #a19ec6;
+	--visibility-private: #aea59e;
 	--visibility-mixed: #7f7a84;
 
 	--font-display: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
