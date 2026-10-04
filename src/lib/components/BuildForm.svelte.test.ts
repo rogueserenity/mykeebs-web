@@ -1,8 +1,9 @@
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { Visibility, type Build } from '@rogueserenity/kbdb-api-client';
 import { kitKey, type StaleBuildRefs } from '$lib/build-refs';
+import { MAX_IMAGES } from '$lib/image-limit';
 import BuildFormWithUser from './test-support/BuildFormWithUser.svelte';
 import '../../routes/layout.css';
 
@@ -250,5 +251,73 @@ describe('BuildForm.svelte removing a photo', () => {
 		await expect
 			.element(page.getByRole('button', { name: 'Remove image 1 of 1' }))
 			.not.toBeDisabled();
+	});
+});
+
+describe('BuildForm.svelte photo limit', () => {
+	const fileInput = () => page.elementLocator(document.querySelector('input[type="file"]')!);
+	const jpg = (name: string) => new File([name], name, { type: 'image/jpeg' });
+	const withImages = (count: number): Build => ({
+		...build,
+		images: Array.from({ length: count }, (_, i) => ({
+			imageId: `img-${i}`,
+			url: `https://img.example/${i}.png`
+		}))
+	});
+
+	function renderWith(props: Partial<Parameters<typeof BuildFormWithUser>[1]['formProps']>) {
+		render(BuildFormWithUser, {
+			formProps: {
+				saving: false,
+				error: null,
+				staleRefs: null,
+				onSubmit: vi.fn(),
+				onCancel: vi.fn(),
+				...props
+			}
+		});
+	}
+
+	it(`disables adding photos once there are ${MAX_IMAGES}`, async () => {
+		renderWith({ initial: withImages(MAX_IMAGES) });
+
+		await expect.element(page.getByRole('button', { name: '+ Add photo' })).toBeDisabled();
+		await expect
+			.element(page.getByText(`Up to ${MAX_IMAGES} photos. Remove one to add another.`))
+			.toBeInTheDocument();
+	});
+
+	it('uploads only the picked photos that fit, and says how many were left out', async () => {
+		const onImageUpload = vi.fn(async () => {});
+		renderWith({ initial: withImages(MAX_IMAGES - 1), onImageUpload });
+		const [a, b] = [jpg('a.jpg'), jpg('b.jpg')];
+
+		await userEvent.upload(fileInput(), [a, b]);
+
+		await expect
+			.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.`))
+			.toBeInTheDocument();
+		expect(onImageUpload.mock.calls).toEqual([[a]]);
+	});
+
+	it(`stages at most ${MAX_IMAGES} photos on a new build`, async () => {
+		renderWith({});
+		const picked = Array.from({ length: MAX_IMAGES + 1 }, (_, i) => jpg(`${i}.jpg`));
+
+		await userEvent.upload(fileInput(), picked);
+
+		await expect
+			.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.`))
+			.toBeInTheDocument();
+		expect(page.getByAltText('Selected build').elements()).toHaveLength(MAX_IMAGES);
+		await expect.element(page.getByRole('button', { name: '+ Add photo' })).toBeDisabled();
+	});
+
+	it('moves focus to + Add photo after a photo is removed', async () => {
+		renderWith({ initial: withImages(2), onImageRemove: vi.fn(async () => {}) });
+
+		await page.getByRole('button', { name: 'Remove image 2 of 2' }).click();
+
+		await expect.element(page.getByRole('button', { name: '+ Add photo' })).toHaveFocus();
 	});
 });

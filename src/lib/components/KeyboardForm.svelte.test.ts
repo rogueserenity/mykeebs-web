@@ -4,6 +4,7 @@ import { render } from 'vitest-browser-svelte';
 import { Visibility, type Keyboard, type KeyboardInput } from '@rogueserenity/kbdb-api-client';
 import { lookupsApi } from '$lib/api/client';
 import { todayDateInput } from '$lib/format';
+import { MAX_IMAGES } from '$lib/image-limit';
 import KeyboardForm from './KeyboardForm.svelte';
 import FormWithDirty from './test-support/FormWithDirty.svelte';
 
@@ -50,6 +51,16 @@ const keyboard: Keyboard = {
 	visibility: Visibility.Public,
 	images: [{ imageId: 'img-1', url: 'https://img.example/1.png' }]
 };
+
+function withImages(count: number): Keyboard {
+	return {
+		...keyboard,
+		images: Array.from({ length: count }, (_, i) => ({
+			imageId: `img-${i}`,
+			url: `https://img.example/${i}.png`
+		}))
+	};
+}
 
 function renderForm(props: Partial<Parameters<typeof KeyboardForm>[1]> = {}) {
 	const mocks = { onSubmit: vi.fn(), onCancel: vi.fn() };
@@ -358,6 +369,25 @@ describe('KeyboardForm.svelte', () => {
 			expect(submitted(onSubmit)[1]?.map((f) => f.name)).toEqual(['a.png', 'b.png']);
 		});
 
+		it(`stages at most ${MAX_IMAGES} photos and says how many were left out`, async () => {
+			const { onSubmit } = renderForm();
+			const picked = Array.from({ length: MAX_IMAGES + 2 }, (_, i) => png(`${i}.png`));
+
+			await userEvent.upload(fileInput(), picked);
+
+			await expect
+				.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 2 were not added.`))
+				.toBeInTheDocument();
+			await expect.element(page.getByRole('button', { name: '+ Add photo' })).toBeDisabled();
+			await page.getByLabelText('Brand').fill('Bowl');
+			await page.getByLabelText('Name').fill('Manta');
+			await submit();
+
+			expect(submitted(onSubmit)[1]?.map((f) => f.name)).toEqual(
+				picked.slice(0, MAX_IMAGES).map((f) => f.name)
+			);
+		});
+
 		it('drops a staged photo when it is removed', async () => {
 			const { onSubmit } = renderForm();
 			const a = png('a.png');
@@ -390,6 +420,28 @@ describe('KeyboardForm.svelte', () => {
 			await userEvent.upload(fileInput(), [png('a.png')]);
 
 			await expect.element(page.getByText('Could not upload that image.')).toBeInTheDocument();
+		});
+
+		it(`disables adding photos once there are ${MAX_IMAGES}`, async () => {
+			renderForm({ initial: withImages(MAX_IMAGES) });
+
+			await expect.element(page.getByRole('button', { name: '+ Add photo' })).toBeDisabled();
+			await expect
+				.element(page.getByText(`Up to ${MAX_IMAGES} photos. Remove one to add another.`))
+				.toBeInTheDocument();
+		});
+
+		it('uploads only the picked photos that fit, and says how many were left out', async () => {
+			const onImageUpload = vi.fn(async () => {});
+			renderForm({ initial: withImages(MAX_IMAGES - 2), onImageUpload });
+			const [a, b, c] = [png('a.png'), png('b.png'), png('c.png')];
+
+			await userEvent.upload(fileInput(), [a, b, c]);
+
+			await expect
+				.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.`))
+				.toBeInTheDocument();
+			expect(onImageUpload.mock.calls).toEqual([[a], [b]]);
 		});
 
 		it('removes a photo by its id', async () => {

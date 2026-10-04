@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import type {
 		Build,
@@ -18,6 +19,7 @@
 	import ItemPicker, { type ItemPickerCache } from '$lib/components/ItemPicker.svelte';
 	import { X } from 'lucide-svelte';
 	import { toDateInput, todayDateInput } from '$lib/format';
+	import { limitNotice, MAX_IMAGES, takeWithinLimit } from '$lib/image-limit';
 
 	let {
 		initial,
@@ -290,6 +292,8 @@
 
 	type StagedImage = { file: File; preview: string };
 	let stagedImages = $state<StagedImage[]>([]);
+	const imageCount = $derived(initial ? (initial.images?.length ?? 0) : stagedImages.length);
+	const atImageLimit = $derived(imageCount >= MAX_IMAGES);
 
 	$effect(() => {
 		return () => {
@@ -298,27 +302,31 @@
 	});
 
 	function onImagePick(event: Event) {
-		const files = Array.from((event.target as HTMLInputElement).files ?? []);
-		if (files.length === 0) return;
+		const picked = Array.from((event.target as HTMLInputElement).files ?? []);
+		if (picked.length === 0) return;
+		const { accepted: files, skipped } = takeWithinLimit(picked, imageCount);
+		const notice = skipped > 0 ? limitNotice(skipped) : null;
 
 		if (!initial) {
 			stagedImages = [
 				...stagedImages,
 				...files.map((file) => ({ file, preview: URL.createObjectURL(file) }))
 			];
+			imageError = notice;
 			if (fileInput) fileInput.value = '';
 			return;
 		}
 
-		uploadImages(files);
+		uploadImages(files, notice);
 	}
 
-	async function uploadImages(files: File[]) {
+	async function uploadImages(files: File[], notice: string | null) {
 		if (!onImageUpload) return;
 		imageError = null;
 		imageBusy = true;
 		try {
 			for (const file of files) await onImageUpload(file);
+			imageError = notice;
 		} catch {
 			imageError = 'Could not upload that image.';
 		} finally {
@@ -341,6 +349,8 @@
 		imageBusy = true;
 		try {
 			await onImageRemove(imageId);
+			imageBusy = false;
+			await tick();
 			addPhotoButton?.focus();
 		} catch {
 			imageError = 'Could not remove the image.';
@@ -502,12 +512,15 @@
 				bind:this={addPhotoButton}
 				type="button"
 				class="btn"
-				disabled={imageBusy}
+				disabled={imageBusy || atImageLimit}
 				onclick={() => fileInput?.click()}
 			>
 				{imageBusy ? 'Working…' : '+ Add photo'}
 			</button>
 		</div>
+		{#if atImageLimit}
+			<span class="text-faint text-xs">Up to {MAX_IMAGES} photos. Remove one to add another.</span>
+		{/if}
 		{#if imageError}
 			<span class="text-xs" style="color: var(--danger)">{imageError}</span>
 		{/if}
