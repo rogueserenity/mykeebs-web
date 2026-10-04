@@ -5,11 +5,13 @@
 		dirty = false,
 		obscured = false,
 		autofocusSecond = false,
+		heading,
 		onClose = () => {}
 	}: {
 		dirty?: boolean;
 		obscured?: boolean;
 		autofocusSecond?: boolean;
+		heading?: string;
 		onClose?: () => void;
 	} = $props();
 
@@ -27,6 +29,7 @@
 	}}
 >
 	{#snippet headerExtra()}<span>Header extra</span>{/snippet}
+	{#if heading}<h2>{heading}</h2>{/if}
 	<input aria-label="First field" />
 	<input aria-label="Second field" data-autofocus={autofocusSecond ? '' : undefined} />
 	<button type="button">Last button</button>

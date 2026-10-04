@@ -23,6 +23,32 @@
 
 	let confirmingDiscard = $state(false);
 	let panel = $state<HTMLDivElement | null>(null);
+	let keepEditingButton = $state<HTMLButtonElement | null>(null);
+	const uid = $props.id();
+	const headingId = `modal-heading-${uid}`;
+	let labelledBy = $state<string | undefined>(undefined);
+
+	function labelFromHeading() {
+		const heading = panel?.querySelector<HTMLElement>('h1, h2, h3');
+		if (!heading) {
+			labelledBy = undefined;
+			return;
+		}
+		if (!heading.id) heading.id = headingId;
+		labelledBy = heading.id;
+	}
+
+	$effect(() => {
+		if (!panel) return;
+		labelFromHeading();
+		const observer = new MutationObserver(labelFromHeading);
+		observer.observe(panel, { childList: true, subtree: true });
+		return () => observer.disconnect();
+	});
+
+	$effect(() => {
+		if (confirmingDiscard) keepEditingButton?.focus();
+	});
 	let previouslyFocused: HTMLElement | null = null;
 
 	function requestClose() {
@@ -103,6 +129,7 @@
 			bind:this={panel}
 			role="dialog"
 			aria-modal="true"
+			aria-labelledby={labelledBy}
 			class="kc-modal-panel max-h-[90vh] w-full {wide
 				? 'max-w-5xl'
 				: 'max-w-3xl'} overflow-y-auto p-6"
@@ -112,11 +139,16 @@
 					class="mb-4 flex flex-wrap items-center gap-2 rounded border p-3"
 					style="border-color: var(--danger)"
 				>
-					<span class="text-sm">Discard your changes?</span>
+					<span class="text-sm" role="alert">Discard your changes?</span>
 					<button type="button" class="btn" style="color: var(--danger)" onclick={discardAndClose}>
 						Discard
 					</button>
-					<button type="button" class="btn" onclick={() => (confirmingDiscard = false)}>
+					<button
+						bind:this={keepEditingButton}
+						type="button"
+						class="btn"
+						onclick={() => (confirmingDiscard = false)}
+					>
 						Keep editing
 					</button>
 				</div>

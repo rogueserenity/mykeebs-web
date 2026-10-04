@@ -62,7 +62,7 @@ const dialog = () => page.getByRole('dialog').last();
 
 async function openManta() {
 	await page.getByRole('button', { name: /Manta/ }).click();
-	await expect.element(dialog().getByRole('heading', { name: 'Manta' })).toBeInTheDocument();
+	await expect.element(page.getByRole('dialog', { name: 'Manta' })).toBeInTheDocument();
 }
 
 async function fillNewKeyboard() {
@@ -200,7 +200,7 @@ describe('keyboards page', () => {
 			await dialog().getByLabelText('Name').fill('Manta R2');
 			await dialog().getByRole('button', { name: 'Save changes' }).click();
 
-			await expect.element(dialog().getByRole('heading', { name: 'Manta R2' })).toBeInTheDocument();
+			await expect.element(page.getByRole('dialog', { name: 'Manta R2' })).toBeInTheDocument();
 			expect(api.updateKeyboard).toHaveBeenCalledWith(
 				expect.objectContaining({
 					keyboardId: 'kb-1',

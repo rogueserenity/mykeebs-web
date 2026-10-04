@@ -61,7 +61,7 @@ const png = (name: string) => new File([name], name, { type: 'image/png' });
 
 async function openAperol() {
 	await page.getByRole('button', { name: /Aperol/ }).click();
-	await expect.element(dialog().getByRole('heading', { name: 'Aperol' })).toBeInTheDocument();
+	await expect.element(page.getByRole('dialog', { name: 'Aperol' })).toBeInTheDocument();
 }
 
 async function fillNewSwitch() {
@@ -197,9 +197,7 @@ describe('switches page', () => {
 			await dialog().getByLabelText('Name').fill('Aperol V2');
 			await dialog().getByRole('button', { name: 'Save changes' }).click();
 
-			await expect
-				.element(dialog().getByRole('heading', { name: 'Aperol V2' }))
-				.toBeInTheDocument();
+			await expect.element(page.getByRole('dialog', { name: 'Aperol V2' })).toBeInTheDocument();
 			expect(api.updateSwitch).toHaveBeenCalledWith(
 				expect.objectContaining({
 					switchId: 'sw-1',

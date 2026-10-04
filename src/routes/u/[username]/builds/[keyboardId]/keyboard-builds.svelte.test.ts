@@ -307,7 +307,9 @@ describe('keyboard builds page', () => {
 				.getByRole('button', { name: /Neo65 Cu/ })
 				.click();
 
-			await expect.element(dialog().getByRole('heading', { name: 'Neo65 Cu' })).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('dialog', { name: 'Neo65 Cu' }).last())
+				.toBeInTheDocument();
 			expect(keyboardsApi.getKeyboard).toHaveBeenLastCalledWith({
 				userId: 'user-1',
 				keyboardId: 'kb-1'
@@ -328,9 +330,7 @@ describe('keyboard builds page', () => {
 				.getByRole('button', { name: /Ding Ding/ })
 				.click();
 
-			await expect
-				.element(dialog().getByRole('heading', { name: /Ding Ding/ }))
-				.toBeInTheDocument();
+			await expect.element(page.getByRole('dialog', { name: /Ding Ding/ })).toBeInTheDocument();
 			expect(switchesApi.getSwitch).toHaveBeenCalledWith({ userId: 'user-1', switchId: 'sw-1' });
 		});
 
@@ -348,7 +348,7 @@ describe('keyboard builds page', () => {
 				.getByRole('button', { name: /Fremen — Base/ })
 				.click();
 
-			await expect.element(dialog().getByRole('heading', { name: 'Base' })).toBeInTheDocument();
+			await expect.element(page.getByRole('dialog', { name: 'Base' })).toBeInTheDocument();
 		});
 
 		it('says so when a kit has since been deleted', async () => {

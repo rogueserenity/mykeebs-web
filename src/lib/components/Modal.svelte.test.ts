@@ -64,7 +64,10 @@ describe('Modal.svelte', () => {
 
 			await userEvent.keyboard('{Escape}');
 
-			await expect.element(page.getByText('Discard your changes?')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Discard your changes?' }))
+				.toBeInTheDocument();
+			await expect.element(page.getByRole('button', { name: 'Keep editing' })).toHaveFocus();
 			expect(onClose).not.toHaveBeenCalled();
 		});
 
@@ -98,6 +101,25 @@ describe('Modal.svelte', () => {
 
 			expect(onClose).toHaveBeenCalledOnce();
 			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+		});
+	});
+
+	describe('name', () => {
+		it('is named by the heading inside it', async () => {
+			await openModal({ heading: 'Edit keyboard' });
+
+			await expect.element(page.getByRole('dialog', { name: 'Edit keyboard' })).toBeInTheDocument();
+		});
+
+		it('picks up a heading that appears after it opens', async () => {
+			const onClose = vi.fn();
+			const { rerender } = render(ModalHarness, { onClose });
+			await page.getByRole('button', { name: 'Open' }).click();
+			await expect.element(page.getByRole('dialog')).toBeInTheDocument();
+
+			await rerender({ onClose, heading: 'Manta' });
+
+			await expect.element(page.getByRole('dialog', { name: 'Manta' })).toBeInTheDocument();
 		});
 	});
 
