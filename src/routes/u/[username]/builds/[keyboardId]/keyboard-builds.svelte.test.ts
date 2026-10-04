@@ -142,7 +142,9 @@ describe('keyboard builds page', () => {
 		renderPage();
 
 		await expect
-			.element(page.getByText('Could not load builds for this keyboard.'))
+			.element(
+				page.getByRole('alert').filter({ hasText: 'Could not load builds for this keyboard.' })
+			)
 			.toBeInTheDocument();
 	});
 
@@ -172,7 +174,9 @@ describe('keyboard builds page', () => {
 
 			await page.getByRole('button', { name: /Jun 30, 2026/ }).click();
 
-			await expect.element(page.getByText('Could not load this build.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not load this build.' }))
+				.toBeInTheDocument();
 		});
 
 		it('opens a photo full size', async () => {
@@ -209,7 +213,9 @@ describe('keyboard builds page', () => {
 			await dialog().getByRole('button', { name: 'Delete' }).click();
 			await page.getByRole('button', { name: 'Confirm delete' }).click();
 
-			await expect.element(page.getByText('Could not delete this build.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not delete this build.' }))
+				.toBeInTheDocument();
 		});
 	});
 
@@ -244,7 +250,9 @@ describe('keyboard builds page', () => {
 			await dialog().getByRole('button', { name: 'Edit' }).click();
 			await dialog().getByRole('button', { name: 'Save changes' }).click();
 
-			await expect.element(page.getByText(STALE_REFS_MESSAGE)).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: STALE_REFS_MESSAGE }))
+				.toBeInTheDocument();
 			await expect
 				.element(page.getByRole('listitem').filter({ hasText: 'Ding Ding' }))
 				.toHaveTextContent('No longer in your collection');
@@ -284,7 +292,9 @@ describe('keyboard builds page', () => {
 			await dialog().getByRole('button', { name: 'Edit' }).click();
 			await dialog().getByRole('button', { name: 'Save changes' }).click();
 
-			await expect.element(page.getByText('Could not save your changes.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not save your changes.' }))
+				.toBeInTheDocument();
 		});
 	});
 

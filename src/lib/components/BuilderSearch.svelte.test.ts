@@ -77,7 +77,9 @@ describe('BuilderSearch.svelte', () => {
 
 		await userEvent.fill(searchbox(), 'zzz');
 
-		await expect.element(page.getByText('No builders match that search.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('status').filter({ hasText: 'No builders match that search.' }))
+			.toBeInTheDocument();
 	});
 
 	it('says the search failed rather than showing nothing or a false no-match', async () => {
@@ -86,21 +88,29 @@ describe('BuilderSearch.svelte', () => {
 
 		await userEvent.fill(searchbox(), 'rog');
 
-		await expect.element(page.getByText('Search failed. Try again.')).toBeInTheDocument();
-		await expect.element(page.getByText('No builders match that search.')).not.toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Search failed. Try again.' }))
+			.toBeInTheDocument();
+		await expect
+			.element(page.getByRole('status').filter({ hasText: 'No builders match that search.' }))
+			.not.toBeInTheDocument();
 	});
 
 	it('clears the failure once a later search succeeds', async () => {
 		listProfiles.mockRejectedValueOnce(new Error('network'));
 		render(BuilderSearch);
 		await userEvent.fill(searchbox(), 'rog');
-		await expect.element(page.getByText('Search failed. Try again.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Search failed. Try again.' }))
+			.toBeInTheDocument();
 
 		listProfiles.mockResolvedValueOnce(pageOf([profile('rogue.serenity')]));
 		await userEvent.fill(searchbox(), 'rogu');
 
 		await expect.element(page.getByText('@rogue.serenity')).toBeInTheDocument();
-		await expect.element(page.getByText('Search failed. Try again.')).not.toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Search failed. Try again.' }))
+			.not.toBeInTheDocument();
 	});
 
 	it("doesn't search for blank input", async () => {

@@ -176,11 +176,11 @@
 		style="border-color: var(--border)"
 	>
 		{#if loading}
-			<p class="text-muted p-4 text-center text-sm">Loading&hellip;</p>
+			<p class="text-muted p-4 text-center text-sm" role="status">Loading&hellip;</p>
 		{:else if loadError}
-			<p class="p-4 text-center text-sm" style="color: var(--danger)">{loadError}</p>
+			<p class="p-4 text-center text-sm" role="alert" style="color: var(--danger)">{loadError}</p>
 		{:else if filteredItems.length === 0}
-			<p class="text-muted p-4 text-center text-sm">No matches.</p>
+			<p class="text-muted p-4 text-center text-sm" role="status">No matches.</p>
 		{:else}
 			{#each filteredItems as item, index (itemKey(item))}
 				<button

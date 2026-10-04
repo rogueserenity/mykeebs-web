@@ -56,7 +56,9 @@ describe('Discover page', () => {
 
 		render(DiscoverPage);
 
-		await expect.element(page.getByText('No builders match that search.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('status').filter({ hasText: 'No builders match that search.' }))
+			.toBeInTheDocument();
 	});
 
 	it('says so when the directory fails to load', async () => {
@@ -64,7 +66,9 @@ describe('Discover page', () => {
 
 		render(DiscoverPage);
 
-		await expect.element(page.getByText('Could not load the directory.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not load the directory.' }))
+			.toBeInTheDocument();
 	});
 
 	it('appends the next page, keeping the search filter, until there are no more', async () => {
@@ -133,7 +137,9 @@ describe('Discover page', () => {
 		listProfiles.mockRejectedValueOnce(new Error('network'));
 		await userEvent.click(page.getByRole('button', { name: 'Load more' }));
 
-		await expect.element(page.getByText('Could not load more results.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not load more results.' }))
+			.toBeInTheDocument();
 		await expect.element(page.getByText('@alpha')).toBeInTheDocument();
 
 		listProfiles.mockResolvedValueOnce(pageOf([profile('anna')]));
@@ -141,7 +147,9 @@ describe('Discover page', () => {
 
 		await expect.element(page.getByText('@anna')).toBeInTheDocument();
 		await expect.element(page.getByText('@alpha')).toBeInTheDocument();
-		await expect.element(page.getByText('Could not load more results.')).not.toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not load more results.' }))
+			.not.toBeInTheDocument();
 		expect(listProfiles).toHaveBeenLastCalledWith({ username: undefined, cursor: 'cursor-2' });
 	});
 

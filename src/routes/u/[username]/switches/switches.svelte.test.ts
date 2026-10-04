@@ -181,7 +181,9 @@ describe('switches page', () => {
 			await fillNewSwitch();
 			await dialog().getByRole('button', { name: 'Add switch' }).click();
 
-			await expect.element(page.getByText('Could not create this switch.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not create this switch.' }))
+				.toBeInTheDocument();
 		});
 	});
 
@@ -214,7 +216,9 @@ describe('switches page', () => {
 			await dialog().getByRole('button', { name: 'Edit' }).click();
 			await dialog().getByRole('button', { name: 'Save changes' }).click();
 
-			await expect.element(page.getByText('Could not save your changes.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not save your changes.' }))
+				.toBeInTheDocument();
 		});
 
 		it('removes the photo and refreshes the switch', async () => {
@@ -285,7 +289,11 @@ describe('switches page', () => {
 			await confirmDelete();
 
 			await expect
-				.element(page.getByText('Used in: Manta. Remove it from those builds first.'))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: 'Used in: Manta. Remove it from those builds first.' })
+				)
 				.toBeInTheDocument();
 		});
 
@@ -297,7 +305,11 @@ describe('switches page', () => {
 			await confirmDelete();
 
 			await expect
-				.element(page.getByText('This switch is still used by one or more builds.'))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: 'This switch is still used by one or more builds.' })
+				)
 				.toBeInTheDocument();
 		});
 
@@ -308,7 +320,9 @@ describe('switches page', () => {
 
 			await confirmDelete();
 
-			await expect.element(page.getByText('Could not delete this switch.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not delete this switch.' }))
+				.toBeInTheDocument();
 		});
 	});
 });

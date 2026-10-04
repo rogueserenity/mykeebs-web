@@ -60,19 +60,25 @@ describe('CollectionGrid.svelte', () => {
 	it('shows loading until the items arrive', async () => {
 		renderGrid({ fetchPage: () => new Promise(() => {}) });
 
-		await expect.element(page.getByText('Loading…')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('status').filter({ hasText: 'Loading…' }))
+			.toBeInTheDocument();
 	});
 
 	it('says so when loading fails', async () => {
 		renderGrid({ fetchPage: async () => Promise.reject(new Error('network')) });
 
-		await expect.element(page.getByText('Could not load this collection.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not load this collection.' }))
+			.toBeInTheDocument();
 	});
 
 	it('shows the empty message for an empty collection', async () => {
 		renderGrid({ fetchPage: async () => ({ items: [] }) });
 
-		await expect.element(page.getByText('No keyboards yet.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('status').filter({ hasText: 'No keyboards yet.' }))
+			.toBeInTheDocument();
 	});
 
 	describe('status filter', () => {
@@ -95,7 +101,9 @@ describe('CollectionGrid.svelte', () => {
 
 			await page.getByRole('button', { name: 'Cancelled' }).click();
 
-			await expect.element(page.getByText('No matches.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('status').filter({ hasText: 'No matches.' }))
+				.toBeInTheDocument();
 		});
 
 		it('is not offered for items without an order status', async () => {

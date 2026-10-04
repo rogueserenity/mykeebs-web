@@ -137,7 +137,9 @@ describe('Profile edit page states', () => {
 		profileState.status = 'loading';
 		render(ProfileEditPage);
 
-		await expect.element(page.getByText('Loading…')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('status').filter({ hasText: 'Loading…' }))
+			.toBeInTheDocument();
 	});
 
 	it('asks a signed-out visitor to sign in', async () => {
@@ -152,7 +154,9 @@ describe('Profile edit page states', () => {
 		profileState.status = 'error';
 		render(ProfileEditPage);
 
-		await expect.element(page.getByText('Could not load your profile.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not load your profile.' }))
+			.toBeInTheDocument();
 	});
 
 	it('fills the form from the existing profile', async () => {
@@ -248,7 +252,9 @@ describe('Profile edit page saving', () => {
 
 		await saveButton().click();
 
-		await expect.element(page.getByText('That username is already taken.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'That username is already taken.' }))
+			.toBeInTheDocument();
 	});
 
 	it('says when the profile changed elsewhere', async () => {
@@ -268,7 +274,9 @@ describe('Profile edit page saving', () => {
 
 		await saveButton().click();
 
-		await expect.element(page.getByText('Could not save your profile.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not save your profile.' }))
+			.toBeInTheDocument();
 	});
 
 	it('cancels back to the profile', async () => {
@@ -309,7 +317,9 @@ describe('Profile edit page photo', () => {
 
 		await userEvent.upload(fileInput(), new File(['heic'], 'me.heic', { type: 'image/heic' }));
 
-		await expect.element(page.getByText('Could not upload that image.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not upload that image.' }))
+			.toBeInTheDocument();
 		expect(api.setProfileImage).not.toHaveBeenCalled();
 	});
 
@@ -323,7 +333,9 @@ describe('Profile edit page photo', () => {
 
 		await userEvent.upload(fileInput(), png);
 
-		await expect.element(page.getByText('Could not upload that image.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not upload that image.' }))
+			.toBeInTheDocument();
 		expect(refreshProfile).not.toHaveBeenCalled();
 	});
 
@@ -343,6 +355,8 @@ describe('Profile edit page photo', () => {
 
 		await page.getByRole('button', { name: 'Remove', exact: true }).click();
 
-		await expect.element(page.getByText('Could not remove your photo.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not remove your photo.' }))
+			.toBeInTheDocument();
 	});
 });

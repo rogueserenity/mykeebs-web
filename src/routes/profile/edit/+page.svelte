@@ -165,11 +165,13 @@
 
 <div class="mx-auto max-w-2xl px-4 py-10">
 	{#if auth.status === 'loading' || profile.status === 'loading' || profile.status === 'idle'}
-		<p class="text-muted p-16 text-center font-mono text-sm tracking-wide">Loading&hellip;</p>
+		<p class="text-muted p-16 text-center font-mono text-sm tracking-wide" role="status">
+			Loading&hellip;
+		</p>
 	{:else if auth.status === 'signed-out'}
 		<p class="text-muted p-16 text-center text-lg">Sign in to edit your profile.</p>
 	{:else if profile.status === 'error'}
-		<p class="p-16 text-center text-lg" style="color: var(--danger)">
+		<p class="p-16 text-center text-lg" role="alert" style="color: var(--danger)">
 			Could not load your profile.
 		</p>
 	{:else}
@@ -202,7 +204,7 @@
 					<span class="text-faint text-xs">Save your profile first, then add a photo.</span>
 				{/if}
 				{#if avatarError}
-					<span class="text-xs" style="color: var(--danger)">{avatarError}</span>
+					<span class="text-xs" role="alert" style="color: var(--danger)">{avatarError}</span>
 				{/if}
 			</div>
 			<input
@@ -228,7 +230,7 @@
 					Your profile will be at /u/{usernameValid ? username : 'username'}
 				</span>
 				{#if usernameError}
-					<span class="text-xs" style="color: var(--danger)">{usernameError}</span>
+					<span class="text-xs" role="alert" style="color: var(--danger)">{usernameError}</span>
 				{/if}
 			</label>
 
@@ -333,7 +335,7 @@
 			</div>
 
 			{#if formError}
-				<p class="text-sm" style="color: var(--danger)">{formError}</p>
+				<p class="text-sm" role="alert" style="color: var(--danger)">{formError}</p>
 			{/if}
 
 			<div class="mt-2 flex gap-2">

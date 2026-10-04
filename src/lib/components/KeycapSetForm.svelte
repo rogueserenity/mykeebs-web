@@ -143,10 +143,10 @@
 	</label>
 
 	{#if validationError}
-		<p class="text-sm" style="color: var(--danger)">{validationError}</p>
+		<p class="text-sm" role="alert" style="color: var(--danger)">{validationError}</p>
 	{/if}
 	{#if error}
-		<p class="text-sm" style="color: var(--danger)">{error}</p>
+		<p class="text-sm" role="alert" style="color: var(--danger)">{error}</p>
 	{/if}
 
 	<div class="mt-2 flex gap-2">

@@ -330,7 +330,7 @@
 				{/if}
 			</div>
 			{#if deleteError}
-				<p class="mt-2 text-sm" style="color: var(--danger)">{deleteError}</p>
+				<p class="mt-2 text-sm" role="alert" style="color: var(--danger)">{deleteError}</p>
 			{/if}
 		{/if}
 	{:else if modal.mode === 'create'}

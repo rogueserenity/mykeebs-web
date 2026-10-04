@@ -184,7 +184,9 @@ describe('keyboards page', () => {
 			await fillNewKeyboard();
 			await dialog().getByRole('button', { name: 'Add keyboard' }).click();
 
-			await expect.element(page.getByText('Could not create this keyboard.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not create this keyboard.' }))
+				.toBeInTheDocument();
 		});
 	});
 
@@ -215,7 +217,9 @@ describe('keyboards page', () => {
 			await dialog().getByRole('button', { name: 'Edit' }).click();
 			await dialog().getByRole('button', { name: 'Save changes' }).click();
 
-			await expect.element(page.getByText('Could not save your changes.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not save your changes.' }))
+				.toBeInTheDocument();
 		});
 
 		it('removes a photo and refreshes the keyboard', async () => {
@@ -300,7 +304,9 @@ describe('keyboards page', () => {
 
 			await expect
 				.element(
-					page.getByText('Used in: Manta (Sep 10, 2026). Remove it from those builds first.')
+					page.getByRole('alert').filter({
+						hasText: 'Used in: Manta (Sep 10, 2026). Remove it from those builds first.'
+					})
 				)
 				.toBeInTheDocument();
 		});
@@ -313,7 +319,11 @@ describe('keyboards page', () => {
 			await confirmDelete();
 
 			await expect
-				.element(page.getByText('This keyboard is still used by one or more builds.'))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: 'This keyboard is still used by one or more builds.' })
+				)
 				.toBeInTheDocument();
 		});
 
@@ -324,7 +334,9 @@ describe('keyboards page', () => {
 
 			await confirmDelete();
 
-			await expect.element(page.getByText('Could not delete this keyboard.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not delete this keyboard.' }))
+				.toBeInTheDocument();
 		});
 	});
 });

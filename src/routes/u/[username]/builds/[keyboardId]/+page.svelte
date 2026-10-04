@@ -338,9 +338,11 @@
 </div>
 
 {#if view.status === 'loading'}
-	<p class="text-muted p-16 text-center font-mono text-sm tracking-wide">Loading&hellip;</p>
+	<p class="text-muted p-16 text-center font-mono text-sm tracking-wide" role="status">
+		Loading&hellip;
+	</p>
 {:else if view.status === 'error'}
-	<p class="p-16 text-center text-lg" style="color: var(--danger)">{view.message}</p>
+	<p class="p-16 text-center text-lg" role="alert" style="color: var(--danger)">{view.message}</p>
 {:else}
 	{@const { keyboard, builds } = view}
 	<div class="flex items-center gap-3 px-4">
@@ -425,9 +427,9 @@
 		{/if}
 	{/snippet}
 	{#if detailLoading}
-		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg" role="status">Loading&hellip;</p>
 	{:else if detailError}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{detailError}</p>
+		<p class="p-8 text-center text-lg" role="alert" style="color: var(--danger)">{detailError}</p>
 	{:else if formMode.mode === 'edit'}
 		{@const build = formMode.build}
 		<BuildForm
@@ -495,7 +497,7 @@
 				{/if}
 			</div>
 			{#if deleteError}
-				<p class="mt-2 text-sm" style="color: var(--danger)">{deleteError}</p>
+				<p class="mt-2 text-sm" role="alert" style="color: var(--danger)">{deleteError}</p>
 			{/if}
 		{/if}
 	{/if}
@@ -522,9 +524,11 @@
 	obscured={keyboardGalleryViewerOpen}
 >
 	{#if keyboardDetailLoading}
-		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg" role="status">Loading&hellip;</p>
 	{:else if keyboardDetailError}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{keyboardDetailError}</p>
+		<p class="p-8 text-center text-lg" role="alert" style="color: var(--danger)">
+			{keyboardDetailError}
+		</p>
 	{:else if keyboardDetail}
 		<KeyboardDetails
 			keyboard={keyboardDetail}
@@ -569,9 +573,11 @@
 	obscured={switchViewerOpen}
 >
 	{#if switchDetailLoading}
-		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg" role="status">Loading&hellip;</p>
 	{:else if switchDetailError}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{switchDetailError}</p>
+		<p class="p-8 text-center text-lg" role="alert" style="color: var(--danger)">
+			{switchDetailError}
+		</p>
 	{:else if switchDetail}
 		<SwitchDetails sw={switchDetail} onImageClick={() => (switchViewerOpen = true)} {showPrice} />
 	{/if}
@@ -592,9 +598,11 @@
 	obscured={kitViewerOpen}
 >
 	{#if kitDetailLoading}
-		<p class="text-muted p-8 text-center text-lg">Loading&hellip;</p>
+		<p class="text-muted p-8 text-center text-lg" role="status">Loading&hellip;</p>
 	{:else if kitDetailError}
-		<p class="p-8 text-center text-lg" style="color: var(--danger)">{kitDetailError}</p>
+		<p class="p-8 text-center text-lg" role="alert" style="color: var(--danger)">
+			{kitDetailError}
+		</p>
 	{:else if kitDetail}
 		{@const kit = kitDetail}
 		<KeycapKitDetails

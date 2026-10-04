@@ -143,7 +143,9 @@ describe('keycap sets page', () => {
 			await dialog().getByLabelText('Name').fill('Botanical');
 			await dialog().getByRole('button', { name: 'Add keycap set' }).click();
 
-			await expect.element(page.getByText('Could not create this keycap set.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not create this keycap set.' }))
+				.toBeInTheDocument();
 		});
 	});
 
@@ -174,7 +176,9 @@ describe('keycap sets page', () => {
 			await page.getByRole('button', { name: 'Edit set' }).click();
 			await dialog().getByRole('button', { name: 'Save changes' }).click();
 
-			await expect.element(page.getByText('Could not save your changes.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not save your changes.' }))
+				.toBeInTheDocument();
 		});
 	});
 
@@ -205,7 +209,11 @@ describe('keycap sets page', () => {
 			await page.getByRole('button', { name: 'Confirm delete' }).click();
 
 			await expect
-				.element(page.getByText('Used in: Manta. Remove it from those builds first.'))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: 'Used in: Manta. Remove it from those builds first.' })
+				)
 				.toBeInTheDocument();
 		});
 
@@ -218,7 +226,11 @@ describe('keycap sets page', () => {
 			await page.getByRole('button', { name: 'Confirm delete' }).click();
 
 			await expect
-				.element(page.getByText('This keycap set is still used by one or more builds.'))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: 'This keycap set is still used by one or more builds.' })
+				)
 				.toBeInTheDocument();
 		});
 
@@ -230,7 +242,9 @@ describe('keycap sets page', () => {
 			await page.getByRole('button', { name: 'Delete set' }).click();
 			await page.getByRole('button', { name: 'Confirm delete' }).click();
 
-			await expect.element(page.getByText('Could not delete this keycap set.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not delete this keycap set.' }))
+				.toBeInTheDocument();
 		});
 	});
 
@@ -339,7 +353,11 @@ describe('keycap sets page', () => {
 			await page.getByRole('button', { name: 'Confirm delete' }).click();
 
 			await expect
-				.element(page.getByText('Used in: Manta. Remove it from those builds first.'))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: 'Used in: Manta. Remove it from those builds first.' })
+				)
 				.toBeInTheDocument();
 			expect(api.deleteKeycapKit).toHaveBeenCalledWith({
 				userId: 'user-1',

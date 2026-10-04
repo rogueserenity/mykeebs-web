@@ -8,7 +8,11 @@ describe('DeleteBlocked.svelte', () => {
 		render(DeleteBlocked, { builds: ['Manta', 'Owlab Spring'], onCancel: vi.fn() });
 
 		await expect
-			.element(page.getByText('Used in: Manta, Owlab Spring. Remove it from those builds first.'))
+			.element(
+				page
+					.getByRole('alert')
+					.filter({ hasText: 'Used in: Manta, Owlab Spring. Remove it from those builds first.' })
+			)
 			.toBeInTheDocument();
 	});
 

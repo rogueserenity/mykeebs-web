@@ -90,7 +90,9 @@ describe('SwitchForm.svelte', () => {
 		await page.getByLabelText('Name').fill('Aperol');
 		await submit();
 
-		await expect.element(page.getByText('Brand, name, and type are required.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Brand, name, and type are required.' }))
+			.toBeInTheDocument();
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
@@ -369,7 +371,9 @@ describe('SwitchForm.svelte', () => {
 
 			await userEvent.upload(fileInput(), png('a.png'));
 
-			await expect.element(page.getByText('Could not upload that image.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not upload that image.' }))
+				.toBeInTheDocument();
 		});
 
 		it('removes the photo', async () => {
@@ -386,7 +390,9 @@ describe('SwitchForm.svelte', () => {
 
 			await page.getByRole('button', { name: 'Remove' }).click();
 
-			await expect.element(page.getByText('Could not remove the image.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not remove the image.' }))
+				.toBeInTheDocument();
 		});
 	});
 

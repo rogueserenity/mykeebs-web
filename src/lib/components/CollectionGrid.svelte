@@ -114,11 +114,11 @@
 
 {#if loading}
 	<div class="flex items-center justify-center p-16">
-		<p class="text-muted font-mono text-sm tracking-wide">Loading&hellip;</p>
+		<p class="text-muted font-mono text-sm tracking-wide" role="status">Loading&hellip;</p>
 	</div>
 {:else if loadError}
 	<div class="flex items-center justify-center p-16">
-		<p class="text-lg" style="color: var(--danger)">{loadError}</p>
+		<p class="text-lg" role="alert" style="color: var(--danger)">{loadError}</p>
 	</div>
 {:else}
 	{#if getOrderStatus}
@@ -193,7 +193,7 @@
 	</div>
 	{#if sortedItems.length === 0}
 		<div class="flex items-center justify-center p-16">
-			<p class="text-muted text-xl font-semibold">
+			<p class="text-muted text-xl font-semibold" role="status">
 				{items.length === 0 ? emptyMessage : 'No matches.'}
 			</p>
 		</div>

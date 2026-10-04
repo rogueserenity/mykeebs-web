@@ -150,7 +150,9 @@ describe('BuildForm.svelte switch counts', () => {
 		await page.getByRole('button', { name: 'Save changes' }).click();
 
 		await expect
-			.element(page.getByText('Every switch needs a count of at least 1.'))
+			.element(
+				page.getByRole('alert').filter({ hasText: 'Every switch needs a count of at least 1.' })
+			)
 			.toBeInTheDocument();
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
@@ -169,7 +171,9 @@ describe('BuildForm.svelte switch counts', () => {
 			{ _switch: 'sw-b', count: 6 }
 		]);
 		await expect
-			.element(page.getByText('Every switch needs a count of at least 1.'))
+			.element(
+				page.getByRole('alert').filter({ hasText: 'Every switch needs a count of at least 1.' })
+			)
 			.not.toBeInTheDocument();
 	});
 });
@@ -247,7 +251,9 @@ describe('BuildForm.svelte removing a photo', () => {
 
 		await page.getByRole('button', { name: 'Remove image 1 of 1' }).click();
 
-		await expect.element(page.getByText('Could not remove the image.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Could not remove the image.' }))
+			.toBeInTheDocument();
 		await expect
 			.element(page.getByRole('button', { name: 'Remove image 1 of 1' }))
 			.not.toBeDisabled();
@@ -295,7 +301,11 @@ describe('BuildForm.svelte photo limit', () => {
 		await userEvent.upload(fileInput(), [a, b]);
 
 		await expect
-			.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.`))
+			.element(
+				page
+					.getByRole('alert')
+					.filter({ hasText: `Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.` })
+			)
 			.toBeInTheDocument();
 		expect(onImageUpload.mock.calls).toEqual([[a]]);
 	});
@@ -307,7 +317,11 @@ describe('BuildForm.svelte photo limit', () => {
 		await userEvent.upload(fileInput(), picked);
 
 		await expect
-			.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.`))
+			.element(
+				page
+					.getByRole('alert')
+					.filter({ hasText: `Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.` })
+			)
 			.toBeInTheDocument();
 		expect(page.getByAltText('Selected build').elements()).toHaveLength(MAX_IMAGES);
 		await expect.element(page.getByRole('button', { name: '+ Add photo' })).toBeDisabled();

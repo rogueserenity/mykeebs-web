@@ -522,7 +522,7 @@
 			<span class="text-faint text-xs">Up to {MAX_IMAGES} photos. Remove one to add another.</span>
 		{/if}
 		{#if imageError}
-			<span class="text-xs" style="color: var(--danger)">{imageError}</span>
+			<span class="text-xs" role="alert" style="color: var(--danger)">{imageError}</span>
 		{/if}
 		<input
 			bind:this={fileInput}
@@ -933,14 +933,14 @@
 	</label>
 
 	{#if validationError}
-		<p class="text-sm" style="color: var(--danger)">{validationError}</p>
+		<p class="text-sm" role="alert" style="color: var(--danger)">{validationError}</p>
 	{/if}
 	{#snippet staleNote()}
 		<p class="text-xs" style="color: var(--danger)">No longer in your collection</p>
 	{/snippet}
 
 	{#if error}
-		<p class="text-sm" style="color: var(--danger)">{error}</p>
+		<p class="text-sm" role="alert" style="color: var(--danger)">{error}</p>
 	{/if}
 
 	<div class="mt-2 flex gap-2">

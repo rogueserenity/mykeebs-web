@@ -123,14 +123,16 @@
 
 <div class="mx-auto max-w-6xl px-4 py-10">
 	{#if view.status === 'loading'}
-		<p class="text-muted p-16 text-center font-mono text-sm tracking-wide">Loading&hellip;</p>
+		<p class="text-muted p-16 text-center font-mono text-sm tracking-wide" role="status">
+			Loading&hellip;
+		</p>
 	{:else if view.status === 'not-found'}
 		<div class="flex flex-col items-center gap-2 py-24 text-center">
 			<p class="heading-lg text-xl">No one here.</p>
 			<p class="text-muted text-sm">There's no profile at this username.</p>
 		</div>
 	{:else if view.status === 'error'}
-		<p class="p-16 text-center text-lg" style="color: var(--danger)">
+		<p class="p-16 text-center text-lg" role="alert" style="color: var(--danger)">
 			Could not load this profile.
 		</p>
 	{:else}

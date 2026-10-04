@@ -94,11 +94,11 @@
 
 	<div class="mt-6 flex flex-col gap-3">
 		{#if loading}
-			<p class="text-muted p-8 text-center text-sm">Loading&hellip;</p>
+			<p class="text-muted p-8 text-center text-sm" role="status">Loading&hellip;</p>
 		{:else if loadError}
-			<p class="p-8 text-center text-sm" style="color: var(--danger)">{loadError}</p>
+			<p class="p-8 text-center text-sm" role="alert" style="color: var(--danger)">{loadError}</p>
 		{:else if results.length === 0}
-			<p class="text-muted p-8 text-center text-sm">No builders match that search.</p>
+			<p class="text-muted p-8 text-center text-sm" role="status">No builders match that search.</p>
 		{:else}
 			{#each results as summary (summary.userId)}
 				<a
@@ -115,7 +115,7 @@
 				</a>
 			{/each}
 			{#if loadMoreError}
-				<p class="text-center text-sm" style="color: var(--danger)">{loadMoreError}</p>
+				<p class="text-center text-sm" role="alert" style="color: var(--danger)">{loadMoreError}</p>
 			{/if}
 			{#if nextCursor}
 				<button type="button" class="btn mx-auto mt-2" disabled={loadingMore} onclick={loadMore}>

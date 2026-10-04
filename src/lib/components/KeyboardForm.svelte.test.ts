@@ -100,7 +100,9 @@ describe('KeyboardForm.svelte', () => {
 		await page.getByLabelText('Brand').fill('   ');
 		await submit();
 
-		await expect.element(page.getByText('Brand and name are required.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Brand and name are required.' }))
+			.toBeInTheDocument();
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
@@ -376,7 +378,11 @@ describe('KeyboardForm.svelte', () => {
 			await userEvent.upload(fileInput(), picked);
 
 			await expect
-				.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 2 were not added.`))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: `Up to ${MAX_IMAGES} photos are allowed, so 2 were not added.` })
+				)
 				.toBeInTheDocument();
 			await expect.element(page.getByRole('button', { name: '+ Add photo' })).toBeDisabled();
 			await page.getByLabelText('Brand').fill('Bowl');
@@ -419,7 +425,9 @@ describe('KeyboardForm.svelte', () => {
 
 			await userEvent.upload(fileInput(), [png('a.png')]);
 
-			await expect.element(page.getByText('Could not upload that image.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not upload that image.' }))
+				.toBeInTheDocument();
 		});
 
 		it(`disables adding photos once there are ${MAX_IMAGES}`, async () => {
@@ -439,7 +447,11 @@ describe('KeyboardForm.svelte', () => {
 			await userEvent.upload(fileInput(), [a, b, c]);
 
 			await expect
-				.element(page.getByText(`Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.`))
+				.element(
+					page
+						.getByRole('alert')
+						.filter({ hasText: `Up to ${MAX_IMAGES} photos are allowed, so 1 was not added.` })
+				)
 				.toBeInTheDocument();
 			expect(onImageUpload.mock.calls).toEqual([[a], [b]]);
 		});
@@ -459,7 +471,9 @@ describe('KeyboardForm.svelte', () => {
 
 			await page.getByRole('button', { name: 'Remove image 1 of 1' }).click();
 
-			await expect.element(page.getByText('Could not remove the image.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Could not remove the image.' }))
+				.toBeInTheDocument();
 			await expect
 				.element(page.getByRole('button', { name: 'Remove image 1 of 1' }))
 				.not.toBeDisabled();

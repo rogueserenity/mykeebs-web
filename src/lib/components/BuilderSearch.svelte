@@ -78,11 +78,13 @@
 			style="background: var(--surface); border: 1px solid var(--border)"
 		>
 			{#if searchLoading}
-				<p class="text-muted p-3 text-sm">Searching&hellip;</p>
+				<p class="text-muted p-3 text-sm" role="status">Searching&hellip;</p>
 			{:else if searchFailed}
-				<p class="p-3 text-sm" style="color: var(--danger)">Search failed. Try again.</p>
+				<p class="p-3 text-sm" role="alert" style="color: var(--danger)">
+					Search failed. Try again.
+				</p>
 			{:else if searchResults.length === 0}
-				<p class="text-muted p-3 text-sm">No builders match that search.</p>
+				<p class="text-muted p-3 text-sm" role="status">No builders match that search.</p>
 			{:else}
 				{#each searchResults as summary (summary.userId)}
 					<button
