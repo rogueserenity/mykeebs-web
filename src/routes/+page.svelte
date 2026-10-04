@@ -24,7 +24,7 @@
 
 {#if auth.status === 'signed-out'}
 	<div class="mx-auto flex max-w-xl flex-col items-center px-4 py-24 text-center">
-		<h1 class="heading-lg text-3xl">Your keyboard collection, all in one place.</h1>
+		<h1 class="heading-lg text-3xl">Your keyboard collection,<br /> all in one place.</h1>
 		<p class="text-muted mt-4">
 			Track your keyboards, switches, keycap sets and builds, from planned to delivered, and see
 			what other builders are working on.
