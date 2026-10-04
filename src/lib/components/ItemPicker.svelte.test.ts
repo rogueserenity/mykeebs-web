@@ -16,6 +16,27 @@ function fetchPage() {
 }
 
 describe('ItemPicker.svelte', () => {
+	it('names the search box and list from the placeholder, and keeps options out of the Tab order', async () => {
+		render(ItemPicker, {
+			userId: 'u1',
+			fetchPage,
+			itemKey: (item: unknown) => (item as Item).id,
+			getLabel: (item: unknown) => (item as Item).name,
+			placeholder: 'Search keyboards…',
+			onPick: vi.fn()
+		});
+		const input = page.getByRole('combobox', { name: 'Search keyboards' });
+		await expect
+			.element(page.getByRole('listbox', { name: 'Search keyboards' }))
+			.toBeInTheDocument();
+		await expect.element(page.getByRole('option', { name: 'Alpha' })).toBeInTheDocument();
+
+		await input.click();
+		await userEvent.keyboard('{Tab}');
+
+		expect(document.activeElement?.getAttribute('role')).not.toBe('option');
+	});
+
 	it('navigates and picks with the keyboard', async () => {
 		const onPick = vi.fn();
 		render(ItemPicker, {

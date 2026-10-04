@@ -39,6 +39,8 @@
 	let loading = $state(cache?.items == null);
 	let loadError = $state<string | null>(null);
 
+	const label = $derived(placeholder.replace(/…$/, ''));
+
 	let loadToken = 0;
 	let filterText = $state('');
 	let searchInput = $state<HTMLInputElement | null>(null);
@@ -157,6 +159,7 @@
 		type="search"
 		class="field-input"
 		{placeholder}
+		aria-label={label}
 		bind:value={filterText}
 		autocomplete="off"
 		data-autofocus
@@ -172,6 +175,7 @@
 		bind:this={listEl}
 		id="item-picker-listbox"
 		role="listbox"
+		aria-label={label}
 		class="max-h-64 overflow-y-auto rounded border"
 		style="border-color: var(--border)"
 	>
@@ -187,6 +191,7 @@
 					id="item-picker-option-{itemKey(item)}"
 					type="button"
 					role="option"
+					tabindex="-1"
 					aria-selected={index === activeIndex}
 					data-active={index === activeIndex}
 					class="kc-picker-row flex w-full items-center gap-3 border-b p-2 text-left last:border-b-0"
