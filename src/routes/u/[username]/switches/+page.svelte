@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Switch as SwitchModel, SwitchInput } from '@rogueserenity/kbdb-api-client';
 	import { ResponseError } from '@rogueserenity/kbdb-api-client';
@@ -187,6 +188,8 @@
 		}
 	}
 </script>
+
+<svelte:head><title>{pageTitle('Switches', `@${userContext.username}`)}</title></svelte:head>
 
 <CollectionGrid
 	bind:this={grid}

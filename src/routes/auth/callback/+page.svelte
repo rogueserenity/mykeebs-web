@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -30,6 +31,8 @@
 			});
 	});
 </script>
+
+<svelte:head><title>{pageTitle('Signing in')}</title></svelte:head>
 
 <div class="flex min-h-[60vh] items-center justify-center">
 	{#if error}

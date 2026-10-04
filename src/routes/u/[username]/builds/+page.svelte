@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Build, BuildInput } from '@rogueserenity/kbdb-api-client';
 	import { resolve } from '$app/paths';
@@ -114,6 +115,8 @@
 		if (!put.ok) throw new Error(`upload failed: ${put.status}`);
 	}
 </script>
+
+<svelte:head><title>{pageTitle('Builds', `@${userContext.username}`)}</title></svelte:head>
 
 <CollectionGrid
 	bind:this={grid}

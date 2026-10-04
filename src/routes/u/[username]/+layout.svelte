@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type { Profile } from '@rogueserenity/kbdb-api-client';
@@ -111,6 +112,14 @@
 		};
 	});
 </script>
+
+<svelte:head>
+	{#if view.status === 'not-found'}
+		<title>{pageTitle('Not found')}</title>
+	{:else if view.status !== 'ready'}
+		<title>{pageTitle(`@${routeUsername}`)}</title>
+	{/if}
+</svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-10">
 	{#if view.status === 'loading'}

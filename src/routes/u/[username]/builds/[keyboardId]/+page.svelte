@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -40,6 +41,10 @@
 		| { status: 'ready'; keyboard: Keyboard | null; builds: Build[] };
 
 	let view = $state<ViewState>({ status: 'loading' });
+
+	const buildsHeading = $derived(
+		view.status === 'ready' ? `${view.keyboard?.name ?? 'Deleted keyboard'} builds` : 'Builds'
+	);
 
 	const failedImages = new SvelteSet<string>();
 	const refetchStaleImages = perItemImageRefetcher(
@@ -336,6 +341,8 @@
 			galleryViewerOpen
 	);
 </script>
+
+<svelte:head><title>{pageTitle(buildsHeading, `@${userContext.username}`)}</title></svelte:head>
 
 <div class="p-4">
 	<a

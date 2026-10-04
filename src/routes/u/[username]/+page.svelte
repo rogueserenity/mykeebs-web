@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { buildsApi, keyboardsApi, switchesApi, keycapSetsApi } from '$lib/api/client';
 	import { formatPrice } from '$lib/format';
 	import { getUserContext } from '$lib/user-context';
@@ -105,6 +106,8 @@
 			: []
 	);
 </script>
+
+<svelte:head><title>{pageTitle(`@${userContext.username}`)}</title></svelte:head>
 
 {#if profile.discordUsername || profile.bio || (profile.links && profile.links.length > 0)}
 	<div class="mb-8 flex flex-col gap-5">

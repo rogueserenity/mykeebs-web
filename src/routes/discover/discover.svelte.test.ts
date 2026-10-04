@@ -166,3 +166,13 @@ describe('Discover page', () => {
 		await expect.element(page.getByText('@older')).not.toBeInTheDocument();
 	});
 });
+
+describe('Discover page title', () => {
+	it('titles the tab', async () => {
+		listProfiles.mockResolvedValue(pageOf([]));
+
+		render(DiscoverPage);
+
+		await vi.waitFor(() => expect(document.title).toBe('Discover · mykeebs'));
+	});
+});

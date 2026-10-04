@@ -1,0 +1,81 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-svelte';
+import { createRawSnippet } from 'svelte';
+import { ResponseError } from '@rogueserenity/kbdb-api-client';
+import { profilesApi } from '$lib/api/client';
+import WithUserContext from '$lib/components/test-support/WithUserContext.svelte';
+import UserLayout from './+layout.svelte';
+import OverviewPage from './+page.svelte';
+import KeyboardsPage from './keyboards/+page.svelte';
+import SwitchesPage from './switches/+page.svelte';
+import KeycapSetsPage from './keycap-sets/+page.svelte';
+import BuildsPage from './builds/+page.svelte';
+import KeyboardBuildsPage from './builds/[keyboardId]/+page.svelte';
+
+vi.mock('$app/state', () => ({
+	page: {
+		params: { username: 'rogue.serenity', keyboardId: 'kb-1' },
+		url: new URL('http://localhost/u/rogue.serenity')
+	}
+}));
+vi.mock('$lib/auth/auth.svelte', () => ({
+	auth: { status: 'signed-in', user: { id: 'user-1', email: null } }
+}));
+vi.mock('$lib/api/client', () => {
+	const empty = async () => ({ items: [] });
+	return {
+		profilesApi: { getProfile: vi.fn() },
+		keyboardsApi: {
+			listKeyboards: empty,
+			getKeyboard: async () => ({ id: 'kb-1', brand: 'Qwertykeys', name: 'Neo65 Cu' })
+		},
+		switchesApi: { listSwitches: empty },
+		keycapSetsApi: { listKeycapSets: empty },
+		buildsApi: { listBuilds: empty },
+		lookupsApi: { getLookup: async () => ({ values: [] }) }
+	};
+});
+
+const title = (expected: string) => vi.waitFor(() => expect(document.title).toBe(expected));
+
+describe('user page titles', () => {
+	it.each([
+		['the overview', OverviewPage, '@rogue.serenity · mykeebs'],
+		['keyboards', KeyboardsPage, 'Keyboards · @rogue.serenity · mykeebs'],
+		['switches', SwitchesPage, 'Switches · @rogue.serenity · mykeebs'],
+		['keycap sets', KeycapSetsPage, 'Keycap sets · @rogue.serenity · mykeebs'],
+		['builds', BuildsPage, 'Builds · @rogue.serenity · mykeebs']
+	])('titles %s', async (_, component, expected) => {
+		render(WithUserContext, { component });
+
+		await title(expected);
+	});
+
+	it("titles a keyboard's builds with the keyboard's name", async () => {
+		render(WithUserContext, { component: KeyboardBuildsPage });
+
+		await title('Neo65 Cu builds · @rogue.serenity · mykeebs');
+	});
+});
+
+describe('user layout titles', () => {
+	const children = createRawSnippet(() => ({ render: () => '<div></div>' }));
+
+	it('titles the tab with the username while the profile loads', async () => {
+		vi.mocked(profilesApi.getProfile).mockReturnValue(new Promise(() => {}));
+
+		render(UserLayout, { children });
+
+		await title('@rogue.serenity · mykeebs');
+	});
+
+	it('titles the tab as not found when there is no such profile', async () => {
+		vi.mocked(profilesApi.getProfile).mockRejectedValue(
+			new ResponseError(new Response(null, { status: 404 }))
+		);
+
+		render(UserLayout, { children });
+
+		await title('Not found · mykeebs');
+	});
+});

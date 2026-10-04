@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { auth } from '$lib/auth/auth.svelte';
@@ -19,3 +20,5 @@
 		}
 	});
 </script>
+
+<svelte:head><title>{pageTitle()}</title></svelte:head>

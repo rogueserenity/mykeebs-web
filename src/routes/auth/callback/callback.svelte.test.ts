@@ -99,3 +99,15 @@ describe('Auth callback page', () => {
 		expect(navigate).not.toHaveBeenCalled();
 	});
 });
+
+describe('Auth callback page title', () => {
+	it('titles the tab', async () => {
+		arriveWith({ code: 'code-1', state: 'state-1' });
+		consume.mockReturnValue(true);
+		exchange.mockReturnValue(new Promise(() => {}));
+
+		render(CallbackPage);
+
+		await vi.waitFor(() => expect(document.title).toBe('Signing in · mykeebs'));
+	});
+});

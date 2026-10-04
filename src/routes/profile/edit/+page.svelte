@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/page-title';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { ProfileInput, ProfileLink } from '@rogueserenity/kbdb-api-client';
@@ -174,6 +175,8 @@
 		}
 	}
 </script>
+
+<svelte:head><title>{pageTitle(isNew ? 'Set up profile' : 'Edit profile')}</title></svelte:head>
 
 <div class="mx-auto max-w-2xl px-4 py-10">
 	{#if auth.status === 'loading' || profile.status === 'loading' || profile.status === 'idle'}

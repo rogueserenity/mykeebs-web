@@ -1,5 +1,5 @@
 import { page } from 'vitest/browser';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import type { Profile } from '@rogueserenity/kbdb-api-client';
 import ProfileEditPage from './+page.svelte';
@@ -17,13 +17,20 @@ const existing = vi.hoisted((): Profile => ({
 vi.mock('$lib/auth/auth.svelte', () => ({
 	auth: { status: 'signed-in', user: { id: 'user-1', email: null } }
 }));
+const profileState = vi.hoisted(() => ({ status: 'ready', data: undefined as unknown }));
+
 vi.mock('$lib/profile/profile.svelte', () => ({
-	profile: { status: 'ready', data: existing },
+	profile: profileState,
 	saveProfile: vi.fn(),
 	refreshProfile: vi.fn()
 }));
 vi.mock('$lib/api/client', () => ({ profilesApi: {} }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+
+beforeEach(() => {
+	profileState.status = 'ready';
+	profileState.data = existing;
+});
 
 describe('Profile edit page links', () => {
 	it('names each remove button after its link and removes only that link', async () => {
@@ -62,5 +69,22 @@ describe('Profile edit page link fields', () => {
 		await expect
 			.element(page.getByRole('textbox', { name: 'Link 2 URL' }))
 			.toHaveValue('https://example.social/@rogue');
+	});
+});
+
+describe('Profile edit page title', () => {
+	it('titles the tab for editing an existing profile', async () => {
+		render(ProfileEditPage);
+
+		await vi.waitFor(() => expect(document.title).toBe('Edit profile · mykeebs'));
+	});
+
+	it('titles the tab for setting up a new profile', async () => {
+		profileState.status = 'none';
+		profileState.data = undefined;
+
+		render(ProfileEditPage);
+
+		await vi.waitFor(() => expect(document.title).toBe('Set up profile · mykeebs'));
 	});
 });
