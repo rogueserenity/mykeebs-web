@@ -1,5 +1,7 @@
 <script lang="ts" generics="T">
 	import { updateWhere } from '$lib/stale-images';
+	import { fetchAllPages } from '$lib/pagination';
+	import { filterByStatus, searchItems, sortItems } from '$lib/collection-filter';
 	import type { Snippet } from 'svelte';
 	import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-svelte';
 	import {
@@ -62,54 +64,18 @@
 		}
 	}
 
-	function valueMatchesFilter(value: unknown, needle: string): boolean {
-		if (typeof value === 'string') {
-			return value.toLowerCase().includes(needle);
-		}
-		if (value != null && typeof value === 'object' && !(value instanceof Date)) {
-			return Object.values(value).some(
-				(nested) => typeof nested === 'string' && nested.toLowerCase().includes(needle)
-			);
-		}
-		return false;
-	}
-
-	function matchesFilter(item: T, needle: string): boolean {
-		return Object.entries(item as Record<string, unknown>).some(
-			([key, value]) => key !== 'id' && valueMatchesFilter(value, needle)
-		);
-	}
-
-	let statusFilteredItems = $derived.by(() => {
-		if (!getOrderStatus || statusFilter === 'all') return items;
-		return items.filter((item) => (getOrderStatus(item) ?? '').toLowerCase() === statusFilter);
-	});
-
-	let filteredItems = $derived.by(() => {
-		const needle = filterText.trim().toLowerCase();
-		if (!needle) return statusFilteredItems;
-		return statusFilteredItems.filter((item) => matchesFilter(item, needle));
-	});
+	let filteredItems = $derived(
+		searchItems(filterByStatus(items, statusFilter, getOrderStatus), filterText)
+	);
 
 	let sortIndex = $state(0);
 	let sortDescending = $state(false);
 
-	function compareValues(a: string | number | undefined, b: string | number | undefined): number {
-		if (a == null && b == null) return 0;
-		if (a == null) return 1;
-		if (b == null) return -1;
-		if (typeof a === 'number' && typeof b === 'number') return a - b;
-		return String(a).localeCompare(String(b));
-	}
-
 	let sortedItems = $derived.by(() => {
 		const option = sortOptions[sortIndex];
-		if (!option) return filteredItems;
-		return [...filteredItems].sort((a, b) => {
-			const primary = compareValues(option.getValue(a), option.getValue(b));
-			if (primary !== 0) return sortDescending ? -primary : primary;
-			return compareValues(getName(a), getName(b));
-		});
+		return option
+			? sortItems(filteredItems, option.getValue, getName, sortDescending)
+			: filteredItems;
 	});
 
 	let loadToken = 0;
@@ -121,14 +87,7 @@
 		loadError = null;
 		loading = true;
 		try {
-			const allItems: T[] = [];
-			let cursor: string | undefined;
-			do {
-				const page = await fetchPage(userId, cursor);
-				if (token !== loadToken) return;
-				allItems.push(...(page.items ?? []));
-				cursor = page.nextCursor ?? undefined;
-			} while (cursor);
+			const allItems = await fetchAllPages((cursor) => fetchPage(userId, cursor));
 			if (token !== loadToken) return;
 			items = allItems;
 		} catch {
