@@ -57,28 +57,24 @@
 				{#if sw.pins != null}
 					<div class="spec-row">
 						<dt>Pins</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.pins}</dd>
 					</div>
 				{/if}
 				{#if sw.material?.topHousing}
 					<div class="spec-row">
 						<dt>Top housing</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.material.topHousing}</dd>
 					</div>
 				{/if}
 				{#if sw.material?.bottomHousing}
 					<div class="spec-row">
 						<dt>Bottom housing</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.material.bottomHousing}</dd>
 					</div>
 				{/if}
 				{#if sw.material?.stem}
 					<div class="spec-row">
 						<dt>Stem</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.material.stem}</dd>
 					</div>
 				{/if}
@@ -93,35 +89,30 @@
 				{#if sw.force?.actuation != null}
 					<div class="spec-row">
 						<dt>Actuation force</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.force.actuation}g</dd>
 					</div>
 				{/if}
 				{#if sw.force?.bottomOut != null}
 					<div class="spec-row">
 						<dt>Bottom-out force</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.force.bottomOut}g</dd>
 					</div>
 				{/if}
 				{#if sw.spring?.material}
 					<div class="spec-row">
 						<dt>Spring material</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.spring.material}</dd>
 					</div>
 				{/if}
 				{#if sw.spring?.preTravel != null}
 					<div class="spec-row">
 						<dt>Pre-travel</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.spring.preTravel}mm</dd>
 					</div>
 				{/if}
 				{#if sw.spring?.totalTravel != null}
 					<div class="spec-row">
 						<dt>Total travel</dt>
-						<span class="spec-leader"></span>
 						<dd>{sw.spring.totalTravel}mm</dd>
 					</div>
 				{/if}

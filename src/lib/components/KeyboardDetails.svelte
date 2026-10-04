@@ -73,28 +73,24 @@
 				{#if materialColorText(keyboard.design.topCase)}
 					<div class="spec-row">
 						<dt>Top case</dt>
-						<span class="spec-leader"></span>
 						<dd>{materialColorText(keyboard.design.topCase)}</dd>
 					</div>
 				{/if}
 				{#if materialColorText(keyboard.design.bottomCase)}
 					<div class="spec-row">
 						<dt>Bottom case</dt>
-						<span class="spec-leader"></span>
 						<dd>{materialColorText(keyboard.design.bottomCase)}</dd>
 					</div>
 				{/if}
 				{#if materialColorText(keyboard.design.weight)}
 					<div class="spec-row">
 						<dt>Weight</dt>
-						<span class="spec-leader"></span>
 						<dd>{materialColorText(keyboard.design.weight)}</dd>
 					</div>
 				{/if}
 				{#if keyboard.design.plates && keyboard.design.plates.length > 0}
 					<div class="spec-row">
 						<dt>Plates</dt>
-						<span class="spec-leader"></span>
 						<dd>{keyboard.design.plates.join(', ')}</dd>
 					</div>
 				{/if}
@@ -109,28 +105,24 @@
 				{#if keyboard.pcb.thickness != null}
 					<div class="spec-row">
 						<dt>Thickness</dt>
-						<span class="spec-leader"></span>
 						<dd>{keyboard.pcb.thickness}mm</dd>
 					</div>
 				{/if}
 				{#if keyboard.pcb.firmware}
 					<div class="spec-row">
 						<dt>Firmware</dt>
-						<span class="spec-leader"></span>
 						<dd>{keyboard.pcb.firmware}</dd>
 					</div>
 				{/if}
 				{#if keyboard.pcb.assembly}
 					<div class="spec-row">
 						<dt>Assembly</dt>
-						<span class="spec-leader"></span>
 						<dd>{keyboard.pcb.assembly}</dd>
 					</div>
 				{/if}
 				{#if keyboard.pcb.connectivity}
 					<div class="spec-row">
 						<dt>Connectivity</dt>
-						<span class="spec-leader"></span>
 						<dd>{keyboard.pcb.connectivity}</dd>
 					</div>
 				{/if}

@@ -16,35 +16,30 @@
 		{#if purchase.vendor}
 			<div class="spec-row">
 				<dt>Vendor</dt>
-				<span class="spec-leader"></span>
 				<dd>{purchase.vendor}</dd>
 			</div>
 		{/if}
 		{#if purchase.quantity != null}
 			<div class="spec-row">
 				<dt>Quantity</dt>
-				<span class="spec-leader"></span>
 				<dd>{purchase.quantity}</dd>
 			</div>
 		{/if}
 		{#if showPrice && formatPrice(purchase.price, purchase.currency)}
 			<div class="spec-row">
 				<dt>Price</dt>
-				<span class="spec-leader"></span>
 				<dd>{formatPrice(purchase.price, purchase.currency)}</dd>
 			</div>
 		{/if}
 		{#if formatDate(purchase.orderDate)}
 			<div class="spec-row">
 				<dt>Ordered</dt>
-				<span class="spec-leader"></span>
 				<dd>{formatDate(purchase.orderDate)}</dd>
 			</div>
 		{/if}
 		{#if formatDate(purchase.deliveryDate)}
 			<div class="spec-row">
 				<dt>Delivered</dt>
-				<span class="spec-leader"></span>
 				<dd>{formatDate(purchase.deliveryDate)}</dd>
 			</div>
 		{/if}

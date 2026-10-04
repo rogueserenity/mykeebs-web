@@ -39,7 +39,6 @@
 	<dl class="spec-list mt-6 sm:w-1/2">
 		<div class="spec-row">
 			<dt>Total cost</dt>
-			<span class="spec-leader"></span>
 			<dd>{totalCost}</dd>
 		</div>
 	</dl>

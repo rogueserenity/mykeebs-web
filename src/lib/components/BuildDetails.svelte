@@ -91,14 +91,12 @@
 				{#if build.plate}
 					<div class="spec-row">
 						<dt>Plate</dt>
-						<span class="spec-leader"></span>
 						<dd>{build.plate}</dd>
 					</div>
 				{/if}
 				{#if build.caseMountType?.type}
 					<div class="spec-row">
 						<dt>Mount type</dt>
-						<span class="spec-leader"></span>
 						<dd>
 							{[build.caseMountType.type, build.caseMountType.durometer]
 								.filter(Boolean)
@@ -109,14 +107,12 @@
 				{#if build.stabs?.name}
 					<div class="spec-row">
 						<dt>Stabs</dt>
-						<span class="spec-leader"></span>
 						<dd>{[build.stabs.name, build.stabs.mountType].filter(Boolean).join(' · ')}</dd>
 					</div>
 				{/if}
 				{#if build.foam != null}
 					<div class="spec-row">
 						<dt>Foam</dt>
-						<span class="spec-leader"></span>
 						<dd>{build.foam ? 'Yes' : 'No'}</dd>
 					</div>
 				{/if}
