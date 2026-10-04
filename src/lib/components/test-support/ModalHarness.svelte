@@ -6,12 +6,14 @@
 		obscured = false,
 		autofocusSecond = false,
 		heading,
+		label,
 		onClose = () => {}
 	}: {
 		dirty?: boolean;
 		obscured?: boolean;
 		autofocusSecond?: boolean;
 		heading?: string;
+		label?: string;
 		onClose?: () => void;
 	} = $props();
 
@@ -23,6 +25,7 @@
 	{open}
 	{dirty}
 	{obscured}
+	{label}
 	onClose={() => {
 		open = false;
 		onClose();

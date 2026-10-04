@@ -9,6 +9,7 @@
 		obscured = false,
 		dirty = false,
 		headerExtra,
+		label,
 		children
 	}: {
 		open: boolean;
@@ -18,6 +19,8 @@
 		// Close attempts surface a "Discard changes?" prompt instead of closing.
 		dirty?: boolean;
 		headerExtra?: Snippet;
+		// Names the dialog while it has no heading, e.g. while loading or showing an error.
+		label?: string;
 		children: Snippet;
 	} = $props();
 
@@ -130,6 +133,7 @@
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby={labelledBy}
+			aria-label={labelledBy ? undefined : label}
 			class="kc-modal-panel max-h-[90vh] w-full {wide
 				? 'max-w-5xl'
 				: 'max-w-3xl'} overflow-y-auto p-6"

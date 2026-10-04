@@ -195,6 +195,7 @@ describe('keyboard builds page', () => {
 			await expect
 				.element(page.getByRole('alert').filter({ hasText: 'Could not load this build.' }))
 				.toBeInTheDocument();
+			await expect.element(page.getByRole('dialog', { name: 'Build' })).toBeInTheDocument();
 		});
 
 		it('opens a photo full size', async () => {
@@ -384,6 +385,7 @@ describe('keyboard builds page', () => {
 				.click();
 
 			await expect.element(page.getByText('This kit no longer exists.')).toBeInTheDocument();
+			await expect.element(page.getByRole('dialog', { name: 'Keycap kit' })).toBeInTheDocument();
 		});
 	});
 });

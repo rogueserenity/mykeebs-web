@@ -417,6 +417,7 @@
 
 <Modal
 	open={detailLoading || detailError !== null || selectedBuild !== null}
+	label="Build"
 	onClose={closeModal}
 	wide
 	obscured={anyNestedOpen && formMode.mode !== 'edit'}
@@ -521,6 +522,7 @@
 
 <Modal
 	open={keyboardDetailLoading || keyboardDetailError !== null || keyboardDetail !== null}
+	label="Keyboard"
 	onClose={closeKeyboardDetail}
 	obscured={keyboardGalleryViewerOpen}
 >
@@ -570,6 +572,7 @@
 
 <Modal
 	open={switchDetailLoading || switchDetailError !== null || switchDetail !== null}
+	label="Switch"
 	onClose={closeSwitchDetail}
 	obscured={switchViewerOpen}
 >
@@ -595,6 +598,7 @@
 
 <Modal
 	open={kitDetailLoading || kitDetailError !== null || kitDetail !== null}
+	label="Keycap kit"
 	onClose={closeKitDetail}
 	obscured={kitViewerOpen}
 >

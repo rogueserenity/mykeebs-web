@@ -111,6 +111,17 @@ describe('Modal.svelte', () => {
 			await expect.element(page.getByRole('dialog', { name: 'Edit keyboard' })).toBeInTheDocument();
 		});
 
+		it('falls back to its label while it has no heading, and prefers the heading', async () => {
+			const onClose = vi.fn();
+			const { rerender } = render(ModalHarness, { onClose, label: 'Build' });
+			await page.getByRole('button', { name: 'Open' }).click();
+			await expect.element(page.getByRole('dialog', { name: 'Build' })).toBeInTheDocument();
+
+			await rerender({ onClose, label: 'Build', heading: 'Neo65 Cu' });
+
+			await expect.element(page.getByRole('dialog', { name: 'Neo65 Cu' })).toBeInTheDocument();
+		});
+
 		it('picks up a heading that appears after it opens', async () => {
 			const onClose = vi.fn();
 			const { rerender } = render(ModalHarness, { onClose });
