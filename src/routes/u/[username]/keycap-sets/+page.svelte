@@ -16,7 +16,7 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
 	import { deleteFailure } from '$lib/delete-blocked';
-	import { uploadToSignedUrl } from '$lib/upload';
+	import { uploadImage } from '$lib/upload';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -301,13 +301,9 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 
-		const { uploadUrl } = await keycapSetsApi.setKeycapKitImage({
-			userId,
-			keycapSetId,
-			kitId,
-			imageUploadRequest: { contentType: file.type }
-		});
-		await uploadToSignedUrl(uploadUrl, file);
+		await uploadImage(file, (imageUploadRequest) =>
+			keycapSetsApi.setKeycapKitImage({ userId, keycapSetId, kitId, imageUploadRequest })
+		);
 	}
 
 	async function handleKitImageUpload(kitId: string, file: File) {

@@ -6,6 +6,11 @@ import { buildsApi, switchesApi } from '$lib/api/client';
 import WithUserContext from '$lib/components/test-support/WithUserContext.svelte';
 import SwitchesPage from './+page.svelte';
 
+vi.mock('$lib/image-resize', () => ({
+	prepareImage: async (file: File) =>
+		new File([file], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
+}));
+
 vi.mock('$lib/api/client', () => ({
 	switchesApi: {
 		listSwitches: vi.fn(),
@@ -139,7 +144,7 @@ describe('switches page', () => {
 			expect(api.setSwitchImage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					switchId: 'sw-2',
-					imageUploadRequest: { contentType: 'image/png' }
+					imageUploadRequest: { contentType: 'image/webp' }
 				})
 			);
 			expect(fetchMock).toHaveBeenCalledWith(
@@ -238,9 +243,12 @@ describe('switches page', () => {
 			await vi.waitFor(() =>
 				expect(api.getSwitch).toHaveBeenCalledWith({ userId: 'user-1', switchId: 'sw-1' })
 			);
+			expect(api.setSwitchImage).toHaveBeenCalledWith(
+				expect.objectContaining({ imageUploadRequest: { contentType: 'image/webp' } })
+			);
 			expect(fetchMock).toHaveBeenCalledWith(
 				'https://bucket.example/t',
-				expect.objectContaining({ method: 'PUT' })
+				expect.objectContaining({ method: 'PUT', headers: { 'Content-Type': 'image/webp' } })
 			);
 		});
 	});

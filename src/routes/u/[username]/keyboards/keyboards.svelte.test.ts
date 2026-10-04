@@ -6,6 +6,14 @@ import { buildsApi, keyboardsApi } from '$lib/api/client';
 import WithUserContext from '$lib/components/test-support/WithUserContext.svelte';
 import KeyboardsPage from './+page.svelte';
 
+vi.mock('$lib/image-resize', () => ({
+	prepareImage: async (file: File) => {
+		// The first photo finishes converting last, so out-of-order uploads would show.
+		if (file.name === 'a.png') await new Promise((resolve) => setTimeout(resolve, 50));
+		return new File([file], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' });
+	}
+}));
+
 vi.mock('$lib/api/client', () => ({
 	keyboardsApi: {
 		listKeyboards: vi.fn(),
@@ -114,7 +122,7 @@ describe('keyboards page', () => {
 	});
 
 	describe('adding a keyboard', () => {
-		it('creates it, uploads the staged photos, and closes', async () => {
+		it('creates it, uploads the staged photos as WebP in order, and closes', async () => {
 			const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
 			vi.stubGlobal('fetch', fetchMock);
 			api.createKeyboard.mockResolvedValue({ id: 'kb-2', brand: 'Bowl', name: 'Deacon TKL' });
@@ -138,9 +146,12 @@ describe('keyboards page', () => {
 				})
 			);
 			expect(api.createKeyboardImage).toHaveBeenCalledTimes(2);
-			expect(fetchMock.mock.calls.map(([url]) => url).sort()).toEqual([
-				'https://bucket.example/a',
-				'https://bucket.example/b'
+			expect(api.createKeyboardImage).toHaveBeenCalledWith(
+				expect.objectContaining({ imageUploadRequest: { contentType: 'image/webp' } })
+			);
+			expect(fetchMock.mock.calls.map(([url, init]) => [url, (init?.body as File).name])).toEqual([
+				['https://bucket.example/a', 'a.webp'],
+				['https://bucket.example/b', 'b.webp']
 			]);
 			expect(api.listKeyboards).toHaveBeenCalledTimes(2);
 		});
@@ -240,9 +251,15 @@ describe('keyboards page', () => {
 			await vi.waitFor(() =>
 				expect(api.getKeyboard).toHaveBeenCalledWith({ userId: 'user-1', keyboardId: 'kb-1' })
 			);
+			expect(api.createKeyboardImage).toHaveBeenCalledWith(
+				expect.objectContaining({ imageUploadRequest: { contentType: 'image/webp' } })
+			);
 			expect(fetchMock).toHaveBeenCalledWith(
 				'https://bucket.example/c',
-				expect.objectContaining({ method: 'PUT' })
+				expect.objectContaining({
+					method: 'PUT',
+					headers: { 'Content-Type': 'image/webp' }
+				})
 			);
 		});
 	});

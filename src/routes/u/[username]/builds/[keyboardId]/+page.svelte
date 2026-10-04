@@ -21,7 +21,7 @@
 	import { newestFirst } from '$lib/build-groups';
 	import { fetchAllPages } from '$lib/pagination';
 	import { stepIndex } from '$lib/step-index';
-	import { uploadToSignedUrl } from '$lib/upload';
+	import { uploadImage } from '$lib/upload';
 	import { primaryBuildImageUrl } from '$lib/build';
 	import { getUserContext } from '$lib/user-context';
 	import Modal from '$lib/components/Modal.svelte';
@@ -201,12 +201,9 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 
-		const { uploadUrl } = await buildsApi.createBuildImage({
-			userId,
-			buildId,
-			imageUploadRequest: { contentType: file.type }
-		});
-		await uploadToSignedUrl(uploadUrl, file);
+		await uploadImage(file, (imageUploadRequest) =>
+			buildsApi.createBuildImage({ userId, buildId, imageUploadRequest })
+		);
 	}
 
 	async function handleImageUpload(buildId: string, file: File) {

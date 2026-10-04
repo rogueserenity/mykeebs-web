@@ -1,11 +1,16 @@
-import { page } from 'vitest/browser';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { page, userEvent } from 'vitest/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { ResponseError, Visibility, type Build } from '@rogueserenity/kbdb-api-client';
 import { buildsApi, keyboardsApi, keycapSetsApi, switchesApi } from '$lib/api/client';
 import { STALE_REFS_MESSAGE } from '$lib/build-refs';
 import WithUserContext from '$lib/components/test-support/WithUserContext.svelte';
 import KeyboardBuildsPage from './+page.svelte';
+
+vi.mock('$lib/image-resize', () => ({
+	prepareImage: async (file: File) =>
+		new File([file], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
+}));
 
 vi.mock('$app/state', () => ({
 	page: { params: { username: 'rogue.serenity', keyboardId: 'kb-1' } }
@@ -75,6 +80,10 @@ beforeEach(() => {
 	builds.listBuilds.mockResolvedValue({ items: [older, undated, current] });
 	builds.getBuild.mockResolvedValue(current);
 	vi.mocked(keyboardsApi.getKeyboard).mockResolvedValue(neo65);
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
 });
 
 describe('keyboard builds page', () => {
@@ -239,6 +248,32 @@ describe('keyboard builds page', () => {
 			await expect
 				.element(page.getByRole('listitem').filter({ hasText: 'Ding Ding' }))
 				.toHaveTextContent('No longer in your collection');
+		});
+
+		it('uploads a photo as WebP straight away and refreshes the build', async () => {
+			const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+			vi.stubGlobal('fetch', fetchMock);
+			builds.createBuildImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/b' } as never);
+			renderPage();
+			await openCurrent();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			const readsBefore = builds.getBuild.mock.calls.length;
+			await userEvent.upload(
+				page.elementLocator(document.querySelector('input[type="file"]')!),
+				new File(['photo'], 'build.jpg', { type: 'image/jpeg' })
+			);
+
+			await vi.waitFor(() => expect(builds.getBuild.mock.calls.length).toBe(readsBefore + 1));
+			expect(builds.createBuildImage).toHaveBeenCalledWith({
+				userId: 'user-1',
+				buildId: 'b-new',
+				imageUploadRequest: { contentType: 'image/webp' }
+			});
+			expect(fetchMock).toHaveBeenCalledWith(
+				'https://bucket.example/b',
+				expect.objectContaining({ method: 'PUT', headers: { 'Content-Type': 'image/webp' } })
+			);
 		});
 
 		it('says so when the save fails for another reason', async () => {

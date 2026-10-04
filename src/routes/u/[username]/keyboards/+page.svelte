@@ -12,7 +12,7 @@
 	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
 	import { deleteFailure } from '$lib/delete-blocked';
 	import { stepIndex } from '$lib/step-index';
-	import { uploadToSignedUrl } from '$lib/upload';
+	import { uploadImage } from '$lib/upload';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import KeyboardForm from '$lib/components/KeyboardForm.svelte';
@@ -98,9 +98,9 @@
 			if (stagedImages && stagedImages.length > 0) {
 				// The keyboard already exists, so an upload failure isn't a failed
 				// create and saveError no longer applies to it.
-				await Promise.all(
-					stagedImages.map((file) => uploadKeyboardImage(keyboard.id ?? '', file).catch(() => {}))
-				);
+				for (const file of stagedImages) {
+					await uploadKeyboardImage(keyboard.id ?? '', file).catch(() => {});
+				}
 			}
 			await grid?.refresh();
 			closeModal();
@@ -151,12 +151,9 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 
-		const { uploadUrl } = await keyboardsApi.createKeyboardImage({
-			userId,
-			keyboardId,
-			imageUploadRequest: { contentType: file.type }
-		});
-		await uploadToSignedUrl(uploadUrl, file);
+		await uploadImage(file, (imageUploadRequest) =>
+			keyboardsApi.createKeyboardImage({ userId, keyboardId, imageUploadRequest })
+		);
 	}
 
 	async function handleImageUpload(keyboardId: string, file: File) {

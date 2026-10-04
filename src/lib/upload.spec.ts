@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { uploadToSignedUrl } from './upload';
+import { uploadImage, uploadToSignedUrl } from './upload';
 
 const file = new File(['png'], 'a.png', { type: 'image/png' });
 
@@ -30,5 +30,37 @@ describe('uploadToSignedUrl', () => {
 		await expect(uploadToSignedUrl('https://bucket.example/signed', file)).rejects.toThrow(
 			'upload failed: 403'
 		);
+	});
+});
+
+describe('uploadImage', () => {
+	const webp = new File(['webp'], 'a.webp', { type: 'image/webp' });
+
+	it('uploads the prepared image, asking for a URL with its content type', async () => {
+		const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
+		vi.stubGlobal('fetch', fetchMock);
+		const prepare = vi.fn(async () => webp);
+		const requestUpload = vi.fn(async () => ({ uploadUrl: 'https://bucket.example/signed' }));
+
+		await uploadImage(file, requestUpload, prepare);
+
+		expect(prepare).toHaveBeenCalledWith(file);
+		expect(requestUpload).toHaveBeenCalledWith({ contentType: 'image/webp' });
+		expect(fetchMock).toHaveBeenCalledWith('https://bucket.example/signed', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'image/webp' },
+			body: webp
+		});
+	});
+
+	it('asks for no upload URL when the image cannot be prepared', async () => {
+		const requestUpload = vi.fn(async () => ({ uploadUrl: 'https://bucket.example/signed' }));
+
+		await expect(
+			uploadImage(file, requestUpload, async () => {
+				throw new Error('undecodable');
+			})
+		).rejects.toThrow('undecodable');
+		expect(requestUpload).not.toHaveBeenCalled();
 	});
 });

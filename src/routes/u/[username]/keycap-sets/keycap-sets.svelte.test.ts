@@ -6,6 +6,11 @@ import { buildsApi, keycapSetsApi } from '$lib/api/client';
 import WithUserContext from '$lib/components/test-support/WithUserContext.svelte';
 import KeycapSetsPage from './+page.svelte';
 
+vi.mock('$lib/image-resize', () => ({
+	prepareImage: async (file: File) =>
+		new File([file], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
+}));
+
 vi.mock('$lib/api/client', () => ({
 	keycapSetsApi: {
 		listKeycapSets: vi.fn(),
@@ -311,7 +316,11 @@ describe('keycap sets page', () => {
 				)
 			);
 			expect(api.setKeycapKitImage).toHaveBeenCalledWith(
-				expect.objectContaining({ keycapSetId: 'set-1', kitId: 'spacebars' })
+				expect.objectContaining({
+					keycapSetId: 'set-1',
+					kitId: 'spacebars',
+					imageUploadRequest: { contentType: 'image/webp' }
+				})
 			);
 			vi.unstubAllGlobals();
 		});

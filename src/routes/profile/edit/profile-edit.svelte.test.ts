@@ -6,6 +6,15 @@ import { goto } from '$app/navigation';
 import { profilesApi } from '$lib/api/client';
 import { refreshProfile, saveProfile } from '$lib/profile/profile.svelte';
 import ProfileEditPage from './+page.svelte';
+import { prepareImage, UnsupportedImageError } from '$lib/image-resize';
+
+vi.mock('$lib/image-resize', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/image-resize')>()),
+	prepareImage: vi.fn(
+		async (file: File) =>
+			new File([file], file.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
+	)
+}));
 
 const existing = vi.hoisted((): Profile => ({
 	userId: 'user-1',
@@ -286,12 +295,22 @@ describe('Profile edit page photo', () => {
 		await vi.waitFor(() => expect(refreshProfile).toHaveBeenCalled());
 		expect(api.setProfileImage).toHaveBeenCalledWith({
 			identifier: 'user-1',
-			imageUploadRequest: { contentType: 'image/png' }
+			imageUploadRequest: { contentType: 'image/webp' }
 		});
 		expect(fetchMock).toHaveBeenCalledWith(
 			'https://bucket.example/me',
 			expect.objectContaining({ method: 'PUT' })
 		);
+	});
+
+	it('says so, without asking for an upload URL, when the image cannot be read', async () => {
+		vi.mocked(prepareImage).mockRejectedValueOnce(new UnsupportedImageError());
+		render(ProfileEditPage);
+
+		await userEvent.upload(fileInput(), new File(['heic'], 'me.heic', { type: 'image/heic' }));
+
+		await expect.element(page.getByText('Could not upload that image.')).toBeInTheDocument();
+		expect(api.setProfileImage).not.toHaveBeenCalled();
 	});
 
 	it('says so when the upload fails', async () => {

@@ -27,6 +27,10 @@ export default defineConfig({
 		// sidesteps that.
 		noExternal: ['lucide-svelte']
 	},
+	optimizeDeps: {
+		// Pre-bundling moves the encoder away from its .wasm files.
+		exclude: ['@jsquash/webp']
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

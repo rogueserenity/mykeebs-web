@@ -11,7 +11,7 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
 	import { deleteFailure } from '$lib/delete-blocked';
-	import { uploadToSignedUrl } from '$lib/upload';
+	import { uploadImage } from '$lib/upload';
 	import VisibilityBadge from '$lib/components/VisibilityBadge.svelte';
 	import OrderStatusBadge from '$lib/components/OrderStatusBadge.svelte';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
@@ -136,12 +136,9 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 
-		const { uploadUrl } = await switchesApi.setSwitchImage({
-			userId,
-			switchId,
-			imageUploadRequest: { contentType: file.type }
-		});
-		await uploadToSignedUrl(uploadUrl, file);
+		await uploadImage(file, (imageUploadRequest) =>
+			switchesApi.setSwitchImage({ userId, switchId, imageUploadRequest })
+		);
 	}
 
 	async function handleImageUpload(switchId: string, file: File) {

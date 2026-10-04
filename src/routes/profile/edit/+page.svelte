@@ -10,7 +10,7 @@
 	import Avatar from '$lib/components/Avatar.svelte';
 	import { X } from 'lucide-svelte';
 	import { cleanLinks, USERNAME_RULES, usernameLooksValid } from '$lib/profile/profile-input';
-	import { uploadToSignedUrl } from '$lib/upload';
+	import { uploadImage } from '$lib/upload';
 
 	const MAX_LINKS = 5;
 
@@ -133,11 +133,10 @@
 		avatarError = null;
 		avatarBusy = true;
 		try {
-			const { uploadUrl } = await profilesApi.setProfileImage({
-				identifier: auth.user.id,
-				imageUploadRequest: { contentType: file.type }
-			});
-			await uploadToSignedUrl(uploadUrl, file);
+			const identifier = auth.user.id;
+			await uploadImage(file, (imageUploadRequest) =>
+				profilesApi.setProfileImage({ identifier, imageUploadRequest })
+			);
 			await refreshProfile();
 		} catch {
 			avatarError = 'Could not upload that image.';

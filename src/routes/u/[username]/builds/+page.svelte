@@ -4,6 +4,7 @@
 	import type { Build, BuildInput } from '@rogueserenity/kbdb-api-client';
 	import { resolve } from '$app/paths';
 	import { buildsApi } from '$lib/api/client';
+	import { uploadImage } from '$lib/upload';
 	import { groupByKeyboard, type KeyboardBuildGroup } from '$lib/build-groups';
 	import { primaryBuildImageUrl } from '$lib/build';
 	import { perItemImageRefetcher, withFreshImageUrls } from '$lib/stale-images';
@@ -84,9 +85,9 @@
 			if (stagedImages && stagedImages.length > 0) {
 				// The build already exists, so an upload failure isn't a failed
 				// create and saveError no longer applies to it.
-				await Promise.all(
-					stagedImages.map((file) => uploadBuildImage(build.id, file).catch(() => {}))
-				);
+				for (const file of stagedImages) {
+					await uploadBuildImage(build.id, file).catch(() => {});
+				}
 			}
 			await grid?.refresh();
 			closeModal();
@@ -102,17 +103,9 @@
 		const userId = userContext.userId;
 		if (!userId) return;
 
-		const { uploadUrl } = await buildsApi.createBuildImage({
-			userId,
-			buildId,
-			imageUploadRequest: { contentType: file.type }
-		});
-		const put = await fetch(uploadUrl, {
-			method: 'PUT',
-			headers: { 'Content-Type': file.type },
-			body: file
-		});
-		if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+		await uploadImage(file, (imageUploadRequest) =>
+			buildsApi.createBuildImage({ userId, buildId, imageUploadRequest })
+		);
 	}
 </script>
 
