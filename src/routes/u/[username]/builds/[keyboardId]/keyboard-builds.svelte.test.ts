@@ -91,7 +91,7 @@ describe('keyboard builds page', () => {
 		renderPage();
 
 		await expect
-			.element(page.getByRole('heading', { name: 'Neo65 Cu', level: 1 }))
+			.element(page.getByRole('heading', { name: 'Neo65 Cu', level: 2 }))
 			.toBeInTheDocument();
 		await expect.element(page.getByText('Qwertykeys')).toBeInTheDocument();
 		const items = page.getByRole('listitem');
@@ -125,7 +125,7 @@ describe('keyboard builds page', () => {
 		renderPage();
 
 		await expect
-			.element(page.getByRole('heading', { name: 'Deleted keyboard', level: 1 }))
+			.element(page.getByRole('heading', { name: 'Deleted keyboard', level: 2 }))
 			.toBeInTheDocument();
 		await expect.element(page.getByRole('listitem')).toHaveLength(3);
 	});
@@ -146,6 +146,15 @@ describe('keyboard builds page', () => {
 				page.getByRole('alert').filter({ hasText: 'Could not load builds for this keyboard.' })
 			)
 			.toBeInTheDocument();
+	});
+
+	it("heads the keyboard section one level below the profile's h1", async () => {
+		renderPage();
+
+		await expect
+			.element(page.getByRole('heading', { level: 2, name: 'Neo65 Cu' }))
+			.toBeInTheDocument();
+		expect(document.querySelectorAll('h1')).toHaveLength(0);
 	});
 
 	it('keeps the decorative timeline dots out of the Tab order', async () => {

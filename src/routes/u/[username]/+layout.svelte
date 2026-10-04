@@ -128,7 +128,7 @@
 		</p>
 	{:else if view.status === 'not-found'}
 		<div class="flex flex-col items-center gap-2 py-24 text-center">
-			<p class="heading-lg text-xl">No one here.</p>
+			<h1 class="heading-lg text-xl">No one here.</h1>
 			<p class="text-muted text-sm">There's no profile at this username.</p>
 		</div>
 	{:else if view.status === 'error'}

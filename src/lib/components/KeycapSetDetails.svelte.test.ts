@@ -5,6 +5,7 @@ import type { KeycapSet } from '@rogueserenity/kbdb-api-client';
 import KeycapSetDetails from './KeycapSetDetails.svelte';
 
 const BROKEN = 'data:image/png;base64,bm90IGFuIGltYWdl';
+const PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
 
 function set(overrides: Partial<KeycapSet> = {}): KeycapSet {
 	return {
@@ -60,5 +61,18 @@ describe('KeycapSetDetails.svelte', () => {
 		render(KeycapSetDetails, p);
 
 		await vi.waitFor(() => expect(p.onImageError).toHaveBeenCalledWith(BROKEN));
+	});
+
+	it('names a kit tile once, treating its photo as decoration', async () => {
+		render(
+			KeycapSetDetails,
+			props({ kits: [{ kitId: 'base', name: 'Base', image: { url: PIXEL } }] })
+		);
+
+		const tile = page.getByRole('button', { name: /Base/ });
+		await expect.element(tile).toBeInTheDocument();
+		expect(tile.element().querySelector('img')?.getAttribute('alt')).toBe('');
+		expect(tile.element().textContent?.match(/Base/g)).toHaveLength(1);
+		await expect.element(page.getByRole('img', { name: 'Base' })).not.toBeInTheDocument();
 	});
 });

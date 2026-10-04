@@ -63,7 +63,7 @@
 				{#if kit.image?.url && !imageFailed}
 					<img
 						src={kit.image.url}
-						alt={kit.name}
+						alt=""
 						class="kc-thumb-tile aspect-square w-full object-contain"
 						loading="lazy"
 						decoding="async"

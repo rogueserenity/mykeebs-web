@@ -355,7 +355,7 @@
 			/>
 		{/if}
 		<div>
-			<h1 class="heading-lg text-2xl">{keyboard?.name ?? 'Deleted keyboard'}</h1>
+			<h2 class="heading-lg text-2xl">{keyboard?.name ?? 'Deleted keyboard'}</h2>
 			{#if keyboard?.brand}
 				<p class="text-muted">{keyboard.brand}</p>
 			{/if}

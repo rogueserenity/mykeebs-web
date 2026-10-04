@@ -78,6 +78,9 @@ describe('user layout titles', () => {
 		render(UserLayout, { children });
 
 		await title('Not found · mykeebs');
+		await expect
+			.element(page.getByRole('heading', { level: 1, name: 'No one here.' }))
+			.toBeInTheDocument();
 	});
 });
 
