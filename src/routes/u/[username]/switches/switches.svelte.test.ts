@@ -1,0 +1,304 @@
+import { page, userEvent } from 'vitest/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-svelte';
+import { ResponseError, Visibility, type Switch } from '@rogueserenity/kbdb-api-client';
+import { buildsApi, switchesApi } from '$lib/api/client';
+import WithUserContext from '$lib/components/test-support/WithUserContext.svelte';
+import SwitchesPage from './+page.svelte';
+
+vi.mock('$lib/api/client', () => ({
+	switchesApi: {
+		listSwitches: vi.fn(),
+		getSwitch: vi.fn(),
+		createSwitch: vi.fn(),
+		updateSwitch: vi.fn(),
+		deleteSwitch: vi.fn(),
+		setSwitchImage: vi.fn(),
+		deleteSwitchImage: vi.fn()
+	},
+	buildsApi: { getBuild: vi.fn() },
+	lookupsApi: {
+		getLookup: vi.fn(async ({ category }: { category: string }) => ({
+			values: category === 'switch_type' ? ['Linear', 'Tactile'] : []
+		}))
+	}
+}));
+
+const api = vi.mocked(switchesApi);
+
+const PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+
+const aperol: Switch = {
+	id: 'sw-1',
+	brand: 'HMX',
+	name: 'Aperol',
+	type: 'Linear',
+	visibility: Visibility.Public,
+	image: { url: PIXEL }
+};
+
+function conflict(blockingBuildIds?: string[]): ResponseError {
+	return new ResponseError(
+		new Response(JSON.stringify({ status: 409, blocking_build_ids: blockingBuildIds }), {
+			status: 409,
+			headers: { 'Content-Type': 'application/problem+json' }
+		})
+	);
+}
+
+function renderPage(isOwnProfile = true) {
+	render(WithUserContext, { component: SwitchesPage, isOwnProfile });
+}
+
+const dialog = () => page.getByRole('dialog').last();
+const fileInput = () => page.elementLocator(document.querySelector('input[type="file"]')!);
+const png = (name: string) => new File([name], name, { type: 'image/png' });
+
+async function openAperol() {
+	await page.getByRole('button', { name: /Aperol/ }).click();
+	await expect.element(dialog().getByRole('heading', { name: 'Aperol' })).toBeInTheDocument();
+}
+
+async function fillNewSwitch() {
+	await page.getByRole('button', { name: 'Add switch' }).click();
+	await dialog().getByLabelText('Brand').fill('Gateron');
+	await dialog().getByLabelText('Name').fill('Oil King');
+	await dialog().getByLabelText('Type').selectOptions('Linear');
+}
+
+beforeEach(() => {
+	vi.clearAllMocks();
+	api.listSwitches.mockResolvedValue({ items: [aperol] });
+	api.getSwitch.mockResolvedValue(aperol);
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+});
+
+describe('switches page', () => {
+	it('lists the switches and lets the owner add one', async () => {
+		renderPage();
+
+		await expect.element(page.getByRole('button', { name: /Aperol/ })).toHaveTextContent('Linear');
+		await expect.element(page.getByRole('button', { name: 'Add switch' })).toBeInTheDocument();
+		await expect.element(page.getByRole('option', { name: 'Sort: Price' })).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('option', { name: 'Sort: Visibility' }))
+			.toBeInTheDocument();
+	});
+
+	it('hides adding, editing, deleting, and private sorts from visitors', async () => {
+		renderPage(false);
+		await openAperol();
+
+		await expect.element(page.getByRole('button', { name: 'Add switch' })).not.toBeInTheDocument();
+		await expect.element(dialog().getByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+		await expect.element(dialog().getByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+		await expect.element(page.getByRole('option', { name: 'Sort: Price' })).not.toBeInTheDocument();
+	});
+
+	it('opens the photo full size', async () => {
+		renderPage();
+		await openAperol();
+
+		await dialog().getByRole('button', { name: 'View full size image' }).click();
+
+		await vi.waitFor(() =>
+			expect(document.querySelector('img.select-none')?.getAttribute('src')).toBe(PIXEL)
+		);
+	});
+
+	describe('adding a switch', () => {
+		it('creates it, uploads the staged photo, and closes', async () => {
+			const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+			vi.stubGlobal('fetch', fetchMock);
+			api.createSwitch.mockResolvedValue({
+				id: 'sw-2',
+				brand: 'Gateron',
+				name: 'Oil King'
+			} as never);
+			api.setSwitchImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/s' } as never);
+			renderPage();
+
+			await fillNewSwitch();
+			await userEvent.upload(fileInput(), png('oil-king.png'));
+			await dialog().getByRole('button', { name: 'Add switch' }).click();
+
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+			expect(api.createSwitch).toHaveBeenCalledWith(
+				expect.objectContaining({
+					userId: 'user-1',
+					switchInput: expect.objectContaining({
+						brand: 'Gateron',
+						name: 'Oil King',
+						type: 'Linear'
+					})
+				})
+			);
+			expect(api.setSwitchImage).toHaveBeenCalledWith(
+				expect.objectContaining({
+					switchId: 'sw-2',
+					imageUploadRequest: { contentType: 'image/png' }
+				})
+			);
+			expect(fetchMock).toHaveBeenCalledWith(
+				'https://bucket.example/s',
+				expect.objectContaining({ method: 'PUT' })
+			);
+			expect(api.listSwitches).toHaveBeenCalledTimes(2);
+		});
+
+		it('still closes when the photo upload fails, since the switch exists', async () => {
+			vi.stubGlobal(
+				'fetch',
+				vi.fn(async () => new Response(null, { status: 403 }))
+			);
+			api.createSwitch.mockResolvedValue({
+				id: 'sw-2',
+				brand: 'Gateron',
+				name: 'Oil King'
+			} as never);
+			api.setSwitchImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/s' } as never);
+			renderPage();
+
+			await fillNewSwitch();
+			await userEvent.upload(fileInput(), png('oil-king.png'));
+			await dialog().getByRole('button', { name: 'Add switch' }).click();
+
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+		});
+
+		it('says so when the create fails', async () => {
+			api.createSwitch.mockRejectedValue(new Error('network'));
+			renderPage();
+
+			await fillNewSwitch();
+			await dialog().getByRole('button', { name: 'Add switch' }).click();
+
+			await expect.element(page.getByText('Could not create this switch.')).toBeInTheDocument();
+		});
+	});
+
+	describe('editing a switch', () => {
+		it('saves and returns to the updated switch', async () => {
+			api.updateSwitch.mockResolvedValue({ ...aperol, name: 'Aperol V2' });
+			renderPage();
+			await openAperol();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByLabelText('Name').fill('Aperol V2');
+			await dialog().getByRole('button', { name: 'Save changes' }).click();
+
+			await expect
+				.element(dialog().getByRole('heading', { name: 'Aperol V2' }))
+				.toBeInTheDocument();
+			expect(api.updateSwitch).toHaveBeenCalledWith(
+				expect.objectContaining({
+					switchId: 'sw-1',
+					switchInput: expect.objectContaining({ name: 'Aperol V2' })
+				})
+			);
+		});
+
+		it('says so when the save fails', async () => {
+			api.updateSwitch.mockRejectedValue(new Error('network'));
+			renderPage();
+			await openAperol();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByRole('button', { name: 'Save changes' }).click();
+
+			await expect.element(page.getByText('Could not save your changes.')).toBeInTheDocument();
+		});
+
+		it('removes the photo and refreshes the switch', async () => {
+			api.deleteSwitchImage.mockResolvedValue(undefined);
+			api.getSwitch.mockResolvedValue({ ...aperol, image: undefined });
+			renderPage();
+			await openAperol();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByRole('button', { name: 'Remove' }).click();
+
+			await expect.element(dialog().getByRole('button', { name: 'Add photo' })).toBeInTheDocument();
+			expect(api.deleteSwitchImage).toHaveBeenCalledWith({ userId: 'user-1', switchId: 'sw-1' });
+		});
+
+		it('uploads a new photo straight away and refreshes the switch', async () => {
+			const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+			vi.stubGlobal('fetch', fetchMock);
+			api.setSwitchImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/t' } as never);
+			renderPage();
+			await openAperol();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await userEvent.upload(fileInput(), png('aperol.png'));
+
+			await vi.waitFor(() =>
+				expect(api.getSwitch).toHaveBeenCalledWith({ userId: 'user-1', switchId: 'sw-1' })
+			);
+			expect(fetchMock).toHaveBeenCalledWith(
+				'https://bucket.example/t',
+				expect.objectContaining({ method: 'PUT' })
+			);
+		});
+	});
+
+	describe('deleting a switch', () => {
+		async function confirmDelete() {
+			await dialog().getByRole('button', { name: 'Delete' }).click();
+			await expect.element(page.getByText('Delete "Aperol"?')).toBeInTheDocument();
+			await page.getByRole('button', { name: 'Confirm delete' }).click();
+		}
+
+		it('asks first, then deletes and closes', async () => {
+			api.deleteSwitch.mockResolvedValue(undefined);
+			renderPage();
+			await openAperol();
+
+			await confirmDelete();
+
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+			expect(api.deleteSwitch).toHaveBeenCalledWith({ userId: 'user-1', switchId: 'sw-1' });
+		});
+
+		it('names the builds that still use it', async () => {
+			api.deleteSwitch.mockRejectedValue(conflict(['b-1']));
+			vi.mocked(buildsApi.getBuild).mockResolvedValue({
+				id: 'b-1',
+				keyboard: { id: 'kb-1', brand: 'Bowl', name: 'Manta' }
+			} as never);
+			renderPage();
+			await openAperol();
+
+			await confirmDelete();
+
+			await expect
+				.element(page.getByText('Used in: Manta. Remove it from those builds first.'))
+				.toBeInTheDocument();
+		});
+
+		it('says it is still used when kbdb names no builds', async () => {
+			api.deleteSwitch.mockRejectedValue(conflict());
+			renderPage();
+			await openAperol();
+
+			await confirmDelete();
+
+			await expect
+				.element(page.getByText('This switch is still used by one or more builds.'))
+				.toBeInTheDocument();
+		});
+
+		it('reports any other failure', async () => {
+			api.deleteSwitch.mockRejectedValue(new Error('network'));
+			renderPage();
+			await openAperol();
+
+			await confirmDelete();
+
+			await expect.element(page.getByText('Could not delete this switch.')).toBeInTheDocument();
+		});
+	});
+});
