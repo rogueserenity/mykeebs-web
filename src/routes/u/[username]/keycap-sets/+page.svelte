@@ -626,6 +626,7 @@
 		src={kit.image?.url ?? ''}
 		alt={kit.name}
 		onClose={() => (kitImageViewerOpen = false)}
+		itemLabel="kit"
 		onPrev={hasMultipleKits ? () => stepKit(-1) : undefined}
 		onNext={hasMultipleKits ? () => stepKit(1) : undefined}
 	/>

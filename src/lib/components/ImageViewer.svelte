@@ -6,7 +6,8 @@
 		alt,
 		onClose,
 		onPrev,
-		onNext
+		onNext,
+		itemLabel = 'photo'
 	}: {
 		open: boolean;
 		src: string;
@@ -14,6 +15,7 @@
 		onClose: () => void;
 		onPrev?: () => void;
 		onNext?: () => void;
+		itemLabel?: string;
 	} = $props();
 
 	const MIN_SCALE = 1;
@@ -148,7 +150,7 @@
 		{#if onPrev}
 			<button
 				type="button"
-				aria-label="Previous kit"
+				aria-label="Previous {itemLabel}"
 				class="btn-icon absolute top-1/2 left-4 z-10 -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
 				onclick={onPrev}
 			>
@@ -158,7 +160,7 @@
 		{#if onNext}
 			<button
 				type="button"
-				aria-label="Next kit"
+				aria-label="Next {itemLabel}"
 				class="btn-icon absolute top-1/2 right-4 z-10 -translate-y-1/2 bg-black/70 text-white hover:bg-black/90"
 				onclick={onNext}
 			>

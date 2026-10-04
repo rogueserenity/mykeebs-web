@@ -261,6 +261,29 @@ describe('keycap sets page', () => {
 				.toBeInTheDocument();
 		});
 
+		it("names the full-size viewer's arrows for kits", async () => {
+			const withPhotos: KeycapSet = {
+				...olivia,
+				kits: olivia.kits!.map((kit) => ({
+					...kit,
+					image: {
+						url: `data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==#${kit.kitId}`
+					}
+				}))
+			};
+			api.listKeycapSets.mockResolvedValue({ items: [withPhotos] });
+			renderPage();
+			await openOlivia();
+			await openKit('Base');
+
+			await dialog().getByRole('button', { name: 'View full size image' }).click();
+
+			await expect.element(page.getByRole('button', { name: 'Next kit' })).toHaveLength(2);
+			await expect
+				.element(page.getByRole('button', { name: 'Next photo' }))
+				.not.toBeInTheDocument();
+		});
+
 		it('adds a kit with a staged photo and uploads it', async () => {
 			const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
 			vi.stubGlobal('fetch', fetchMock);
