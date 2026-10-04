@@ -16,6 +16,6 @@ export async function uploadImage(
 	prepare: (file: File) => Promise<File> = prepareImage
 ): Promise<void> {
 	const image = await prepare(file);
-	const { uploadUrl } = await requestUpload({ contentType: image.type });
+	const { uploadUrl } = await requestUpload({ contentType: image.type, sizeBytes: image.size });
 	await uploadToSignedUrl(uploadUrl, image);
 }

@@ -319,7 +319,7 @@ describe('keycap sets page', () => {
 				expect.objectContaining({
 					keycapSetId: 'set-1',
 					kitId: 'spacebars',
-					imageUploadRequest: { contentType: 'image/webp' }
+					imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
 				})
 			);
 			vi.unstubAllGlobals();

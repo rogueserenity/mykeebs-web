@@ -144,7 +144,7 @@ describe('switches page', () => {
 			expect(api.setSwitchImage).toHaveBeenCalledWith(
 				expect.objectContaining({
 					switchId: 'sw-2',
-					imageUploadRequest: { contentType: 'image/webp' }
+					imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
 				})
 			);
 			expect(fetchMock).toHaveBeenCalledWith(
@@ -244,7 +244,9 @@ describe('switches page', () => {
 				expect(api.getSwitch).toHaveBeenCalledWith({ userId: 'user-1', switchId: 'sw-1' })
 			);
 			expect(api.setSwitchImage).toHaveBeenCalledWith(
-				expect.objectContaining({ imageUploadRequest: { contentType: 'image/webp' } })
+				expect.objectContaining({
+					imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
+				})
 			);
 			expect(fetchMock).toHaveBeenCalledWith(
 				'https://bucket.example/t',

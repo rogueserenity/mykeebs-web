@@ -147,7 +147,9 @@ describe('keyboards page', () => {
 			);
 			expect(api.createKeyboardImage).toHaveBeenCalledTimes(2);
 			expect(api.createKeyboardImage).toHaveBeenCalledWith(
-				expect.objectContaining({ imageUploadRequest: { contentType: 'image/webp' } })
+				expect.objectContaining({
+					imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
+				})
 			);
 			expect(fetchMock.mock.calls.map(([url, init]) => [url, (init?.body as File).name])).toEqual([
 				['https://bucket.example/a', 'a.webp'],
@@ -252,7 +254,9 @@ describe('keyboards page', () => {
 				expect(api.getKeyboard).toHaveBeenCalledWith({ userId: 'user-1', keyboardId: 'kb-1' })
 			);
 			expect(api.createKeyboardImage).toHaveBeenCalledWith(
-				expect.objectContaining({ imageUploadRequest: { contentType: 'image/webp' } })
+				expect.objectContaining({
+					imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
+				})
 			);
 			expect(fetchMock).toHaveBeenCalledWith(
 				'https://bucket.example/c',

@@ -295,7 +295,7 @@ describe('Profile edit page photo', () => {
 		await vi.waitFor(() => expect(refreshProfile).toHaveBeenCalled());
 		expect(api.setProfileImage).toHaveBeenCalledWith({
 			identifier: 'user-1',
-			imageUploadRequest: { contentType: 'image/webp' }
+			imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
 		});
 		expect(fetchMock).toHaveBeenCalledWith(
 			'https://bucket.example/me',

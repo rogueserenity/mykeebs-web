@@ -268,7 +268,7 @@ describe('keyboard builds page', () => {
 			expect(builds.createBuildImage).toHaveBeenCalledWith({
 				userId: 'user-1',
 				buildId: 'b-new',
-				imageUploadRequest: { contentType: 'image/webp' }
+				imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
 			});
 			expect(fetchMock).toHaveBeenCalledWith(
 				'https://bucket.example/b',

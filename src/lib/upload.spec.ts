@@ -34,9 +34,9 @@ describe('uploadToSignedUrl', () => {
 });
 
 describe('uploadImage', () => {
-	const webp = new File(['webp'], 'a.webp', { type: 'image/webp' });
+	const webp = new File(['converted webp'], 'a.webp', { type: 'image/webp' });
 
-	it('uploads the prepared image, asking for a URL with its content type', async () => {
+	it('uploads the prepared image, asking for a URL with its type and exact size', async () => {
 		const fetchMock = vi.fn(async () => new Response(null, { status: 200 }));
 		vi.stubGlobal('fetch', fetchMock);
 		const prepare = vi.fn(async () => webp);
@@ -45,7 +45,8 @@ describe('uploadImage', () => {
 		await uploadImage(file, requestUpload, prepare);
 
 		expect(prepare).toHaveBeenCalledWith(file);
-		expect(requestUpload).toHaveBeenCalledWith({ contentType: 'image/webp' });
+		expect(webp.size).not.toBe(file.size);
+		expect(requestUpload).toHaveBeenCalledWith({ contentType: 'image/webp', sizeBytes: webp.size });
 		expect(fetchMock).toHaveBeenCalledWith('https://bucket.example/signed', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'image/webp' },

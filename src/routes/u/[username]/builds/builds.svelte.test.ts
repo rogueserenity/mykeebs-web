@@ -90,7 +90,7 @@ describe('builds page', () => {
 		expect(builds.createBuildImage).toHaveBeenCalledWith({
 			userId: 'user-1',
 			buildId: 'b-2',
-			imageUploadRequest: { contentType: 'image/webp' }
+			imageUploadRequest: { contentType: 'image/webp', sizeBytes: expect.any(Number) }
 		});
 		expect(fetchMock.mock.calls.map(([url, init]) => [url, (init?.body as File).name])).toEqual([
 			['https://bucket.example/a', 'a.webp'],
