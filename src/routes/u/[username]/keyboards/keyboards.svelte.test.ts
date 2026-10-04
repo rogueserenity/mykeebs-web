@@ -1,0 +1,309 @@
+import { page, userEvent } from 'vitest/browser';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render } from 'vitest-browser-svelte';
+import { ResponseError, Visibility, type Keyboard } from '@rogueserenity/kbdb-api-client';
+import { buildsApi, keyboardsApi } from '$lib/api/client';
+import WithUserContext from '$lib/components/test-support/WithUserContext.svelte';
+import KeyboardsPage from './+page.svelte';
+
+vi.mock('$lib/api/client', () => ({
+	keyboardsApi: {
+		listKeyboards: vi.fn(),
+		getKeyboard: vi.fn(),
+		createKeyboard: vi.fn(),
+		updateKeyboard: vi.fn(),
+		deleteKeyboard: vi.fn(),
+		createKeyboardImage: vi.fn(),
+		deleteKeyboardImage: vi.fn()
+	},
+	buildsApi: { getBuild: vi.fn() },
+	lookupsApi: { getLookup: vi.fn(async () => ({ values: [] })) }
+}));
+
+const api = vi.mocked(keyboardsApi);
+
+const PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+
+const manta: Keyboard = {
+	id: 'kb-1',
+	brand: 'Bowl',
+	name: 'Manta',
+	size: '65%',
+	layout: 'WK',
+	visibility: Visibility.Public,
+	images: [
+		{ imageId: 'img-1', url: `${PIXEL}#1` },
+		{ imageId: 'img-2', url: `${PIXEL}#2` }
+	]
+};
+
+function conflict(blockingBuildIds?: string[]): ResponseError {
+	return new ResponseError(
+		new Response(JSON.stringify({ status: 409, blocking_build_ids: blockingBuildIds }), {
+			status: 409,
+			headers: { 'Content-Type': 'application/problem+json' }
+		})
+	);
+}
+
+function renderPage(isOwnProfile = true) {
+	render(WithUserContext, { component: KeyboardsPage, isOwnProfile });
+}
+
+const dialog = () => page.getByRole('dialog').last();
+
+async function openManta() {
+	await page.getByRole('button', { name: /Manta/ }).click();
+	await expect.element(dialog().getByRole('heading', { name: 'Manta' })).toBeInTheDocument();
+}
+
+async function fillNewKeyboard() {
+	await page.getByRole('button', { name: 'Add keyboard' }).click();
+	await dialog().getByLabelText('Brand').fill('Bowl');
+	await dialog().getByLabelText('Name').fill('Deacon TKL');
+}
+
+beforeEach(() => {
+	vi.clearAllMocks();
+	api.listKeyboards.mockResolvedValue({ items: [manta] });
+	api.getKeyboard.mockResolvedValue(manta);
+});
+
+afterEach(() => {
+	vi.unstubAllGlobals();
+});
+
+describe('keyboards page', () => {
+	it('lists the keyboards and lets the owner add one', async () => {
+		renderPage();
+
+		await expect.element(page.getByRole('button', { name: /Manta/ })).toHaveTextContent('65% · WK');
+		await expect.element(page.getByRole('button', { name: 'Add keyboard' })).toBeInTheDocument();
+		await expect.element(page.getByRole('option', { name: 'Sort: Price' })).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('option', { name: 'Sort: Visibility' }))
+			.toBeInTheDocument();
+	});
+
+	it('hides adding, editing, deleting, and private sorts from visitors', async () => {
+		renderPage(false);
+		await openManta();
+
+		await expect
+			.element(page.getByRole('button', { name: 'Add keyboard' }))
+			.not.toBeInTheDocument();
+		await expect.element(dialog().getByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+		await expect.element(dialog().getByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+		await expect.element(page.getByRole('option', { name: 'Sort: Price' })).not.toBeInTheDocument();
+	});
+
+	it("steps through a keyboard's photos full size, wrapping at the ends", async () => {
+		renderPage();
+		await openManta();
+
+		const shown = () => document.querySelector('img.select-none')?.getAttribute('src');
+
+		await dialog().getByRole('button', { name: 'View full size image' }).nth(1).click();
+		await vi.waitFor(() => expect(shown()).toBe(`${PIXEL}#2`));
+
+		await page.getByRole('button', { name: 'Next photo' }).click();
+		await vi.waitFor(() => expect(shown()).toBe(`${PIXEL}#1`));
+
+		await page.getByRole('button', { name: 'Previous photo' }).click();
+		await vi.waitFor(() => expect(shown()).toBe(`${PIXEL}#2`));
+	});
+
+	describe('adding a keyboard', () => {
+		it('creates it, uploads the staged photos, and closes', async () => {
+			const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+			vi.stubGlobal('fetch', fetchMock);
+			api.createKeyboard.mockResolvedValue({ id: 'kb-2', brand: 'Bowl', name: 'Deacon TKL' });
+			api.createKeyboardImage
+				.mockResolvedValueOnce({ uploadUrl: 'https://bucket.example/a' } as never)
+				.mockResolvedValueOnce({ uploadUrl: 'https://bucket.example/b' } as never);
+			renderPage();
+
+			await fillNewKeyboard();
+			await userEvent.upload(page.elementLocator(document.querySelector('input[type="file"]')!), [
+				new File(['a'], 'a.png', { type: 'image/png' }),
+				new File(['b'], 'b.png', { type: 'image/png' })
+			]);
+			await dialog().getByRole('button', { name: 'Add keyboard' }).click();
+
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+			expect(api.createKeyboard).toHaveBeenCalledWith(
+				expect.objectContaining({
+					userId: 'user-1',
+					keyboardInput: expect.objectContaining({ brand: 'Bowl', name: 'Deacon TKL' })
+				})
+			);
+			expect(api.createKeyboardImage).toHaveBeenCalledTimes(2);
+			expect(fetchMock.mock.calls.map(([url]) => url).sort()).toEqual([
+				'https://bucket.example/a',
+				'https://bucket.example/b'
+			]);
+			expect(api.listKeyboards).toHaveBeenCalledTimes(2);
+		});
+
+		it('still closes when a photo upload fails, since the keyboard exists', async () => {
+			vi.stubGlobal(
+				'fetch',
+				vi.fn(async () => new Response(null, { status: 403 }))
+			);
+			api.createKeyboard.mockResolvedValue({ id: 'kb-2', brand: 'Bowl', name: 'Deacon TKL' });
+			api.createKeyboardImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/a' } as never);
+			renderPage();
+
+			await fillNewKeyboard();
+			await userEvent.upload(
+				page.elementLocator(document.querySelector('input[type="file"]')!),
+				new File(['a'], 'a.png', { type: 'image/png' })
+			);
+			await dialog().getByRole('button', { name: 'Add keyboard' }).click();
+
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+		});
+
+		it('says so when the create fails', async () => {
+			api.createKeyboard.mockRejectedValue(new Error('network'));
+			renderPage();
+
+			await fillNewKeyboard();
+			await dialog().getByRole('button', { name: 'Add keyboard' }).click();
+
+			await expect.element(page.getByText('Could not create this keyboard.')).toBeInTheDocument();
+		});
+	});
+
+	describe('editing a keyboard', () => {
+		it('saves and returns to the updated keyboard', async () => {
+			api.updateKeyboard.mockResolvedValue({ ...manta, name: 'Manta R2' });
+			renderPage();
+			await openManta();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByLabelText('Name').fill('Manta R2');
+			await dialog().getByRole('button', { name: 'Save changes' }).click();
+
+			await expect.element(dialog().getByRole('heading', { name: 'Manta R2' })).toBeInTheDocument();
+			expect(api.updateKeyboard).toHaveBeenCalledWith(
+				expect.objectContaining({
+					keyboardId: 'kb-1',
+					keyboardInput: expect.objectContaining({ name: 'Manta R2' })
+				})
+			);
+		});
+
+		it('says so when the save fails', async () => {
+			api.updateKeyboard.mockRejectedValue(new Error('network'));
+			renderPage();
+			await openManta();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByRole('button', { name: 'Save changes' }).click();
+
+			await expect.element(page.getByText('Could not save your changes.')).toBeInTheDocument();
+		});
+
+		it('removes a photo and refreshes the keyboard', async () => {
+			api.deleteKeyboardImage.mockResolvedValue(undefined);
+			api.getKeyboard.mockResolvedValue({ ...manta, images: [manta.images![0]] });
+			renderPage();
+			await openManta();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByRole('button', { name: 'Remove image 2 of 2' }).click();
+
+			await expect
+				.element(dialog().getByRole('button', { name: 'Remove image 1 of 1' }))
+				.toBeInTheDocument();
+			expect(api.deleteKeyboardImage).toHaveBeenCalledWith({
+				userId: 'user-1',
+				keyboardId: 'kb-1',
+				imageId: 'img-2'
+			});
+		});
+
+		it('uploads a photo straight away and refreshes the keyboard', async () => {
+			const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+			vi.stubGlobal('fetch', fetchMock);
+			api.createKeyboardImage.mockResolvedValue({ uploadUrl: 'https://bucket.example/c' } as never);
+			renderPage();
+			await openManta();
+
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await userEvent.upload(
+				page.elementLocator(document.querySelector('input[type="file"]')!),
+				new File(['c'], 'c.png', { type: 'image/png' })
+			);
+
+			await vi.waitFor(() =>
+				expect(api.getKeyboard).toHaveBeenCalledWith({ userId: 'user-1', keyboardId: 'kb-1' })
+			);
+			expect(fetchMock).toHaveBeenCalledWith(
+				'https://bucket.example/c',
+				expect.objectContaining({ method: 'PUT' })
+			);
+		});
+	});
+
+	describe('deleting a keyboard', () => {
+		async function confirmDelete() {
+			await dialog().getByRole('button', { name: 'Delete' }).click();
+			await expect.element(page.getByText('Delete "Manta"?')).toBeInTheDocument();
+			await page.getByRole('button', { name: 'Confirm delete' }).click();
+		}
+
+		it('asks first, then deletes and closes', async () => {
+			api.deleteKeyboard.mockResolvedValue(undefined);
+			renderPage();
+			await openManta();
+
+			await confirmDelete();
+
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+			expect(api.deleteKeyboard).toHaveBeenCalledWith({ userId: 'user-1', keyboardId: 'kb-1' });
+		});
+
+		it('names the builds that still use it', async () => {
+			api.deleteKeyboard.mockRejectedValue(conflict(['b-1']));
+			vi.mocked(buildsApi.getBuild).mockResolvedValue({
+				id: 'b-1',
+				buildDate: new Date('2026-09-10T12:00:00Z'),
+				keyboard: { id: 'kb-1', brand: 'Bowl', name: 'Manta' }
+			} as never);
+			renderPage();
+			await openManta();
+
+			await confirmDelete();
+
+			await expect
+				.element(
+					page.getByText('Used in: Manta (Sep 10, 2026). Remove it from those builds first.')
+				)
+				.toBeInTheDocument();
+		});
+
+		it('says it is still used when kbdb names no builds', async () => {
+			api.deleteKeyboard.mockRejectedValue(conflict());
+			renderPage();
+			await openManta();
+
+			await confirmDelete();
+
+			await expect
+				.element(page.getByText('This keyboard is still used by one or more builds.'))
+				.toBeInTheDocument();
+		});
+
+		it('reports any other failure', async () => {
+			api.deleteKeyboard.mockRejectedValue(new Error('network'));
+			renderPage();
+			await openManta();
+
+			await confirmDelete();
+
+			await expect.element(page.getByText('Could not delete this keyboard.')).toBeInTheDocument();
+		});
+	});
+});

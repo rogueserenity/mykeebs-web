@@ -10,7 +10,9 @@
 	import CollectionGrid from '$lib/components/CollectionGrid.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import DeleteBlocked from '$lib/components/DeleteBlocked.svelte';
-	import { blockingBuildIdsFromError, blockingBuildLabels } from '$lib/delete-blocked';
+	import { deleteFailure } from '$lib/delete-blocked';
+	import { stepIndex } from '$lib/step-index';
+	import { uploadToSignedUrl } from '$lib/upload';
 	import ImageViewer from '$lib/components/ImageViewer.svelte';
 	import KeyboardDetails from '$lib/components/KeyboardDetails.svelte';
 	import KeyboardForm from '$lib/components/KeyboardForm.svelte';
@@ -154,12 +156,7 @@
 			keyboardId,
 			imageUploadRequest: { contentType: file.type }
 		});
-		const put = await fetch(uploadUrl, {
-			method: 'PUT',
-			headers: { 'Content-Type': file.type },
-			body: file
-		});
-		if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+		await uploadToSignedUrl(uploadUrl, file);
 	}
 
 	async function handleImageUpload(keyboardId: string, file: File) {
@@ -186,18 +183,16 @@
 			await grid?.refresh();
 			closeModal();
 		} catch (err) {
-			const buildIds = await blockingBuildIdsFromError(err);
-			if (buildIds) {
-				if (buildIds.length > 0) {
-					blockingBuilds = await blockingBuildLabels(buildIds, (buildId) =>
-						buildsApi.getBuild({ userId, buildId })
-					);
-				} else {
-					deleteError = 'This keyboard is still used by one or more builds.';
+			const failure = await deleteFailure(
+				err,
+				(buildId) => buildsApi.getBuild({ userId, buildId }),
+				{
+					stillUsed: 'This keyboard is still used by one or more builds.',
+					failed: 'Could not delete this keyboard.'
 				}
-			} else {
-				deleteError = 'Could not delete this keyboard.';
-			}
+			);
+			if ('blockingBuilds' in failure) blockingBuilds = failure.blockingBuilds;
+			else deleteError = failure.error;
 		} finally {
 			deleting = false;
 		}
@@ -375,10 +370,10 @@
 		alt={modal.keyboard.name}
 		onClose={() => (galleryViewerOpen = false)}
 		onPrev={images.length > 1
-			? () => (galleryIndex = (galleryIndex - 1 + images.length) % images.length)
+			? () => (galleryIndex = stepIndex(galleryIndex, -1, images.length))
 			: undefined}
 		onNext={images.length > 1
-			? () => (galleryIndex = (galleryIndex + 1) % images.length)
+			? () => (galleryIndex = stepIndex(galleryIndex, 1, images.length))
 			: undefined}
 	/>
 {/if}
