@@ -42,6 +42,7 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
+<a href="#main" class="skip-link">Skip to content</a>
 <header class="app-header">
 	<div class="md:hidden">
 		<button
@@ -104,4 +105,6 @@
 		{/if}
 	</div>
 {/if}
-{@render children()}
+<main id="main" tabindex="-1">
+	{@render children()}
+</main>
