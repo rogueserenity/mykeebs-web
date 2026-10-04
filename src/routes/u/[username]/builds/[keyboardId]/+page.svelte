@@ -374,6 +374,7 @@
 						class="kc-build-timeline-dot"
 						class:kc-build-timeline-dot-current={index === 0}
 						aria-hidden="true"
+						tabindex="-1"
 						onclick={() => openBuild(build.id)}
 					></button>
 					<button

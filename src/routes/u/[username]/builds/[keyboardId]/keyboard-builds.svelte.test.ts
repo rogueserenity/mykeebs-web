@@ -148,6 +148,15 @@ describe('keyboard builds page', () => {
 			.toBeInTheDocument();
 	});
 
+	it('keeps the decorative timeline dots out of the Tab order', async () => {
+		renderPage();
+		await expect.element(page.getByRole('button', { name: /Jun 30, 2026/ })).toBeInTheDocument();
+
+		const dots = [...document.querySelectorAll<HTMLElement>('.kc-build-timeline-dot')];
+		expect(dots.length).toBeGreaterThan(0);
+		for (const dot of dots) expect(dot.tabIndex).toBe(-1);
+	});
+
 	describe('a build', () => {
 		it('opens with edit and delete for the owner', async () => {
 			renderPage();
