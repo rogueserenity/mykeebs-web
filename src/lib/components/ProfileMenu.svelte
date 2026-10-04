@@ -9,6 +9,9 @@
 
 	let open = $state(false);
 	let menuEl = $state<HTMLDivElement | null>(null);
+	let trigger = $state<HTMLButtonElement | null>(null);
+	const uid = $props.id();
+	const panelId = `account-panel-${uid}`;
 
 	function handleDocumentClick(event: MouseEvent) {
 		if (open && menuEl && !menuEl.contains(event.target as Node)) {
@@ -17,7 +20,9 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') open = false;
+		if (event.key !== 'Escape') return;
+		open = false;
+		trigger?.focus();
 	}
 </script>
 
@@ -26,9 +31,10 @@
 <div class="relative" bind:this={menuEl}>
 	<button
 		type="button"
+		bind:this={trigger}
 		class="profile-trigger"
-		aria-haspopup="menu"
 		aria-expanded={open}
+		aria-controls={panelId}
 		onclick={() => (open = !open)}
 	>
 		<Avatar name={displayName} imageUrl={profile.data?.avatar?.url} size="sm" />
@@ -36,7 +42,7 @@
 	</button>
 
 	{#if open}
-		<div class="profile-menu" role="menu">
+		<div id={panelId} class="profile-menu">
 			<div class="flex items-center gap-3 px-2 pb-3">
 				<Avatar name={displayName} imageUrl={profile.data?.avatar?.url} size="lg" />
 				<div class="min-w-0">
@@ -51,19 +57,13 @@
 				</div>
 			</div>
 			<div class="profile-menu-divider"></div>
-			<a
-				href={resolve('/profile/edit')}
-				class="profile-menu-item"
-				role="menuitem"
-				onclick={() => (open = false)}
-			>
+			<a href={resolve('/profile/edit')} class="profile-menu-item" onclick={() => (open = false)}>
 				{hasProfile ? 'Edit profile' : 'Set up your profile'}
 			</a>
 			<div class="profile-menu-divider"></div>
 			<button
 				type="button"
 				class="profile-menu-item"
-				role="menuitem"
 				onclick={() => {
 					open = false;
 					signOut();
