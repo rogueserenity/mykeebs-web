@@ -364,7 +364,7 @@ describe('KeyboardForm.svelte', () => {
 			const b = png('b.png');
 
 			await userEvent.upload(fileInput(), [a, b]);
-			await page.getByRole('button', { name: 'Remove image' }).nth(1).click();
+			await page.getByRole('button', { name: 'Remove image 2 of 2' }).click();
 			await page.getByLabelText('Brand').fill('Bowl');
 			await page.getByLabelText('Name').fill('Manta');
 			await submit();
@@ -396,7 +396,7 @@ describe('KeyboardForm.svelte', () => {
 			const onImageRemove = vi.fn(async () => {});
 			renderForm({ initial: keyboard, onImageRemove });
 
-			await page.getByRole('button', { name: 'Remove image' }).click();
+			await page.getByRole('button', { name: 'Remove image 1 of 1' }).click();
 
 			expect(onImageRemove).toHaveBeenCalledWith('img-1');
 		});

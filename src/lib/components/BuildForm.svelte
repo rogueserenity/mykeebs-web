@@ -456,7 +456,7 @@
 		<span class="field-label">Images</span>
 		<div class="flex flex-wrap gap-3">
 			{#if initial}
-				{#each initial.images ?? [] as image (image.imageId)}
+				{#each initial.images ?? [] as image, index (image.imageId)}
 					<div class="relative">
 						<img
 							src={image.url}
@@ -469,7 +469,7 @@
 							type="button"
 							class="btn-icon absolute -top-2 -right-2 h-6 w-6 text-xs"
 							disabled={imageBusy}
-							aria-label="Remove image"
+							aria-label="Remove image {index + 1} of {initial.images?.length}"
 							onclick={() => removeImage(image.imageId)}
 						>
 							<X class="h-3.5 w-3.5" />
@@ -488,7 +488,7 @@
 						<button
 							type="button"
 							class="btn-icon absolute -top-2 -right-2 h-6 w-6 text-xs"
-							aria-label="Remove image"
+							aria-label="Remove image {index + 1} of {stagedImages.length}"
 							onclick={() => removeStagedImage(index)}
 						>
 							<X class="h-3.5 w-3.5" />

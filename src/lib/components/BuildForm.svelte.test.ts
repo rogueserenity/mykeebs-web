@@ -199,3 +199,33 @@ describe('BuildForm.svelte remove buttons', () => {
 		await expect.element(page.getByText('8008 2 — Base')).toBeInTheDocument();
 	});
 });
+
+describe('BuildForm.svelte image remove buttons', () => {
+	it('numbers each image remove button and removes the right image', async () => {
+		const onImageRemove = vi.fn(async () => {});
+		render(BuildFormWithUser, {
+			formProps: {
+				initial: {
+					...build,
+					images: [
+						{ imageId: 'img-1', url: 'https://img.example/1.png' },
+						{ imageId: 'img-2', url: 'https://img.example/2.png' }
+					]
+				},
+				saving: false,
+				error: null,
+				staleRefs: null,
+				onSubmit: vi.fn(),
+				onCancel: vi.fn(),
+				onImageRemove
+			}
+		});
+
+		await expect
+			.element(page.getByRole('button', { name: 'Remove image 1 of 2' }))
+			.toBeInTheDocument();
+		await page.getByRole('button', { name: 'Remove image 2 of 2' }).click();
+
+		expect(onImageRemove).toHaveBeenCalledWith('img-2');
+	});
+});

@@ -281,7 +281,9 @@
 						<button
 							type="button"
 							class="btn-icon"
-							aria-label="Remove link"
+							aria-label={link.name.trim()
+								? `Remove ${link.name.trim()} link`
+								: `Remove link ${index + 1}`}
 							onclick={() => removeLink(index)}
 						>
 							<X class="h-5 w-5" />
