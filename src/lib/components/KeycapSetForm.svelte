@@ -66,6 +66,8 @@
 	});
 
 	let validationError = $state<string | null>(null);
+	const uid = $props.id();
+	const validationId = `validation-${uid}`;
 
 	function guardEnterSubmit(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
@@ -107,13 +109,34 @@
 
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 		<label class="flex flex-col gap-1.5">
-			<span class="field-label">Brand <span style="color: var(--danger)">*</span></span>
-			<input type="text" class="field-input" bind:value={brand} autocomplete="off" data-autofocus />
+			<span class="field-label"
+				>Brand <span aria-hidden="true" style="color: var(--danger)">*</span></span
+			>
+			<input
+				type="text"
+				class="field-input"
+				bind:value={brand}
+				aria-required="true"
+				aria-invalid={validationError !== null && !brand.trim()}
+				aria-describedby={validationError !== null && !brand.trim() ? validationId : undefined}
+				autocomplete="off"
+				data-autofocus
+			/>
 		</label>
 
 		<label class="flex flex-col gap-1.5">
-			<span class="field-label">Name <span style="color: var(--danger)">*</span></span>
-			<input type="text" class="field-input" bind:value={name} autocomplete="off" />
+			<span class="field-label"
+				>Name <span aria-hidden="true" style="color: var(--danger)">*</span></span
+			>
+			<input
+				type="text"
+				class="field-input"
+				bind:value={name}
+				aria-required="true"
+				aria-invalid={validationError !== null && !name.trim()}
+				aria-describedby={validationError !== null && !name.trim() ? validationId : undefined}
+				autocomplete="off"
+			/>
 		</label>
 
 		<label class="flex flex-col gap-1.5">
@@ -143,7 +166,9 @@
 	</label>
 
 	{#if validationError}
-		<p class="text-sm" role="alert" style="color: var(--danger)">{validationError}</p>
+		<p id={validationId} class="text-sm" role="alert" style="color: var(--danger)">
+			{validationError}
+		</p>
 	{/if}
 	{#if error}
 		<p class="text-sm" role="alert" style="color: var(--danger)">{error}</p>

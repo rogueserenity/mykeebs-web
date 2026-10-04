@@ -155,6 +155,11 @@ describe('BuildForm.svelte switch counts', () => {
 			)
 			.toBeInTheDocument();
 		expect(onSubmit).not.toHaveBeenCalled();
+		await expect.element(countFor('Oil King (Gateron)')).toBeInvalid();
+		await expect
+			.element(countFor('Oil King (Gateron)'))
+			.toHaveAccessibleDescription('Every switch needs a count of at least 1.');
+		await expect.element(countFor('Aperol (HMX)')).not.toBeInvalid();
 	});
 
 	it('saves once every switch has a count again', async () => {
@@ -333,5 +338,25 @@ describe('BuildForm.svelte photo limit', () => {
 		await page.getByRole('button', { name: 'Remove image 2 of 2' }).click();
 
 		await expect.element(page.getByRole('button', { name: '+ Add photo' })).toHaveFocus();
+	});
+});
+
+describe('BuildForm.svelte keyboard', () => {
+	it('points the keyboard button at the error when no keyboard was chosen', async () => {
+		render(BuildFormWithUser, {
+			formProps: {
+				saving: false,
+				error: null,
+				staleRefs: null,
+				onSubmit: vi.fn(),
+				onCancel: vi.fn()
+			}
+		});
+
+		await page.getByRole('button', { name: 'Add build' }).click();
+
+		await expect
+			.element(page.getByRole('button', { name: 'Choose keyboard…' }))
+			.toHaveAccessibleDescription('A keyboard is required.');
 	});
 });

@@ -60,6 +60,8 @@
 	let saving = $state(false);
 	let formError = $state<string | null>(null);
 	let usernameError = $state<string | null>(null);
+	const uid = $props.id();
+	const usernameErrorId = `username-error-${uid}`;
 
 	let usernameValid = $derived(usernameLooksValid(username));
 
@@ -218,19 +220,26 @@
 
 		<form class="mt-8 flex flex-col gap-5" onsubmit={handleSubmit}>
 			<label class="flex flex-col gap-1.5">
-				<span class="section-label mb-0">Username <span style="color: var(--danger)">*</span></span>
+				<span class="section-label mb-0"
+					>Username <span aria-hidden="true" style="color: var(--danger)">*</span></span
+				>
 				<input
 					type="text"
 					class="field-input font-mono"
 					maxlength="32"
 					bind:value={username}
+					aria-required="true"
+					aria-invalid={usernameError !== null}
+					aria-describedby={usernameError !== null ? usernameErrorId : undefined}
 					autocomplete="off"
 				/>
 				<span class="text-faint text-xs">
 					Your profile will be at /u/{usernameValid ? username : 'username'}
 				</span>
 				{#if usernameError}
-					<span class="text-xs" role="alert" style="color: var(--danger)">{usernameError}</span>
+					<span id={usernameErrorId} class="text-xs" role="alert" style="color: var(--danger)"
+						>{usernameError}</span
+					>
 				{/if}
 			</label>
 

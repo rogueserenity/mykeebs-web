@@ -153,6 +153,8 @@
 	});
 
 	let validationError = $state<string | null>(null);
+	const uid = $props.id();
+	const validationId = `validation-${uid}`;
 
 	function guardEnterSubmit(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
@@ -248,12 +250,17 @@
 	</div>
 
 	<label class="flex flex-col gap-1.5">
-		<span class="field-label">Name <span style="color: var(--danger)">*</span></span>
+		<span class="field-label"
+			>Name <span aria-hidden="true" style="color: var(--danger)">*</span></span
+		>
 		<input
 			type="text"
 			class="field-input"
 			placeholder="e.g. Base, Extension, Accents"
 			bind:value={name}
+			aria-required="true"
+			aria-invalid={validationError !== null && !name.trim()}
+			aria-describedby={validationError !== null && !name.trim() ? validationId : undefined}
 			autocomplete="off"
 			data-autofocus
 		/>
@@ -302,7 +309,9 @@
 	</div>
 
 	{#if validationError}
-		<p class="text-sm" role="alert" style="color: var(--danger)">{validationError}</p>
+		<p id={validationId} class="text-sm" role="alert" style="color: var(--danger)">
+			{validationError}
+		</p>
 	{/if}
 	{#if error}
 		<p class="text-sm" role="alert" style="color: var(--danger)">{error}</p>

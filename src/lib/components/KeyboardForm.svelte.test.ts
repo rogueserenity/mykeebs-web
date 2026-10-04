@@ -106,6 +106,22 @@ describe('KeyboardForm.svelte', () => {
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
+	it('marks brand and name required, and flags only the empty ones after a failed save', async () => {
+		renderForm();
+		const brand = page.getByLabelText('Brand');
+		const name = page.getByLabelText('Name');
+		await expect.element(brand).toBeRequired();
+		await expect.element(name).toBeRequired();
+		await expect.element(name).not.toBeInvalid();
+
+		await brand.fill('Bowl');
+		await submit();
+
+		await expect.element(name).toBeInvalid();
+		await expect.element(name).toHaveAccessibleDescription('Brand and name are required.');
+		await expect.element(brand).not.toBeInvalid();
+	});
+
 	it('submits a minimal keyboard trimmed, private, and without empty sections', async () => {
 		const { onSubmit } = renderForm();
 

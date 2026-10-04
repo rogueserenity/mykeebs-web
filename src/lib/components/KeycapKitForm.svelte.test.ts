@@ -82,4 +82,15 @@ describe('KeycapKitForm.svelte cleared price', () => {
 		expect(onSubmit).toHaveBeenCalledOnce();
 		expect(onSubmit.mock.calls[0][0].purchase?.price).toBeNullable();
 	});
+
+	it('marks the name required, and flags it after a failed save', async () => {
+		render(KeycapKitForm, { saving: false, error: null, onSubmit: vi.fn(), onCancel: () => {} });
+		const name = page.getByLabelText('Name');
+		await expect.element(name).toBeRequired();
+
+		await page.getByRole('button', { name: 'Add kit' }).click();
+
+		await expect.element(name).toBeInvalid();
+		await expect.element(name).toHaveAccessibleDescription('Name is required.');
+	});
 });

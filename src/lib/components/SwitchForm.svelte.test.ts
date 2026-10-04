@@ -96,6 +96,22 @@ describe('SwitchForm.svelte', () => {
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
+	it('marks brand, name, and type required, and flags only the empty ones after a failed save', async () => {
+		renderForm();
+		const type = page.getByLabelText('Type');
+		await expect.element(page.getByLabelText('Brand')).toBeRequired();
+		await expect.element(type).toBeRequired();
+
+		await page.getByLabelText('Brand').fill('HMX');
+		await page.getByLabelText('Name').fill('Aperol');
+		await submit();
+
+		await expect.element(type).toBeInvalid();
+		await expect.element(type).toHaveAccessibleDescription('Brand, name, and type are required.');
+		await expect.element(page.getByLabelText('Brand')).not.toBeInvalid();
+		await expect.element(page.getByLabelText('Name')).not.toBeInvalid();
+	});
+
 	it('submits a minimal switch trimmed, private, and without empty sections', async () => {
 		const { onSubmit } = renderForm();
 

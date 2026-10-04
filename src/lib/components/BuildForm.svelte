@@ -394,6 +394,9 @@
 	});
 
 	let validationError = $state<string | null>(null);
+	const uid = $props.id();
+	const validationId = `validation-${uid}`;
+	const keyboardMissing = $derived(validationError !== null && !keyboard);
 
 	function guardEnterSubmit(event: KeyboardEvent) {
 		if (event.key !== 'Enter') return;
@@ -540,7 +543,9 @@
 	</fieldset>
 
 	<div class="flex flex-col gap-1.5">
-		<span class="field-label">Keyboard <span style="color: var(--danger)">*</span></span>
+		<span class="field-label"
+			>Keyboard <span aria-hidden="true" style="color: var(--danger)">*</span></span
+		>
 		{#if keyboard && !keyboardPickerOpen}
 			<div
 				class="kc-card flex items-center gap-3 p-3"
@@ -606,6 +611,7 @@
 				class="btn"
 				data-autofocus
 				use:focusOnMount={refocusKeyboardTrigger}
+				aria-describedby={keyboardMissing ? validationId : undefined}
 				onclick={() => (keyboardPickerOpen = true)}
 			>
 				Choose keyboard…
@@ -721,6 +727,10 @@
 							type="number"
 							class="field-input w-20"
 							aria-label="Count of {entry.label}"
+							aria-invalid={validationError !== null && (entry.count == null || entry.count < 1)}
+							aria-describedby={validationError !== null && (entry.count == null || entry.count < 1)
+								? validationId
+								: undefined}
 							min="1"
 							step="1"
 							bind:value={entry.count}
@@ -933,7 +943,9 @@
 	</label>
 
 	{#if validationError}
-		<p class="text-sm" role="alert" style="color: var(--danger)">{validationError}</p>
+		<p id={validationId} class="text-sm" role="alert" style="color: var(--danger)">
+			{validationError}
+		</p>
 	{/if}
 	{#snippet staleNote()}
 		<p class="text-xs" style="color: var(--danger)">No longer in your collection</p>

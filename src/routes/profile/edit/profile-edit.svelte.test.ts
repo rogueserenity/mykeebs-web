@@ -255,6 +255,12 @@ describe('Profile edit page saving', () => {
 		await expect
 			.element(page.getByRole('alert').filter({ hasText: 'That username is already taken.' }))
 			.toBeInTheDocument();
+		const usernameField = page.getByRole('textbox', { name: /^Username/ });
+		await expect.element(usernameField).toBeRequired();
+		await expect.element(usernameField).toBeInvalid();
+		await expect
+			.element(usernameField)
+			.toHaveAccessibleDescription('That username is already taken.');
 	});
 
 	it('says when the profile changed elsewhere', async () => {
