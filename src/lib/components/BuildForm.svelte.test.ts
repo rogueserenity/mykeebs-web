@@ -229,3 +229,26 @@ describe('BuildForm.svelte image remove buttons', () => {
 		expect(onImageRemove).toHaveBeenCalledWith('img-2');
 	});
 });
+
+describe('BuildForm.svelte removing a photo', () => {
+	it('says so when the removal fails, and lets you try again', async () => {
+		render(BuildFormWithUser, {
+			formProps: {
+				initial: { ...build, images: [{ imageId: 'img-1', url: 'https://img.example/1.png' }] },
+				saving: false,
+				error: null,
+				staleRefs: null,
+				onSubmit: vi.fn(),
+				onCancel: vi.fn(),
+				onImageRemove: vi.fn().mockRejectedValue(new Error('network'))
+			}
+		});
+
+		await page.getByRole('button', { name: 'Remove image 1 of 1' }).click();
+
+		await expect.element(page.getByText('Could not remove the image.')).toBeInTheDocument();
+		await expect
+			.element(page.getByRole('button', { name: 'Remove image 1 of 1' }))
+			.not.toBeDisabled();
+	});
+});

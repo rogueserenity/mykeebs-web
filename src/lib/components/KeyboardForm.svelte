@@ -221,6 +221,8 @@
 		imageBusy = true;
 		try {
 			await onImageRemove(imageId);
+		} catch {
+			imageError = 'Could not remove the image.';
 		} finally {
 			imageBusy = false;
 		}

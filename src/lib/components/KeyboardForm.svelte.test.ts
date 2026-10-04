@@ -400,6 +400,18 @@ describe('KeyboardForm.svelte', () => {
 
 			expect(onImageRemove).toHaveBeenCalledWith('img-1');
 		});
+
+		it('says so when removing a photo fails, and lets you try again', async () => {
+			const onImageRemove = vi.fn().mockRejectedValue(new Error('network'));
+			renderForm({ initial: keyboard, onImageRemove });
+
+			await page.getByRole('button', { name: 'Remove image 1 of 1' }).click();
+
+			await expect.element(page.getByText('Could not remove the image.')).toBeInTheDocument();
+			await expect
+				.element(page.getByRole('button', { name: 'Remove image 1 of 1' }))
+				.not.toBeDisabled();
+		});
 	});
 
 	describe('cleared number fields', () => {

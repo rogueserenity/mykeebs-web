@@ -342,6 +342,8 @@
 		try {
 			await onImageRemove(imageId);
 			addPhotoButton?.focus();
+		} catch {
+			imageError = 'Could not remove the image.';
 		} finally {
 			imageBusy = false;
 		}
