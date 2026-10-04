@@ -146,6 +146,7 @@
 			<select
 				class="field-select sort-select"
 				class:sort-select-hidden={filterExpanded}
+				aria-label="Sort by"
 				bind:value={sortIndex}
 			>
 				{#each sortOptions as option, index (option.label)}
@@ -171,6 +172,7 @@
 				type="search"
 				class="field-input w-full min-w-0 sm:w-64 sm:flex-none"
 				placeholder="Filter…"
+				aria-label="Filter"
 				bind:value={filterText}
 				onblur={collapseFilterIfEmpty}
 				onkeydown={handleFilterKeydown}

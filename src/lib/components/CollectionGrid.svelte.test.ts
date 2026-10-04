@@ -122,7 +122,7 @@ describe('CollectionGrid.svelte', () => {
 			await shown();
 
 			await page.getByRole('button', { name: 'Filter' }).click();
-			await expect.element(page.getByRole('searchbox')).toHaveFocus();
+			await expect.element(page.getByRole('searchbox', { name: 'Filter' })).toHaveFocus();
 			await userEvent.keyboard('type');
 
 			await expect.element(page.getByRole('article')).toHaveLength(1);
@@ -136,7 +136,7 @@ describe('CollectionGrid.svelte', () => {
 			await page.getByRole('button', { name: 'Filter' }).click();
 			await userEvent.keyboard('type{Escape}');
 
-			await expect.element(page.getByRole('searchbox')).not.toBeInTheDocument();
+			await expect.element(page.getByRole('searchbox', { name: 'Filter' })).not.toBeInTheDocument();
 			await expect.element(page.getByRole('article')).toHaveLength(3);
 		});
 	});
@@ -146,7 +146,7 @@ describe('CollectionGrid.svelte', () => {
 			renderGrid();
 			await shown();
 
-			await page.getByRole('combobox').selectOptions('Sort: Price');
+			await page.getByRole('combobox', { name: 'Sort by' }).selectOptions('Sort: Price');
 
 			await vi.waitFor(async () => expect(await shown()).toEqual(['Agar', 'Manta', 'Kafka']));
 		});
