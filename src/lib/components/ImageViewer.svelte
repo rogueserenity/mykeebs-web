@@ -95,18 +95,55 @@
 		dragging = false;
 	}
 
+	let viewer = $state<HTMLDivElement | null>(null);
+	let closeButton = $state<HTMLButtonElement | null>(null);
+
+	$effect(() => {
+		if (!open) return;
+		const previouslyFocused = document.activeElement as HTMLElement | null;
+		closeButton?.focus();
+		return () => previouslyFocused?.focus();
+	});
+
+	function trapTab(event: KeyboardEvent) {
+		const focusable = Array.from(
+			viewer?.querySelectorAll<HTMLElement>('button:not([disabled])') ?? []
+		);
+		if (focusable.length === 0) return;
+		const first = focusable[0];
+		const last = focusable[focusable.length - 1];
+		if (event.shiftKey && document.activeElement === first) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && document.activeElement === last) {
+			event.preventDefault();
+			first.focus();
+		} else if (!viewer?.contains(document.activeElement)) {
+			event.preventDefault();
+			first.focus();
+		}
+	}
+
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') onClose();
 		else if (event.key === 'ArrowLeft') onPrev?.();
 		else if (event.key === 'ArrowRight') onNext?.();
+		else if (event.key === 'Tab') trapTab(event);
 	}
 </script>
 
 <svelte:window onkeydown={open ? handleKeydown : undefined} />
 
 {#if open}
-	<div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90">
+	<div
+		bind:this={viewer}
+		role="dialog"
+		aria-modal="true"
+		aria-label="{alt}, full size"
+		class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90"
+	>
 		<button
+			bind:this={closeButton}
 			type="button"
 			aria-label="Close"
 			class="btn-icon absolute top-4 right-4 z-10 bg-black/70 text-white hover:bg-black/90"
