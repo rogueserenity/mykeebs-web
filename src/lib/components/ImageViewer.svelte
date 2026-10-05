@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ArrowLeft, ArrowRight, X } from 'lucide-svelte';
+	import { clampOffset } from '$lib/pan';
 	let {
 		open,
 		src,
@@ -124,11 +125,37 @@
 		}
 	}
 
+	const PAN_STEP = 50;
+	const PAN_STEP_LARGE = 200;
+	let imageEl = $state<HTMLImageElement | null>(null);
+	let stage = $state<HTMLDivElement | null>(null);
+
+	function pan(dx: number, dy: number) {
+		if (!imageEl || !stage) return;
+		offsetX = clampOffset(offsetX + dx, imageEl.offsetWidth, scale, stage.clientWidth);
+		offsetY = clampOffset(offsetY + dy, imageEl.offsetHeight, scale, stage.clientHeight);
+	}
+
+	const arrowDirections: Record<string, [number, number]> = {
+		ArrowLeft: [1, 0],
+		ArrowRight: [-1, 0],
+		ArrowUp: [0, 1],
+		ArrowDown: [0, -1]
+	};
+
 	function handleKeydown(event: KeyboardEvent) {
+		const direction = arrowDirections[event.key];
 		if (event.key === 'Escape') onClose();
-		else if (event.key === 'ArrowLeft') onPrev?.();
-		else if (event.key === 'ArrowRight') onNext?.();
 		else if (event.key === 'Tab') trapTab(event);
+		else if (direction && scale > MIN_SCALE) {
+			event.preventDefault();
+			const step = event.shiftKey ? PAN_STEP_LARGE : PAN_STEP;
+			pan(direction[0] * step, direction[1] * step);
+		} else if (event.key === 'ArrowLeft') onPrev?.();
+		else if (event.key === 'ArrowRight') onNext?.();
+		else if (event.key === '+' || event.key === '=') zoomIn();
+		else if (event.key === '-' || event.key === '_') zoomOut();
+		else if (event.key === '0') resetZoom();
 	}
 </script>
 
@@ -180,7 +207,7 @@
 				</button>
 			</div>
 			<span class="rounded bg-black/70 px-3 py-1 text-center text-sm text-white/80">
-				Scroll to zoom
+				{scale > MIN_SCALE ? 'Arrow keys or drag to move' : 'Scroll to zoom'}
 			</span>
 		</div>
 
@@ -206,6 +233,7 @@
 		{/if}
 
 		<div
+			bind:this={stage}
 			class="flex h-full w-full items-center justify-center overflow-hidden {scale > MIN_SCALE
 				? dragging
 					? 'cursor-grabbing'
@@ -219,6 +247,7 @@
 			role="presentation"
 		>
 			<img
+				bind:this={imageEl}
 				{src}
 				{alt}
 				class="max-h-[90vh] max-w-[90vw] rounded select-none"
