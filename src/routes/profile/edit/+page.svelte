@@ -185,7 +185,12 @@
 		</p>
 
 		<div class="mt-8 flex items-center gap-4">
-			<Avatar name={username || 'you'} imageUrl={profile.data?.avatar?.url} size="lg" />
+			<Avatar
+				name={username || 'you'}
+				imageUrl={profile.data?.avatar?.url}
+				size="lg"
+				label="Your profile photo"
+			/>
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-2">
 					<button

@@ -2,11 +2,14 @@
 	let {
 		name,
 		imageUrl,
-		size = 'sm'
+		size = 'sm',
+		label
 	}: {
 		name: string;
 		imageUrl?: string;
 		size?: 'sm' | 'lg';
+		// Only where the avatar is the subject; elsewhere the name sits beside it.
+		label?: string;
 	} = $props();
 
 	function initials(value: string): string {
@@ -14,10 +17,14 @@
 	}
 </script>
 
-<span class="avatar avatar-{size}">
+<span
+	class="avatar avatar-{size}"
+	role={label && !imageUrl ? 'img' : undefined}
+	aria-label={label && !imageUrl ? label : undefined}
+>
 	{#if imageUrl}
-		<img src={imageUrl} alt={name} decoding="async" />
+		<img src={imageUrl} alt={label ?? ''} decoding="async" />
 	{:else}
-		{initials(name)}
+		<span aria-hidden="true">{initials(name)}</span>
 	{/if}
 </span>
