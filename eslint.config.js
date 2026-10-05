@@ -25,6 +25,10 @@ export default defineConfig(
 	},
 	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+		rules: {
+			// Misfires on $bindable() props, which the parent reads through bind:.
+			'no-useless-assignment': 'off'
+		},
 		languageOptions: {
 			parserOptions: {
 				projectService: true,

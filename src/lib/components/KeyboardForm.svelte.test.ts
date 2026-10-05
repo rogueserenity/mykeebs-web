@@ -426,6 +426,30 @@ describe('KeyboardForm.svelte', () => {
 	});
 
 	describe('images on an existing keyboard', () => {
+		it('keeps unsaved edits when the keyboard refreshes, while showing its new photos', async () => {
+			const mocks = { onSubmit: vi.fn(), onCancel: vi.fn() };
+			const formProps = { saving: false, error: null, ...mocks, initial: keyboard };
+			const { rerender } = render(FormWithDirty, { form: KeyboardForm, formProps });
+			await page.getByLabelText('Name').fill('Manta R2');
+
+			await rerender({
+				form: KeyboardForm,
+				formProps: {
+					...formProps,
+					initial: {
+						...keyboard,
+						images: [...keyboard.images!, { imageId: 'img-2', url: 'https://img.example/2.png' }]
+					}
+				}
+			});
+
+			await expect
+				.element(page.getByRole('button', { name: 'Remove image 2 of 2' }))
+				.toBeInTheDocument();
+			await expect.element(page.getByLabelText('Name')).toHaveValue('Manta R2');
+			await expect.element(dirty()).toHaveTextContent('true');
+		});
+
 		it('uploads a picked photo straight away', async () => {
 			const onImageUpload = vi.fn(async () => {});
 			renderForm({ initial: keyboard, onImageUpload });

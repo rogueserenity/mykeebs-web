@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { Switch as SwitchModel, SwitchInput } from '@rogueserenity/kbdb-api-client';
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
 	import VisibilityPicker from './VisibilityPicker.svelte';
@@ -13,7 +14,6 @@
 		onCancel,
 		onImageUpload,
 		onImageRemove,
-		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
 		dirty = $bindable(false)
 	}: {
 		initial?: SwitchModel;
@@ -26,30 +26,33 @@
 		dirty?: boolean;
 	} = $props();
 
+	// Read once: a form keeps its in-progress edits when `initial` refreshes.
+	const seed = untrack(() => initial);
+
 	const uid = $props.id();
 
-	let brand = $state(initial?.brand ?? '');
-	let manufacturer = $state(initial?.manufacturer ?? '');
-	let name = $state(initial?.name ?? '');
-	let type = $state(initial?.type ?? '');
-	let pins = $state(initial?.pins != null ? String(initial.pins) : '');
-	let factoryLubed = $state(initial?.factoryLubed ?? false);
-	let topHousing = $state(initial?.material?.topHousing ?? '');
-	let bottomHousing = $state(initial?.material?.bottomHousing ?? '');
-	let stem = $state(initial?.material?.stem ?? '');
-	let actuation = $state<number | undefined>(initial?.force?.actuation);
-	let bottomOut = $state<number | undefined>(initial?.force?.bottomOut);
-	let springMaterial = $state(initial?.spring?.material ?? '');
-	let preTravel = $state<number | undefined>(initial?.spring?.preTravel);
-	let totalTravel = $state<number | undefined>(initial?.spring?.totalTravel);
-	let vendor = $state(initial?.purchase?.vendor ?? '');
-	let price = $state<number | undefined>(initial?.purchase?.price);
-	let orderDate = $state(toDateInput(initial?.purchase?.orderDate));
-	let deliveryDate = $state(toDateInput(initial?.purchase?.deliveryDate));
-	let orderStatus = $state(initial?.purchase?.orderStatus ?? '');
-	let quantity = $state<number | undefined>(initial?.purchase?.quantity);
-	let notes = $state(initial?.notes ?? '');
-	let visibility = $state<Visibility>(initial?.visibility ?? Visibility.Private);
+	let brand = $state(seed?.brand ?? '');
+	let manufacturer = $state(seed?.manufacturer ?? '');
+	let name = $state(seed?.name ?? '');
+	let type = $state(seed?.type ?? '');
+	let pins = $state(seed?.pins != null ? String(seed.pins) : '');
+	let factoryLubed = $state(seed?.factoryLubed ?? false);
+	let topHousing = $state(seed?.material?.topHousing ?? '');
+	let bottomHousing = $state(seed?.material?.bottomHousing ?? '');
+	let stem = $state(seed?.material?.stem ?? '');
+	let actuation = $state<number | undefined>(seed?.force?.actuation);
+	let bottomOut = $state<number | undefined>(seed?.force?.bottomOut);
+	let springMaterial = $state(seed?.spring?.material ?? '');
+	let preTravel = $state<number | undefined>(seed?.spring?.preTravel);
+	let totalTravel = $state<number | undefined>(seed?.spring?.totalTravel);
+	let vendor = $state(seed?.purchase?.vendor ?? '');
+	let price = $state<number | undefined>(seed?.purchase?.price);
+	let orderDate = $state(toDateInput(seed?.purchase?.orderDate));
+	let deliveryDate = $state(toDateInput(seed?.purchase?.deliveryDate));
+	let orderStatus = $state(seed?.purchase?.orderStatus ?? '');
+	let quantity = $state<number | undefined>(seed?.purchase?.quantity);
+	let notes = $state(seed?.notes ?? '');
+	let visibility = $state<Visibility>(seed?.visibility ?? Visibility.Private);
 
 	let showOrderDate = $derived(
 		orderStatus.trim() !== '' && orderStatus.trim().toLowerCase() !== 'planned'
@@ -58,7 +61,7 @@
 
 	// Only clears in response to a status change, never on mount: an existing
 	// item may legitimately carry dates its current status wouldn't set.
-	let lastOrderStatus = initial?.purchase?.orderStatus ?? '';
+	let lastOrderStatus = seed?.purchase?.orderStatus ?? '';
 	$effect(() => {
 		if (orderStatus === lastOrderStatus) return;
 		lastOrderStatus = orderStatus;
@@ -69,20 +72,18 @@
 	});
 
 	let constructionOpen = $state(
-		Boolean(
-			initial?.material?.topHousing || initial?.material?.bottomHousing || initial?.material?.stem
-		)
+		Boolean(seed?.material?.topHousing || seed?.material?.bottomHousing || seed?.material?.stem)
 	);
 	let feelOpen = $state(
 		Boolean(
-			initial?.force?.actuation != null ||
-			initial?.force?.bottomOut != null ||
-			initial?.spring?.material ||
-			initial?.spring?.preTravel != null ||
-			initial?.spring?.totalTravel != null
+			seed?.force?.actuation != null ||
+			seed?.force?.bottomOut != null ||
+			seed?.spring?.material ||
+			seed?.spring?.preTravel != null ||
+			seed?.spring?.totalTravel != null
 		)
 	);
-	let purchaseOpen = $state(Boolean(initial?.purchase));
+	let purchaseOpen = $state(Boolean(seed?.purchase));
 
 	let constructionSummary = $derived(
 		[topHousing, bottomHousing, stem].filter((v) => v.trim()).join(' · ') || 'Not set'
@@ -194,28 +195,28 @@
 		}
 	}
 
-	const initialBrand = initial?.brand ?? '';
-	const initialManufacturer = initial?.manufacturer ?? '';
-	const initialName = initial?.name ?? '';
-	const initialType = initial?.type ?? '';
-	const initialPins = initial?.pins != null ? String(initial.pins) : '';
-	const initialFactoryLubed = initial?.factoryLubed ?? false;
-	const initialTopHousing = initial?.material?.topHousing ?? '';
-	const initialBottomHousing = initial?.material?.bottomHousing ?? '';
-	const initialStem = initial?.material?.stem ?? '';
-	const initialActuation = initial?.force?.actuation;
-	const initialBottomOut = initial?.force?.bottomOut;
-	const initialSpringMaterial = initial?.spring?.material ?? '';
-	const initialPreTravel = initial?.spring?.preTravel;
-	const initialTotalTravel = initial?.spring?.totalTravel;
-	const initialVendor = initial?.purchase?.vendor ?? '';
-	const initialPrice = initial?.purchase?.price;
-	const initialOrderDate = toDateInput(initial?.purchase?.orderDate);
-	const initialDeliveryDate = toDateInput(initial?.purchase?.deliveryDate);
-	const initialOrderStatus = initial?.purchase?.orderStatus ?? '';
-	const initialQuantity = initial?.purchase?.quantity;
-	const initialNotes = initial?.notes ?? '';
-	const initialVisibility = initial?.visibility ?? Visibility.Private;
+	const initialBrand = seed?.brand ?? '';
+	const initialManufacturer = seed?.manufacturer ?? '';
+	const initialName = seed?.name ?? '';
+	const initialType = seed?.type ?? '';
+	const initialPins = seed?.pins != null ? String(seed.pins) : '';
+	const initialFactoryLubed = seed?.factoryLubed ?? false;
+	const initialTopHousing = seed?.material?.topHousing ?? '';
+	const initialBottomHousing = seed?.material?.bottomHousing ?? '';
+	const initialStem = seed?.material?.stem ?? '';
+	const initialActuation = seed?.force?.actuation;
+	const initialBottomOut = seed?.force?.bottomOut;
+	const initialSpringMaterial = seed?.spring?.material ?? '';
+	const initialPreTravel = seed?.spring?.preTravel;
+	const initialTotalTravel = seed?.spring?.totalTravel;
+	const initialVendor = seed?.purchase?.vendor ?? '';
+	const initialPrice = seed?.purchase?.price;
+	const initialOrderDate = toDateInput(seed?.purchase?.orderDate);
+	const initialDeliveryDate = toDateInput(seed?.purchase?.deliveryDate);
+	const initialOrderStatus = seed?.purchase?.orderStatus ?? '';
+	const initialQuantity = seed?.purchase?.quantity;
+	const initialNotes = seed?.notes ?? '';
+	const initialVisibility = seed?.visibility ?? Visibility.Private;
 
 	$effect(() => {
 		dirty =

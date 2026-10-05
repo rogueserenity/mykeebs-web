@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import type {
 		Build,
@@ -30,7 +30,6 @@
 		onCancel,
 		onImageUpload,
 		onImageRemove,
-		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
 		dirty = $bindable(false)
 	}: {
 		initial?: Build;
@@ -43,6 +42,9 @@
 		onImageRemove?: (imageId: string) => Promise<void>;
 		dirty?: boolean;
 	} = $props();
+
+	// Read once: a form keeps its in-progress edits when `initial` refreshes.
+	const seed = untrack(() => initial);
 
 	const userContext = getUserContext();
 
@@ -60,17 +62,17 @@
 
 	type ChosenKeyboard = { id: string; brand: string; name: string; imageUrl?: string };
 	let keyboard = $state<ChosenKeyboard | undefined>(
-		initial?.keyboard
+		seed?.keyboard
 			? {
-					id: initial.keyboard.id,
-					brand: initial.keyboard.brand,
-					name: initial.keyboard.name,
-					imageUrl: initial.keyboard.imageUrl
+					id: seed.keyboard.id,
+					brand: seed.keyboard.brand,
+					name: seed.keyboard.name,
+					imageUrl: seed.keyboard.imageUrl
 				}
 			: undefined
 	);
 	let keyboardPlates = $state<string[]>([]);
-	let plate = $state(initial?.plate ?? '');
+	let plate = $state(seed?.plate ?? '');
 	let keyboardPickerOpen = $state(false);
 	const refocusKeyboardTrigger = { value: false };
 
@@ -97,20 +99,20 @@
 		refocusKeyboardTrigger.value = true;
 	}
 
-	let caseMountType = $state(initial?.caseMountType?.type ?? '');
-	let durometer = $state(initial?.caseMountType?.durometer ?? '');
-	let stabsName = $state(initial?.stabs?.name ?? '');
-	let stabsMountType = $state(initial?.stabs?.mountType ?? '');
-	let stabsPrice = $state<number | undefined>(initial?.stabs?.price);
-	let foam = $state(initial?.foam ?? false);
+	let caseMountType = $state(seed?.caseMountType?.type ?? '');
+	let durometer = $state(seed?.caseMountType?.durometer ?? '');
+	let stabsName = $state(seed?.stabs?.name ?? '');
+	let stabsMountType = $state(seed?.stabs?.mountType ?? '');
+	let stabsPrice = $state<number | undefined>(seed?.stabs?.price);
+	let foam = $state(seed?.foam ?? false);
 	// Browsers disagree on empty-date rendering (Safari fills today, Chrome
 	// shows mm/dd/yyyy), so a new build defaults to today explicitly.
-	let buildDate = $state(initial ? toDateInput(initial.buildDate) : todayDateInput());
-	let notes = $state(initial?.notes ?? '');
-	let visibility = $state<Visibility>(initial?.visibility ?? Visibility.Private);
+	let buildDate = $state(seed ? toDateInput(seed.buildDate) : todayDateInput());
+	let notes = $state(seed?.notes ?? '');
+	let visibility = $state<Visibility>(seed?.visibility ?? Visibility.Private);
 
-	let caseMountOpen = $state(Boolean(initial?.caseMountType));
-	let stabsOpen = $state(Boolean(initial?.stabs));
+	let caseMountOpen = $state(Boolean(seed?.caseMountType));
+	let stabsOpen = $state(Boolean(seed?.stabs));
 
 	type MountTypeValue = { name: string; supportsDurometer: boolean };
 	let mountTypes = $state<MountTypeValue[]>([]);
@@ -160,7 +162,7 @@
 
 	type SwitchEntry = { switchId: string; count: number; label: string; imageUrl?: string };
 	let switchEntries = $state<SwitchEntry[]>(
-		(initial?.switches ?? []).map((entry) => ({
+		(seed?.switches ?? []).map((entry) => ({
 			switchId: entry._switch.id,
 			count: entry.count,
 			label: `${entry._switch.name} (${entry._switch.brand})`,
@@ -226,7 +228,7 @@
 		imageUrl?: string;
 	};
 	let keycapKitEntries = $state<KeycapKitEntryDisplay[]>(
-		(initial?.keycapSets ?? []).flatMap((set) =>
+		(seed?.keycapSets ?? []).flatMap((set) =>
 			set.kits.map((kit) => ({
 				keycapSetId: set.id,
 				kitId: kit.kitId,
@@ -249,8 +251,8 @@
 	const checkedKitIds = new SvelteSet<string>();
 
 	$effect(() => {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track kitPickerSet so switching sets clears the checklist
-		kitPickerSet;
+		// Switching sets clears the checklist.
+		void kitPickerSet;
 		checkedKitIds.clear();
 	});
 
@@ -359,19 +361,23 @@
 		}
 	}
 
-	const initialKeyboardId = initial?.keyboard.id ?? '';
-	const initialPlate = initial?.plate ?? '';
-	const initialCaseMountType = initial?.caseMountType?.type ?? '';
-	const initialDurometer = initial?.caseMountType?.durometer ?? '';
-	const initialStabsName = initial?.stabs?.name ?? '';
-	const initialStabsMountType = initial?.stabs?.mountType ?? '';
-	const initialStabsPrice = initial?.stabs?.price;
-	const initialFoam = initial?.foam ?? false;
-	const initialBuildDate = initial ? toDateInput(initial.buildDate) : todayDateInput();
-	const initialNotes = initial?.notes ?? '';
-	const initialVisibility = initial?.visibility ?? Visibility.Private;
-	const initialSwitchIds = switchEntries.map((e) => `${e.switchId}:${e.count}`).sort();
-	const initialKeycapKitIds = keycapKitEntries.map((e) => `${e.keycapSetId}:${e.kitId}`).sort();
+	const initialKeyboardId = seed?.keyboard.id ?? '';
+	const initialPlate = seed?.plate ?? '';
+	const initialCaseMountType = seed?.caseMountType?.type ?? '';
+	const initialDurometer = seed?.caseMountType?.durometer ?? '';
+	const initialStabsName = seed?.stabs?.name ?? '';
+	const initialStabsMountType = seed?.stabs?.mountType ?? '';
+	const initialStabsPrice = seed?.stabs?.price;
+	const initialFoam = seed?.foam ?? false;
+	const initialBuildDate = seed ? toDateInput(seed.buildDate) : todayDateInput();
+	const initialNotes = seed?.notes ?? '';
+	const initialVisibility = seed?.visibility ?? Visibility.Private;
+	const initialSwitchIds = untrack(() =>
+		switchEntries.map((e) => `${e.switchId}:${e.count}`).sort()
+	);
+	const initialKeycapKitIds = untrack(() =>
+		keycapKitEntries.map((e) => `${e.keycapSetId}:${e.kitId}`).sort()
+	);
 
 	$effect(() => {
 		dirty =

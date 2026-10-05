@@ -5,6 +5,7 @@
 </script>
 
 <script lang="ts" generics="T">
+	import { untrack } from 'svelte';
 	let {
 		userId,
 		fetchPage,
@@ -35,8 +36,8 @@
 		cache?: ItemPickerCache<T>;
 	} = $props();
 
-	let items = $state<T[]>(cache?.items ?? []);
-	let loading = $state(cache?.items == null);
+	let items = $state<T[]>(untrack(() => cache?.items ?? []));
+	let loading = $state(untrack(() => cache?.items == null));
 	let loadError = $state<string | null>(null);
 
 	const label = $derived(placeholder.replace(/…$/, ''));
@@ -65,8 +66,8 @@
 	let activeIndex = $state(0);
 
 	$effect(() => {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track filteredItems so a new filter always re-clamps
-		filteredItems;
+		// A new filter always re-clamps.
+		void filteredItems;
 		activeIndex = 0;
 	});
 

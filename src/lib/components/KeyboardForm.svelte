@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import type { Keyboard, KeyboardInput } from '@rogueserenity/kbdb-api-client';
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
@@ -16,7 +17,6 @@
 		onCancel,
 		onImageUpload,
 		onImageRemove,
-		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
 		dirty = $bindable(false)
 	}: {
 		initial?: Keyboard;
@@ -29,28 +29,31 @@
 		dirty?: boolean;
 	} = $props();
 
-	let brand = $state(initial?.brand ?? '');
-	let name = $state(initial?.name ?? '');
-	let size = $state(initial?.size ?? '');
-	let layout = $state(initial?.layout ?? '');
-	let topCaseMaterial = $state(initial?.design?.topCase?.material ?? '');
-	let topCaseColor = $state(initial?.design?.topCase?.color ?? '');
-	let bottomCaseMaterial = $state(initial?.design?.bottomCase?.material ?? '');
-	let bottomCaseColor = $state(initial?.design?.bottomCase?.color ?? '');
-	let weightMaterial = $state(initial?.design?.weight?.material ?? '');
-	let weightColor = $state(initial?.design?.weight?.color ?? '');
-	let plates = new SvelteSet<string>(initial?.design?.plates ?? []);
-	let thickness = $state<number | undefined>(initial?.pcb?.thickness);
-	let firmware = $state(initial?.pcb?.firmware ?? '');
-	let assembly = $state(initial?.pcb?.assembly ?? '');
-	let connectivity = $state(initial?.pcb?.connectivity ?? '');
-	let vendor = $state(initial?.purchase?.vendor ?? '');
-	let price = $state<number | undefined>(initial?.purchase?.price);
-	let orderDate = $state(toDateInput(initial?.purchase?.orderDate));
-	let deliveryDate = $state(toDateInput(initial?.purchase?.deliveryDate));
-	let orderStatus = $state(initial?.purchase?.orderStatus ?? '');
-	let notes = $state(initial?.notes ?? '');
-	let visibility = $state<Visibility>(initial?.visibility ?? Visibility.Private);
+	// Read once: a form keeps its in-progress edits when `initial` refreshes.
+	const seed = untrack(() => initial);
+
+	let brand = $state(seed?.brand ?? '');
+	let name = $state(seed?.name ?? '');
+	let size = $state(seed?.size ?? '');
+	let layout = $state(seed?.layout ?? '');
+	let topCaseMaterial = $state(seed?.design?.topCase?.material ?? '');
+	let topCaseColor = $state(seed?.design?.topCase?.color ?? '');
+	let bottomCaseMaterial = $state(seed?.design?.bottomCase?.material ?? '');
+	let bottomCaseColor = $state(seed?.design?.bottomCase?.color ?? '');
+	let weightMaterial = $state(seed?.design?.weight?.material ?? '');
+	let weightColor = $state(seed?.design?.weight?.color ?? '');
+	let plates = new SvelteSet<string>(seed?.design?.plates ?? []);
+	let thickness = $state<number | undefined>(seed?.pcb?.thickness);
+	let firmware = $state(seed?.pcb?.firmware ?? '');
+	let assembly = $state(seed?.pcb?.assembly ?? '');
+	let connectivity = $state(seed?.pcb?.connectivity ?? '');
+	let vendor = $state(seed?.purchase?.vendor ?? '');
+	let price = $state<number | undefined>(seed?.purchase?.price);
+	let orderDate = $state(toDateInput(seed?.purchase?.orderDate));
+	let deliveryDate = $state(toDateInput(seed?.purchase?.deliveryDate));
+	let orderStatus = $state(seed?.purchase?.orderStatus ?? '');
+	let notes = $state(seed?.notes ?? '');
+	let visibility = $state<Visibility>(seed?.visibility ?? Visibility.Private);
 
 	let showOrderDate = $derived(
 		orderStatus.trim() !== '' && orderStatus.trim().toLowerCase() !== 'planned'
@@ -59,7 +62,7 @@
 
 	// Only clears in response to a status change, never on mount: an existing
 	// item may legitimately carry dates its current status wouldn't set.
-	let lastOrderStatus = initial?.purchase?.orderStatus ?? '';
+	let lastOrderStatus = seed?.purchase?.orderStatus ?? '';
 	$effect(() => {
 		if (orderStatus === lastOrderStatus) return;
 		lastOrderStatus = orderStatus;
@@ -69,9 +72,9 @@
 		else if (!deliveryDate) deliveryDate = todayDateInput();
 	});
 
-	let designOpen = $state(Boolean(initial?.design));
-	let pcbOpen = $state(Boolean(initial?.pcb));
-	let purchaseOpen = $state(Boolean(initial?.purchase));
+	let designOpen = $state(Boolean(seed?.design));
+	let pcbOpen = $state(Boolean(seed?.pcb));
+	let purchaseOpen = $state(Boolean(seed?.purchase));
 
 	let designSummary = $derived(
 		[
@@ -235,28 +238,28 @@
 		}
 	}
 
-	const initialBrand = initial?.brand ?? '';
-	const initialName = initial?.name ?? '';
-	const initialSize = initial?.size ?? '';
-	const initialLayout = initial?.layout ?? '';
-	const initialTopCaseMaterial = initial?.design?.topCase?.material ?? '';
-	const initialTopCaseColor = initial?.design?.topCase?.color ?? '';
-	const initialBottomCaseMaterial = initial?.design?.bottomCase?.material ?? '';
-	const initialBottomCaseColor = initial?.design?.bottomCase?.color ?? '';
-	const initialWeightMaterial = initial?.design?.weight?.material ?? '';
-	const initialWeightColor = initial?.design?.weight?.color ?? '';
-	const initialPlates = [...(initial?.design?.plates ?? [])].sort();
-	const initialThickness = initial?.pcb?.thickness;
-	const initialFirmware = initial?.pcb?.firmware ?? '';
-	const initialAssembly = initial?.pcb?.assembly ?? '';
-	const initialConnectivity = initial?.pcb?.connectivity ?? '';
-	const initialVendor = initial?.purchase?.vendor ?? '';
-	const initialPrice = initial?.purchase?.price;
-	const initialOrderDate = toDateInput(initial?.purchase?.orderDate);
-	const initialDeliveryDate = toDateInput(initial?.purchase?.deliveryDate);
-	const initialOrderStatus = initial?.purchase?.orderStatus ?? '';
-	const initialNotes = initial?.notes ?? '';
-	const initialVisibility = initial?.visibility ?? Visibility.Private;
+	const initialBrand = seed?.brand ?? '';
+	const initialName = seed?.name ?? '';
+	const initialSize = seed?.size ?? '';
+	const initialLayout = seed?.layout ?? '';
+	const initialTopCaseMaterial = seed?.design?.topCase?.material ?? '';
+	const initialTopCaseColor = seed?.design?.topCase?.color ?? '';
+	const initialBottomCaseMaterial = seed?.design?.bottomCase?.material ?? '';
+	const initialBottomCaseColor = seed?.design?.bottomCase?.color ?? '';
+	const initialWeightMaterial = seed?.design?.weight?.material ?? '';
+	const initialWeightColor = seed?.design?.weight?.color ?? '';
+	const initialPlates = [...(seed?.design?.plates ?? [])].sort();
+	const initialThickness = seed?.pcb?.thickness;
+	const initialFirmware = seed?.pcb?.firmware ?? '';
+	const initialAssembly = seed?.pcb?.assembly ?? '';
+	const initialConnectivity = seed?.pcb?.connectivity ?? '';
+	const initialVendor = seed?.purchase?.vendor ?? '';
+	const initialPrice = seed?.purchase?.price;
+	const initialOrderDate = toDateInput(seed?.purchase?.orderDate);
+	const initialDeliveryDate = toDateInput(seed?.purchase?.deliveryDate);
+	const initialOrderStatus = seed?.purchase?.orderStatus ?? '';
+	const initialNotes = seed?.notes ?? '';
+	const initialVisibility = seed?.visibility ?? Visibility.Private;
 
 	$effect(() => {
 		dirty =

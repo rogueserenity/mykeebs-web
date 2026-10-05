@@ -32,8 +32,8 @@
 	let dragOriginY = 0;
 
 	$effect(() => {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- track src so switching images resets zoom
-		src;
+		// Switching images resets zoom.
+		void src;
 		if (open) {
 			scale = 1;
 			offsetX = 0;

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { KeycapKit, KeycapKitInput } from '@rogueserenity/kbdb-api-client';
 	import { lookupsApi } from '$lib/api/client';
 	import { toDateInput, todayDateInput } from '$lib/format';
@@ -12,7 +13,6 @@
 		onCancel,
 		onImageUpload,
 		onImageRemove,
-		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
 		dirty = $bindable(false)
 	}: {
 		initial?: KeycapKit;
@@ -26,13 +26,16 @@
 		dirty?: boolean;
 	} = $props();
 
-	let name = $state(initial?.name ?? '');
-	let vendor = $state(initial?.purchase?.vendor ?? '');
-	let price = $state<number | undefined>(initial?.purchase?.price);
-	let orderDate = $state(toDateInput(initial?.purchase?.orderDate));
-	let deliveryDate = $state(toDateInput(initial?.purchase?.deliveryDate));
-	let orderStatus = $state(initial?.purchase?.orderStatus ?? '');
-	let primary = $state(isPrimary);
+	// Read once: a form keeps its in-progress edits when `initial` refreshes.
+	const seed = untrack(() => initial);
+
+	let name = $state(seed?.name ?? '');
+	let vendor = $state(seed?.purchase?.vendor ?? '');
+	let price = $state<number | undefined>(seed?.purchase?.price);
+	let orderDate = $state(toDateInput(seed?.purchase?.orderDate));
+	let deliveryDate = $state(toDateInput(seed?.purchase?.deliveryDate));
+	let orderStatus = $state(seed?.purchase?.orderStatus ?? '');
+	let primary = $state(untrack(() => isPrimary));
 
 	let showOrderDate = $derived(
 		orderStatus.trim() !== '' && orderStatus.trim().toLowerCase() !== 'planned'
@@ -41,7 +44,7 @@
 
 	// Only clears in response to a status change, never on mount: an existing
 	// kit may legitimately carry dates its current status wouldn't set.
-	let lastOrderStatus = initial?.purchase?.orderStatus ?? '';
+	let lastOrderStatus = seed?.purchase?.orderStatus ?? '';
 	$effect(() => {
 		if (orderStatus === lastOrderStatus) return;
 		lastOrderStatus = orderStatus;
@@ -132,13 +135,13 @@
 		}
 	}
 
-	const initialName = initial?.name ?? '';
-	const initialVendor = initial?.purchase?.vendor ?? '';
-	const initialPrice = initial?.purchase?.price;
-	const initialOrderDate = toDateInput(initial?.purchase?.orderDate);
-	const initialDeliveryDate = toDateInput(initial?.purchase?.deliveryDate);
-	const initialOrderStatus = initial?.purchase?.orderStatus ?? '';
-	const initialPrimary = isPrimary;
+	const initialName = seed?.name ?? '';
+	const initialVendor = seed?.purchase?.vendor ?? '';
+	const initialPrice = seed?.purchase?.price;
+	const initialOrderDate = toDateInput(seed?.purchase?.orderDate);
+	const initialDeliveryDate = toDateInput(seed?.purchase?.deliveryDate);
+	const initialOrderStatus = seed?.purchase?.orderStatus ?? '';
+	const initialPrimary = untrack(() => isPrimary);
 
 	$effect(() => {
 		dirty =

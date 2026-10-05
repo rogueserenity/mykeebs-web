@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { KeycapSet, KeycapSetInput } from '@rogueserenity/kbdb-api-client';
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
 	import VisibilityPicker from './VisibilityPicker.svelte';
@@ -10,7 +11,6 @@
 		error,
 		onSubmit,
 		onCancel,
-		// eslint-disable-next-line no-useless-assignment -- false positive: read externally via bind:dirty
 		dirty = $bindable(false)
 	}: {
 		initial?: KeycapSet;
@@ -21,12 +21,15 @@
 		dirty?: boolean;
 	} = $props();
 
-	let brand = $state(initial?.brand ?? '');
-	let name = $state(initial?.name ?? '');
-	let profile = $state(initial?.profile ?? '');
-	let material = $state(initial?.material ?? '');
-	let notes = $state(initial?.notes ?? '');
-	let visibility = $state<Visibility>(initial?.visibility ?? Visibility.Private);
+	// Read once: a form keeps its in-progress edits when `initial` refreshes.
+	const seed = untrack(() => initial);
+
+	let brand = $state(seed?.brand ?? '');
+	let name = $state(seed?.name ?? '');
+	let profile = $state(seed?.profile ?? '');
+	let material = $state(seed?.material ?? '');
+	let notes = $state(seed?.notes ?? '');
+	let visibility = $state<Visibility>(seed?.visibility ?? Visibility.Private);
 
 	let profiles = $state<string[]>([]);
 	let materials = $state<string[]>([]);
@@ -48,12 +51,12 @@
 			.catch(() => {});
 	});
 
-	const initialBrand = initial?.brand ?? '';
-	const initialName = initial?.name ?? '';
-	const initialProfile = initial?.profile ?? '';
-	const initialMaterial = initial?.material ?? '';
-	const initialNotes = initial?.notes ?? '';
-	const initialVisibility = initial?.visibility ?? Visibility.Private;
+	const initialBrand = seed?.brand ?? '';
+	const initialName = seed?.name ?? '';
+	const initialProfile = seed?.profile ?? '';
+	const initialMaterial = seed?.material ?? '';
+	const initialNotes = seed?.notes ?? '';
+	const initialVisibility = seed?.visibility ?? Visibility.Private;
 
 	$effect(() => {
 		dirty =
