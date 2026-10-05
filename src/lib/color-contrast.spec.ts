@@ -80,3 +80,15 @@ describe('labelled badges on their own tint', () => {
 		}
 	);
 });
+
+describe('select chevron', () => {
+	const stroke = css.match(/stroke='%23([0-9a-f]{6})'/i)?.[1];
+
+	it('uses the faint text color, since a CSS variable cannot reach inside the inline SVG', () => {
+		expect(`#${stroke}`).toBe(tokens['text-faint']);
+	});
+
+	it('meets the 3:1 non-text contrast minimum on the field background', () => {
+		expect(contrast(resolve(`#${stroke}`), resolve('var(--bg-raised)'))).toBeGreaterThanOrEqual(3);
+	});
+});
