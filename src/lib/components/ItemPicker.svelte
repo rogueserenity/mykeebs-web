@@ -156,6 +156,7 @@
 
 <div class="flex flex-col gap-2">
 	<input
+		name="search"
 		bind:this={searchInput}
 		type="search"
 		class="field-input"

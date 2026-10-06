@@ -85,6 +85,7 @@
 	</p>
 
 	<input
+		name="search"
 		type="search"
 		class="field-input mt-6 w-full"
 		placeholder="Search by username..."

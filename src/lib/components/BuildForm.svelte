@@ -534,6 +534,7 @@
 			<span class="text-xs" role="alert" style="color: var(--danger)">{imageError}</span>
 		{/if}
 		<input
+			name="images"
 			bind:this={fileInput}
 			type="file"
 			accept="image/*"
@@ -628,7 +629,7 @@
 	{#if keyboard && keyboardPlates.length > 0}
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Plate</span>
-			<select class="field-select w-full" bind:value={plate}>
+			<select name="plate" class="field-select w-full" bind:value={plate}>
 				<option value="">—</option>
 				{#each optionsWith(keyboardPlates, plate) as value (value)}
 					<option {value}>{value}</option>
@@ -647,7 +648,7 @@
 		<div class="field-group-body grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Mount type</span>
-				<select class="field-select w-full" bind:value={caseMountType}>
+				<select name="caseMountType" class="field-select w-full" bind:value={caseMountType}>
 					<option value="">—</option>
 					{#each optionsWith( mountTypes.map((m) => m.name), caseMountType ) as value (value)}
 						<option {value}>{value}</option>
@@ -657,7 +658,7 @@
 			{#if supportsDurometer}
 				<label class="flex flex-col gap-1.5">
 					<span class="field-label">Durometer</span>
-					<select class="field-select w-full" bind:value={durometer}>
+					<select name="durometer" class="field-select w-full" bind:value={durometer}>
 						<option value="">—</option>
 						{#each optionsWith(durometers, durometer) as value (value)}
 							<option {value}>{value}</option>
@@ -676,7 +677,7 @@
 		<div class="field-group-body grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Name</span>
-				<select class="field-select w-full" bind:value={stabsName}>
+				<select name="stabsName" class="field-select w-full" bind:value={stabsName}>
 					<option value="">—</option>
 					{#each optionsWith(stabNames, stabsName) as value (value)}
 						<option {value}>{value}</option>
@@ -685,7 +686,7 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Mount type</span>
-				<select class="field-select w-full" bind:value={stabsMountType}>
+				<select name="stabsMountType" class="field-select w-full" bind:value={stabsMountType}>
 					<option value="">—</option>
 					{#each optionsWith(stabMountTypes, stabsMountType) as value (value)}
 						<option {value}>{value}</option>
@@ -694,13 +695,20 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Price</span>
-				<input type="number" class="field-input" min="0" step="0.01" bind:value={stabsPrice} />
+				<input
+					name="stabsPrice"
+					type="number"
+					class="field-input"
+					min="0"
+					step="0.01"
+					bind:value={stabsPrice}
+				/>
 			</label>
 		</div>
 	</details>
 
 	<label class="flex items-center gap-2 text-sm">
-		<input type="checkbox" class="field-checkbox" bind:checked={foam} />
+		<input name="foam" type="checkbox" class="field-checkbox" bind:checked={foam} />
 		Foam
 	</label>
 
@@ -730,6 +738,7 @@
 							{/if}
 						</div>
 						<input
+							name="switchCount"
 							type="number"
 							class="field-input w-20"
 							aria-label="Count of {entry.label}"
@@ -847,6 +856,8 @@
 									style="border-color: var(--border)"
 								>
 									<input
+										name="kits"
+										value={kit.kitId}
 										type="checkbox"
 										class="field-checkbox"
 										disabled={alreadyAdded}
@@ -940,12 +951,13 @@
 
 	<label class="flex flex-col gap-1.5">
 		<span class="field-label">Build date</span>
-		<input type="date" class="field-input w-56" bind:value={buildDate} />
+		<input name="buildDate" type="date" class="field-input w-56" bind:value={buildDate} />
 	</label>
 
 	<label class="flex flex-col gap-1.5">
 		<span class="field-label">Notes</span>
-		<textarea class="field-input" rows="5" maxlength="1000" bind:value={notes}></textarea>
+		<textarea name="notes" class="field-input" rows="5" maxlength="1000" bind:value={notes}
+		></textarea>
 	</label>
 
 	{#if validationError}

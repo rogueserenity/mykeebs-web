@@ -65,6 +65,7 @@
 
 <div class="relative {className}" onfocusout={closeIfFocusLeft}>
 	<input
+		name="search"
 		type="search"
 		class="field-input w-56"
 		placeholder="Find a builder…"

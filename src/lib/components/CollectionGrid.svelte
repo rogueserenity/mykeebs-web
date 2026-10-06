@@ -144,6 +144,7 @@
 	<div class="flex items-center justify-end gap-2 p-4 pb-0">
 		{#if sortOptions.length > 0}
 			<select
+				name="sort"
 				class="field-select sort-select"
 				class:sort-select-hidden={filterExpanded}
 				aria-label="Sort by"
@@ -168,6 +169,7 @@
 		{/if}
 		{#if filterExpanded}
 			<input
+				name="filter"
 				bind:this={filterInput}
 				type="search"
 				class="field-input w-full min-w-0 sm:w-64 sm:flex-none"

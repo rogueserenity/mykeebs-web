@@ -33,7 +33,11 @@
 >
 	{#snippet headerExtra()}<span>Header extra</span>{/snippet}
 	{#if heading}<h2>{heading}</h2>{/if}
-	<input aria-label="First field" />
-	<input aria-label="Second field" data-autofocus={autofocusSecond ? '' : undefined} />
+	<input name="first" aria-label="First field" />
+	<input
+		name="second"
+		aria-label="Second field"
+		data-autofocus={autofocusSecond ? '' : undefined}
+	/>
 	<button type="button">Last button</button>
 </Modal>

@@ -215,6 +215,7 @@
 				{/if}
 			</div>
 			<input
+				name="avatar"
 				bind:this={fileInput}
 				type="file"
 				accept="image/*"
@@ -229,6 +230,7 @@
 					>Username <span aria-hidden="true" style="color: var(--danger)">*</span></span
 				>
 				<input
+					name="username"
 					type="text"
 					class="field-input font-mono"
 					maxlength="32"
@@ -251,6 +253,7 @@
 			<label class="flex flex-col gap-1.5">
 				<span class="section-label mb-0">Discord username</span>
 				<input
+					name="discordUsername"
 					type="text"
 					class="field-input font-mono"
 					maxlength="32"
@@ -261,7 +264,8 @@
 
 			<label class="flex flex-col gap-1.5">
 				<span class="section-label mb-0">Bio</span>
-				<textarea class="field-input" rows="3" maxlength="500" bind:value={bio}></textarea>
+				<textarea name="bio" class="field-input" rows="3" maxlength="500" bind:value={bio}
+				></textarea>
 				<span class="text-faint text-xs">{bio.length}/500</span>
 			</label>
 
@@ -270,6 +274,7 @@
 				{#each links as link, index (index)}
 					<div class="flex gap-2">
 						<input
+							name="linkName"
 							type="text"
 							class="field-input w-1/3"
 							aria-label="Link {index + 1} label"
@@ -278,6 +283,7 @@
 							bind:value={link.name}
 						/>
 						<input
+							name="linkUrl"
 							type="url"
 							class="field-input flex-1 font-mono"
 							aria-label="Link {index + 1} URL"
@@ -306,7 +312,7 @@
 
 				<label class="flex flex-col gap-1.5">
 					<span class="text-sm">Currency</span>
-					<select class="field-select w-56" bind:value={currency}>
+					<select name="currency" class="field-select w-56" bind:value={currency}>
 						{#each CURRENCY_OPTIONS as option (option.code)}
 							<option value={option.code}>{option.label}</option>
 						{/each}
@@ -317,7 +323,12 @@
 				</label>
 
 				<label class="flex items-center gap-2">
-					<input type="checkbox" class="field-checkbox" bind:checked={showPriceToMe} />
+					<input
+						name="showPriceToMe"
+						type="checkbox"
+						class="field-checkbox"
+						bind:checked={showPriceToMe}
+					/>
 					<span class="text-sm">Show prices to me</span>
 				</label>
 				<p class="text-faint -mt-2 text-xs">
@@ -326,7 +337,12 @@
 				</p>
 
 				<label class="flex items-center gap-2">
-					<input type="checkbox" class="field-checkbox" bind:checked={showPriceToOthers} />
+					<input
+						name="showPriceToOthers"
+						type="checkbox"
+						class="field-checkbox"
+						bind:checked={showPriceToOthers}
+					/>
 					<span class="text-sm">Show prices to others</span>
 				</label>
 				<p class="text-faint -mt-2 text-xs">
@@ -339,7 +355,12 @@
 				<span class="section-label mb-0">Discoverability</span>
 
 				<label class="flex items-center gap-2">
-					<input type="checkbox" class="field-checkbox" bind:checked={discoverable} />
+					<input
+						name="discoverable"
+						type="checkbox"
+						class="field-checkbox"
+						bind:checked={discoverable}
+					/>
 					<span class="text-sm">Make my profile discoverable</span>
 				</label>
 				<p class="text-faint -mt-2 text-xs">

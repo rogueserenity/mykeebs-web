@@ -244,6 +244,7 @@
 			{/if}
 		</div>
 		<input
+			name="images"
 			bind:this={fileInput}
 			type="file"
 			accept="image/*"
@@ -257,6 +258,7 @@
 			>Name <span aria-hidden="true" style="color: var(--danger)">*</span></span
 		>
 		<input
+			name="name"
 			type="text"
 			class="field-input"
 			placeholder="e.g. Base, Extension, Accents"
@@ -270,14 +272,14 @@
 	</label>
 
 	<label class="flex items-center gap-2 text-sm">
-		<input type="checkbox" class="field-checkbox" bind:checked={primary} />
+		<input name="primary" type="checkbox" class="field-checkbox" bind:checked={primary} />
 		Primary kit for this set
 	</label>
 
 	<div class="field-group-body grid grid-cols-1 gap-4 sm:grid-cols-2">
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Vendor</span>
-			<select class="field-select w-full" bind:value={vendor}>
+			<select name="vendor" class="field-select w-full" bind:value={vendor}>
 				<option value="">—</option>
 				{#each optionsWith(vendors, vendor) as value (value)}
 					<option {value}>{value}</option>
@@ -286,7 +288,7 @@
 		</label>
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Order status</span>
-			<select class="field-select w-full" bind:value={orderStatus}>
+			<select name="orderStatus" class="field-select w-full" bind:value={orderStatus}>
 				<option value="">—</option>
 				{#each optionsWith(orderStatuses, orderStatus) as value (value)}
 					<option {value}>{value}</option>
@@ -295,18 +297,25 @@
 		</label>
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Price</span>
-			<input type="number" class="field-input" min="0" step="0.01" bind:value={price} />
+			<input
+				name="price"
+				type="number"
+				class="field-input"
+				min="0"
+				step="0.01"
+				bind:value={price}
+			/>
 		</label>
 		{#if showOrderDate}
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Order date</span>
-				<input type="date" class="field-input" bind:value={orderDate} />
+				<input name="orderDate" type="date" class="field-input" bind:value={orderDate} />
 			</label>
 		{/if}
 		{#if isDelivered}
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Delivery date</span>
-				<input type="date" class="field-input" bind:value={deliveryDate} />
+				<input name="deliveryDate" type="date" class="field-input" bind:value={deliveryDate} />
 			</label>
 		{/if}
 	</div>

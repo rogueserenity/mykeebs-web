@@ -443,6 +443,7 @@
 			<span class="text-xs" role="alert" style="color: var(--danger)">{imageError}</span>
 		{/if}
 		<input
+			name="images"
 			bind:this={fileInput}
 			type="file"
 			accept="image/*"
@@ -463,6 +464,7 @@
 				>Brand <span aria-hidden="true" style="color: var(--danger)">*</span></span
 			>
 			<input
+				name="brand"
 				type="text"
 				class="field-input"
 				bind:value={brand}
@@ -479,6 +481,7 @@
 				>Name <span aria-hidden="true" style="color: var(--danger)">*</span></span
 			>
 			<input
+				name="name"
 				type="text"
 				class="field-input"
 				bind:value={name}
@@ -491,7 +494,7 @@
 
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Size</span>
-			<select class="field-select w-full" bind:value={size}>
+			<select name="size" class="field-select w-full" bind:value={size}>
 				<option value="">—</option>
 				{#each optionsWith(keyboardSizes, size) as value (value)}
 					<option {value}>{value}</option>
@@ -501,7 +504,7 @@
 
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Layout</span>
-			<select class="field-select w-full" bind:value={layout}>
+			<select name="layout" class="field-select w-full" bind:value={layout}>
 				<option value="">—</option>
 				{#each optionsWith(availableLayouts, layout) as value (value)}
 					<option {value}>{value}</option>
@@ -518,7 +521,7 @@
 		<div class="field-group-body grid grid-cols-1 gap-4 sm:grid-cols-3">
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Top case material</span>
-				<select class="field-select w-full" bind:value={topCaseMaterial}>
+				<select name="topCaseMaterial" class="field-select w-full" bind:value={topCaseMaterial}>
 					<option value="">—</option>
 					{#each optionsWith(caseMaterials, topCaseMaterial) as value (value)}
 						<option {value}>{value}</option>
@@ -527,13 +530,23 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Top case color</span>
-				<input type="text" class="field-input" bind:value={topCaseColor} autocomplete="off" />
+				<input
+					name="topCaseColor"
+					type="text"
+					class="field-input"
+					bind:value={topCaseColor}
+					autocomplete="off"
+				/>
 			</label>
 			<div class="hidden sm:block"></div>
 
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Bottom case material</span>
-				<select class="field-select w-full" bind:value={bottomCaseMaterial}>
+				<select
+					name="bottomCaseMaterial"
+					class="field-select w-full"
+					bind:value={bottomCaseMaterial}
+				>
 					<option value="">—</option>
 					{#each optionsWith(caseMaterials, bottomCaseMaterial) as value (value)}
 						<option {value}>{value}</option>
@@ -542,13 +555,19 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Bottom case color</span>
-				<input type="text" class="field-input" bind:value={bottomCaseColor} autocomplete="off" />
+				<input
+					name="bottomCaseColor"
+					type="text"
+					class="field-input"
+					bind:value={bottomCaseColor}
+					autocomplete="off"
+				/>
 			</label>
 			<div class="hidden sm:block"></div>
 
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Weight material</span>
-				<select class="field-select w-full" bind:value={weightMaterial}>
+				<select name="weightMaterial" class="field-select w-full" bind:value={weightMaterial}>
 					<option value="">—</option>
 					{#each optionsWith(weightMaterials, weightMaterial) as value (value)}
 						<option {value}>{value}</option>
@@ -557,7 +576,13 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Weight color</span>
-				<input type="text" class="field-input" bind:value={weightColor} autocomplete="off" />
+				<input
+					name="weightColor"
+					type="text"
+					class="field-input"
+					bind:value={weightColor}
+					autocomplete="off"
+				/>
 			</label>
 			<div class="hidden sm:block"></div>
 
@@ -567,6 +592,8 @@
 					{#each optionsWith(plateMaterials, [...plates]) as value (value)}
 						<label class="flex items-center gap-2 text-sm">
 							<input
+								name="plates"
+								{value}
 								type="checkbox"
 								class="field-checkbox"
 								checked={plates.has(value)}
@@ -591,11 +618,18 @@
 		<div class="field-group-body grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Thickness (mm)</span>
-				<input type="number" class="field-input" min="0" step="0.1" bind:value={thickness} />
+				<input
+					name="thickness"
+					type="number"
+					class="field-input"
+					min="0"
+					step="0.1"
+					bind:value={thickness}
+				/>
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Firmware</span>
-				<select class="field-select w-full" bind:value={firmware}>
+				<select name="firmware" class="field-select w-full" bind:value={firmware}>
 					<option value="">—</option>
 					{#each optionsWith(firmwares, firmware) as value (value)}
 						<option {value}>{value}</option>
@@ -604,7 +638,7 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Assembly</span>
-				<select class="field-select w-full" bind:value={assembly}>
+				<select name="assembly" class="field-select w-full" bind:value={assembly}>
 					<option value="">—</option>
 					{#each optionsWith(assemblies, assembly) as value (value)}
 						<option {value}>{value}</option>
@@ -613,7 +647,7 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Connectivity</span>
-				<select class="field-select w-full" bind:value={connectivity}>
+				<select name="connectivity" class="field-select w-full" bind:value={connectivity}>
 					<option value="">—</option>
 					{#each optionsWith(connectivities, connectivity) as value (value)}
 						<option {value}>{value}</option>
@@ -631,7 +665,7 @@
 		<div class="field-group-body grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Vendor</span>
-				<select class="field-select w-full" bind:value={vendor}>
+				<select name="vendor" class="field-select w-full" bind:value={vendor}>
 					<option value="">—</option>
 					{#each optionsWith(vendors, vendor) as value (value)}
 						<option {value}>{value}</option>
@@ -640,7 +674,7 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Order status</span>
-				<select class="field-select w-full" bind:value={orderStatus}>
+				<select name="orderStatus" class="field-select w-full" bind:value={orderStatus}>
 					<option value="">—</option>
 					{#each optionsWith(orderStatuses, orderStatus) as value (value)}
 						<option {value}>{value}</option>
@@ -649,18 +683,25 @@
 			</label>
 			<label class="flex flex-col gap-1.5">
 				<span class="field-label">Price</span>
-				<input type="number" class="field-input" min="0" step="0.01" bind:value={price} />
+				<input
+					name="price"
+					type="number"
+					class="field-input"
+					min="0"
+					step="0.01"
+					bind:value={price}
+				/>
 			</label>
 			{#if showOrderDate}
 				<label class="flex flex-col gap-1.5">
 					<span class="field-label">Order date</span>
-					<input type="date" class="field-input" bind:value={orderDate} />
+					<input name="orderDate" type="date" class="field-input" bind:value={orderDate} />
 				</label>
 			{/if}
 			{#if isDelivered}
 				<label class="flex flex-col gap-1.5">
 					<span class="field-label">Delivery date</span>
-					<input type="date" class="field-input" bind:value={deliveryDate} />
+					<input name="deliveryDate" type="date" class="field-input" bind:value={deliveryDate} />
 				</label>
 			{/if}
 		</div>
@@ -668,7 +709,8 @@
 
 	<label class="flex flex-col gap-1.5">
 		<span class="field-label">Notes</span>
-		<textarea class="field-input" rows="5" maxlength="1000" bind:value={notes}></textarea>
+		<textarea name="notes" class="field-input" rows="5" maxlength="1000" bind:value={notes}
+		></textarea>
 	</label>
 
 	{#if validationError}

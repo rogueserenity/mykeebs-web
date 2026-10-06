@@ -116,6 +116,7 @@
 				>Brand <span aria-hidden="true" style="color: var(--danger)">*</span></span
 			>
 			<input
+				name="brand"
 				type="text"
 				class="field-input"
 				bind:value={brand}
@@ -132,6 +133,7 @@
 				>Name <span aria-hidden="true" style="color: var(--danger)">*</span></span
 			>
 			<input
+				name="name"
 				type="text"
 				class="field-input"
 				bind:value={name}
@@ -144,7 +146,7 @@
 
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Profile</span>
-			<select class="field-select w-full" bind:value={profile}>
+			<select name="profile" class="field-select w-full" bind:value={profile}>
 				<option value="">—</option>
 				{#each optionsWith(profiles, profile) as value (value)}
 					<option {value}>{value}</option>
@@ -154,7 +156,7 @@
 
 		<label class="flex flex-col gap-1.5">
 			<span class="field-label">Material</span>
-			<select class="field-select w-full" bind:value={material}>
+			<select name="material" class="field-select w-full" bind:value={material}>
 				<option value="">—</option>
 				{#each optionsWith(materials, material) as value (value)}
 					<option {value}>{value}</option>
@@ -165,7 +167,8 @@
 
 	<label class="flex flex-col gap-1.5">
 		<span class="field-label">Notes</span>
-		<textarea class="field-input" rows="5" maxlength="1000" bind:value={notes}></textarea>
+		<textarea name="notes" class="field-input" rows="5" maxlength="1000" bind:value={notes}
+		></textarea>
 	</label>
 
 	{#if validationError}
