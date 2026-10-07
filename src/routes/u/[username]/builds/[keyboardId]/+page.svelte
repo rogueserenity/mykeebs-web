@@ -100,7 +100,7 @@
 	let deleting = $state(false);
 	let deleteError = $state<string | null>(null);
 	let confirmingDelete = $state(false);
-	let formDirty = $state(false);
+	let form = $state<{ isDirty(): boolean } | null>(null);
 
 	let galleryViewerOpen = $state(false);
 	let galleryIndex = $state(0);
@@ -152,13 +152,11 @@
 		saveError = null;
 		deleteError = null;
 		confirmingDelete = false;
-		formDirty = false;
 	}
 
 	function openEdit(build: Build) {
 		saveError = null;
 		staleRefs = null;
-		formDirty = false;
 		formMode = { mode: 'edit', build };
 	}
 
@@ -173,7 +171,6 @@
 			await load(userId, keyboardId);
 			selectedBuild = build;
 			formMode = { mode: 'closed' };
-			formDirty = false;
 		} catch (err) {
 			staleRefs = await staleBuildRefsFromError(err, input);
 			if (err instanceof ResponseError) {
@@ -421,7 +418,7 @@
 	onClose={closeModal}
 	wide
 	obscured={anyNestedOpen && formMode.mode !== 'edit'}
-	dirty={formDirty}
+	isDirty={() => form?.isDirty() ?? false}
 >
 	{#snippet headerExtra()}
 		{#if selectedBuild && formMode.mode !== 'edit'}
@@ -442,11 +439,10 @@
 			onSubmit={(input) => handleUpdate(build.id, input)}
 			onCancel={() => {
 				formMode = { mode: 'closed' };
-				formDirty = false;
 			}}
 			onImageUpload={(file) => handleImageUpload(build.id, file)}
 			onImageRemove={(imageId) => handleImageRemove(build.id, imageId)}
-			bind:dirty={formDirty}
+			bind:this={form}
 		/>
 	{:else if selectedBuild}
 		{@const build = selectedBuild}

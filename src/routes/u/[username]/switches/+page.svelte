@@ -39,7 +39,7 @@
 	let deleteError = $state<string | null>(null);
 	let blockingBuilds = $state<string[] | null>(null);
 	let confirmingDelete = $state(false);
-	let formDirty = $state(false);
+	let form = $state<{ isDirty(): boolean } | null>(null);
 
 	const staleImages = staleImageRefetcher(
 		(switchId) => switchesApi.getSwitch({ userId: userContext.userId, switchId }),
@@ -58,13 +58,11 @@
 
 	function openCreate() {
 		saveError = null;
-		formDirty = false;
 		modal = { mode: 'create' };
 	}
 
 	function openEdit(sw: SwitchModel) {
 		saveError = null;
-		formDirty = false;
 		modal = { mode: 'edit', sw };
 	}
 
@@ -75,7 +73,6 @@
 		deleteError = null;
 		blockingBuilds = null;
 		confirmingDelete = false;
-		formDirty = false;
 	}
 
 	async function handleCreate(input: SwitchInput, stagedImage?: File) {
@@ -110,7 +107,6 @@
 			const sw = await switchesApi.updateSwitch({ userId, switchId, switchInput: input });
 			await grid?.refresh();
 			modal = { mode: 'view', sw };
-			formDirty = false;
 		} catch (err) {
 			if (err instanceof ResponseError) {
 				const body = await err.response.json().catch(() => null);
@@ -248,7 +244,12 @@
 	{/snippet}
 </CollectionGrid>
 
-<Modal open={modal.mode !== 'closed'} onClose={closeModal} obscured={viewerOpen} dirty={formDirty}>
+<Modal
+	open={modal.mode !== 'closed'}
+	onClose={closeModal}
+	obscured={viewerOpen}
+	isDirty={() => form?.isDirty() ?? false}
+>
 	{#snippet headerExtra()}
 		{#if modal.mode === 'view'}
 			<VisibilityBadge visibility={modal.sw.visibility} />
@@ -312,7 +313,7 @@
 			error={saveError}
 			onSubmit={handleCreate}
 			onCancel={closeModal}
-			bind:dirty={formDirty}
+			bind:this={form}
 		/>
 	{:else if modal.mode === 'edit'}
 		{@const sw = modal.sw}
@@ -323,11 +324,10 @@
 			onSubmit={(input) => handleUpdate(sw.id ?? '', input)}
 			onCancel={() => {
 				modal = { mode: 'view', sw };
-				formDirty = false;
 			}}
 			onImageUpload={(file) => handleImageUpload(sw.id ?? '', file)}
 			onImageRemove={() => handleImageRemove(sw.id ?? '')}
-			bind:dirty={formDirty}
+			bind:this={form}
 		/>
 	{/if}
 </Modal>

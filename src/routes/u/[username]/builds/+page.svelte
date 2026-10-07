@@ -58,19 +58,17 @@
 	let saving = $state(false);
 	let saveError = $state<string | null>(null);
 	let staleRefs = $state<StaleBuildRefs | null>(null);
-	let formDirty = $state(false);
+	let form = $state<{ isDirty(): boolean } | null>(null);
 
 	function closeModal() {
 		formMode = { mode: 'closed' };
 		saveError = null;
 		staleRefs = null;
-		formDirty = false;
 	}
 
 	function openCreate() {
 		saveError = null;
 		staleRefs = null;
-		formDirty = false;
 		formMode = { mode: 'create' };
 	}
 
@@ -174,7 +172,12 @@
 	{/snippet}
 </CollectionGrid>
 
-<Modal open={formMode.mode === 'create'} onClose={closeModal} wide dirty={formDirty}>
+<Modal
+	open={formMode.mode === 'create'}
+	onClose={closeModal}
+	wide
+	isDirty={() => form?.isDirty() ?? false}
+>
 	{#if formMode.mode === 'create'}
 		<BuildForm
 			{saving}
@@ -182,7 +185,7 @@
 			{staleRefs}
 			onSubmit={handleCreate}
 			onCancel={closeModal}
-			bind:dirty={formDirty}
+			bind:this={form}
 		/>
 	{/if}
 </Modal>

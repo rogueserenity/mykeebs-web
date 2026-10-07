@@ -41,7 +41,7 @@
 	let deleteError = $state<string | null>(null);
 	let blockingBuilds = $state<string[] | null>(null);
 	let confirmingDelete = $state(false);
-	let formDirty = $state(false);
+	let form = $state<{ isDirty(): boolean } | null>(null);
 
 	const staleImages = staleImageRefetcher(
 		(keyboardId) => keyboardsApi.getKeyboard({ userId: userContext.userId, keyboardId }),
@@ -66,13 +66,11 @@
 
 	function openCreate() {
 		saveError = null;
-		formDirty = false;
 		modal = { mode: 'create' };
 	}
 
 	function openEdit(keyboard: Keyboard) {
 		saveError = null;
-		formDirty = false;
 		modal = { mode: 'edit', keyboard };
 	}
 
@@ -84,7 +82,6 @@
 		deleteError = null;
 		blockingBuilds = null;
 		confirmingDelete = false;
-		formDirty = false;
 	}
 
 	async function handleCreate(input: KeyboardInput, stagedImages?: File[]) {
@@ -125,7 +122,6 @@
 			});
 			await grid?.refresh();
 			modal = { mode: 'view', keyboard };
-			formDirty = false;
 		} catch (err) {
 			if (err instanceof ResponseError) {
 				const body = await err.response.json().catch(() => null);
@@ -271,7 +267,7 @@
 	open={modal.mode !== 'closed'}
 	onClose={closeModal}
 	obscured={galleryViewerOpen}
-	dirty={formDirty}
+	isDirty={() => form?.isDirty() ?? false}
 >
 	{#snippet headerExtra()}
 		{#if modal.mode === 'view'}
@@ -339,7 +335,7 @@
 			error={saveError}
 			onSubmit={handleCreate}
 			onCancel={closeModal}
-			bind:dirty={formDirty}
+			bind:this={form}
 		/>
 	{:else if modal.mode === 'edit'}
 		{@const keyboard = modal.keyboard}
@@ -350,11 +346,10 @@
 			onSubmit={(input) => handleUpdate(keyboard.id ?? '', input)}
 			onCancel={() => {
 				modal = { mode: 'view', keyboard };
-				formDirty = false;
 			}}
 			onImageUpload={(file) => handleImageUpload(keyboard.id ?? '', file)}
 			onImageRemove={(imageId) => handleImageRemove(keyboard.id ?? '', imageId)}
-			bind:dirty={formDirty}
+			bind:this={form}
 		/>
 	{/if}
 </Modal>

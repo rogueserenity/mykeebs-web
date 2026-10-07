@@ -257,6 +257,18 @@ describe('switches page', () => {
 		});
 	});
 
+	it('asks before closing a form with unsaved edits', async () => {
+		renderPage();
+		await fillNewSwitch();
+
+		await userEvent.keyboard('{Escape}');
+
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Discard your changes?' }))
+			.toBeInTheDocument();
+		await expect.element(dialog().getByLabelText('Name')).toHaveValue('Oil King');
+	});
+
 	describe('deleting a switch', () => {
 		async function confirmDelete() {
 			await dialog().getByRole('button', { name: 'Delete' }).click();

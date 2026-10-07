@@ -5,10 +5,11 @@
 		form: Form,
 		formProps
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	}: { form: Component<any>; formProps: Record<string, unknown> } = $props();
+	}: { form: Component<any, { isDirty(): boolean }>; formProps: Record<string, unknown> } =
+		$props();
 
-	let dirty = $state(false);
+	let instance = $state<{ isDirty(): boolean } | null>(null);
 </script>
 
-<Form {...formProps} bind:dirty />
-<output data-testid="dirty">{dirty}</output>
+<Form {...formProps} bind:this={instance} />
+<output data-testid="dirty">{instance?.isDirty() ?? false}</output>

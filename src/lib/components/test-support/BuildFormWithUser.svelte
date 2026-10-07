@@ -5,7 +5,7 @@
 
 	let { formProps }: { formProps: ComponentProps<typeof BuildForm> } = $props();
 
-	let dirty = $state(false);
+	let instance = $state<{ isDirty(): boolean } | null>(null);
 
 	setUserContext({
 		userId: 'user-1',
@@ -16,5 +16,5 @@
 	});
 </script>
 
-<BuildForm {...formProps} bind:dirty />
-<output data-testid="dirty">{dirty}</output>
+<BuildForm {...formProps} bind:this={instance} />
+<output data-testid="dirty">{instance?.isDirty() ?? false}</output>

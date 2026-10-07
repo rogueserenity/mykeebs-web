@@ -23,7 +23,7 @@
 <button type="button" onclick={() => (open = true)}>Open</button>
 <Modal
 	{open}
-	{dirty}
+	isDirty={() => dirty}
 	{obscured}
 	{label}
 	onClose={() => {

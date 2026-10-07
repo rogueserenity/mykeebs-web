@@ -182,6 +182,20 @@ describe('keycap sets page', () => {
 		});
 	});
 
+	it('asks before closing a set form with unsaved edits', async () => {
+		renderPage();
+		await openOlivia();
+		await page.getByRole('button', { name: 'Edit set' }).click();
+		await dialog().getByLabelText('Name').fill('Olivia R2');
+
+		await userEvent.keyboard('{Escape}');
+
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Discard your changes?' }))
+			.toBeInTheDocument();
+		await expect.element(dialog().getByLabelText('Name')).toHaveValue('Olivia R2');
+	});
+
 	describe('deleting a set', () => {
 		it('asks first, then deletes and closes', async () => {
 			api.deleteKeycapSet.mockResolvedValue(undefined);
@@ -249,6 +263,21 @@ describe('keycap sets page', () => {
 	});
 
 	describe('kits', () => {
+		it('asks before closing a kit form with unsaved edits', async () => {
+			renderPage();
+			await openOlivia();
+			await openKit('Base');
+			await page.getByRole('button', { name: 'Edit kit' }).click();
+			await dialog().getByLabelText('Name').fill('Base R2');
+
+			await userEvent.keyboard('{Escape}');
+
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Discard your changes?' }))
+				.toBeInTheDocument();
+			await expect.element(dialog().getByLabelText('Name')).toHaveValue('Base R2');
+		});
+
 		it('steps through the kits with the arrows, wrapping at the ends', async () => {
 			renderPage();
 			await openOlivia();

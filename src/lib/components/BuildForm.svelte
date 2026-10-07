@@ -29,8 +29,7 @@
 		onSubmit,
 		onCancel,
 		onImageUpload,
-		onImageRemove,
-		dirty = $bindable(false)
+		onImageRemove
 	}: {
 		initial?: Build;
 		saving: boolean;
@@ -40,7 +39,6 @@
 		onCancel: () => void;
 		onImageUpload?: (file: File) => Promise<void>;
 		onImageRemove?: (imageId: string) => Promise<void>;
-		dirty?: boolean;
 	} = $props();
 
 	// Read once: a form keeps its in-progress edits when `initial` refreshes.
@@ -379,8 +377,8 @@
 		keycapKitEntries.map((e) => `${e.keycapSetId}:${e.kitId}`).sort()
 	);
 
-	$effect(() => {
-		dirty =
+	export function isDirty(): boolean {
+		return (
 			(keyboard?.id ?? '') !== initialKeyboardId ||
 			plate !== initialPlate ||
 			caseMountType !== initialCaseMountType ||
@@ -396,8 +394,9 @@
 			JSON.stringify(switchEntries.map((e) => `${e.switchId}:${e.count}`).sort()) !==
 				JSON.stringify(initialSwitchIds) ||
 			JSON.stringify(keycapKitEntries.map((e) => `${e.keycapSetId}:${e.kitId}`).sort()) !==
-				JSON.stringify(initialKeycapKitIds);
-	});
+				JSON.stringify(initialKeycapKitIds)
+		);
+	}
 
 	let validationError = $state<string | null>(null);
 	const uid = $props.id();

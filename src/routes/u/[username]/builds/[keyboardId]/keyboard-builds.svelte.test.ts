@@ -254,6 +254,20 @@ describe('keyboard builds page', () => {
 			expect(builds.listBuilds).toHaveBeenCalledTimes(2);
 		});
 
+		it('asks before closing with unsaved edits', async () => {
+			renderPage();
+			await openCurrent();
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByLabelText('Notes').fill('Lubed the stabs');
+
+			await userEvent.keyboard('{Escape}');
+
+			await expect
+				.element(page.getByRole('alert').filter({ hasText: 'Discard your changes?' }))
+				.toBeInTheDocument();
+			await expect.element(dialog().getByLabelText('Notes')).toHaveValue('Lubed the stabs');
+		});
+
 		it('flags parts that are no longer in the collection', async () => {
 			builds.updateBuild.mockRejectedValue(
 				new ResponseError(
