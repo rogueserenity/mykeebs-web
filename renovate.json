@@ -2,6 +2,9 @@
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": ["config:recommended", "helpers:pinGitHubActionDigestsToSemver", ":semanticCommits"],
 	"automerge": true,
+	"constraints": {
+		"npm": "^11"
+	},
 	"packageRules": [
 		{
 			"description": "Major updates need a human look; everything else merges once CI passes",
