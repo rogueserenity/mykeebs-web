@@ -10,15 +10,13 @@
 		saving,
 		error,
 		onSubmit,
-		onCancel,
-		dirty = $bindable(false)
+		onCancel
 	}: {
 		initial?: KeycapSet;
 		saving: boolean;
 		error: string | null;
 		onSubmit: (input: KeycapSetInput) => void;
 		onCancel: () => void;
-		dirty?: boolean;
 	} = $props();
 
 	// Read once: a form keeps its in-progress edits when `initial` refreshes.
@@ -58,15 +56,16 @@
 	const initialNotes = seed?.notes ?? '';
 	const initialVisibility = seed?.visibility ?? Visibility.Private;
 
-	$effect(() => {
-		dirty =
+	export function isDirty(): boolean {
+		return (
 			brand !== initialBrand ||
 			name !== initialName ||
 			profile !== initialProfile ||
 			material !== initialMaterial ||
 			notes !== initialNotes ||
-			visibility !== initialVisibility;
-	});
+			visibility !== initialVisibility
+		);
+	}
 
 	let validationError = $state<string | null>(null);
 	const uid = $props.id();

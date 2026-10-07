@@ -272,6 +272,66 @@ describe('keyboards page', () => {
 		});
 	});
 
+	describe('unsaved changes', () => {
+		const discardPrompt = () =>
+			page.getByRole('alert').filter({ hasText: 'Discard your changes?' });
+
+		it('asks before closing a form with edits, and keeps it open on "Keep editing"', async () => {
+			renderPage();
+			await fillNewKeyboard();
+
+			await userEvent.keyboard('{Escape}');
+			await expect.element(discardPrompt()).toBeInTheDocument();
+
+			await page.getByRole('button', { name: 'Keep editing' }).click();
+			await expect.element(discardPrompt()).not.toBeInTheDocument();
+			await expect.element(dialog().getByLabelText('Name')).toHaveValue('Deacon TKL');
+
+			await userEvent.keyboard('{Escape}');
+			await page.getByRole('button', { name: 'Discard' }).click();
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+		});
+
+		it('closes an untouched form straight away', async () => {
+			renderPage();
+			await page.getByRole('button', { name: 'Add keyboard' }).click();
+			await expect.element(dialog().getByLabelText('Name')).toBeInTheDocument();
+
+			await userEvent.keyboard('{Escape}');
+
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+		});
+
+		it('stops asking once an edit is cancelled', async () => {
+			renderPage();
+			await openManta();
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByLabelText('Name').fill('Manta R2');
+
+			await dialog().getByRole('button', { name: 'Cancel' }).click();
+			await expect.element(page.getByRole('dialog', { name: 'Manta' })).toBeInTheDocument();
+			await userEvent.keyboard('{Escape}');
+
+			await expect.element(discardPrompt()).not.toBeInTheDocument();
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+		});
+
+		it('stops asking once an edit is saved', async () => {
+			api.updateKeyboard.mockResolvedValue({ ...manta, name: 'Manta R2' });
+			renderPage();
+			await openManta();
+			await dialog().getByRole('button', { name: 'Edit' }).click();
+			await dialog().getByLabelText('Name').fill('Manta R2');
+
+			await dialog().getByRole('button', { name: 'Save changes' }).click();
+			await expect.element(page.getByRole('dialog', { name: 'Manta R2' })).toBeInTheDocument();
+			await userEvent.keyboard('{Escape}');
+
+			await expect.element(discardPrompt()).not.toBeInTheDocument();
+			await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+		});
+	});
+
 	describe('deleting a keyboard', () => {
 		async function confirmDelete() {
 			await dialog().getByRole('button', { name: 'Delete' }).click();

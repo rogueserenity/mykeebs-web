@@ -7,7 +7,7 @@
 		onClose,
 		wide = false,
 		obscured = false,
-		dirty = false,
+		isDirty,
 		headerExtra,
 		label,
 		children
@@ -16,8 +16,8 @@
 		onClose: () => void;
 		wide?: boolean;
 		obscured?: boolean;
-		// Close attempts surface a "Discard changes?" prompt instead of closing.
-		dirty?: boolean;
+		// Asked on each close attempt; true surfaces a "Discard changes?" prompt instead of closing.
+		isDirty?: () => boolean;
 		headerExtra?: Snippet;
 		// Names the dialog while it has no heading, e.g. while loading or showing an error.
 		label?: string;
@@ -55,7 +55,7 @@
 	let previouslyFocused: HTMLElement | null = null;
 
 	function requestClose() {
-		if (dirty) confirmingDiscard = true;
+		if (isDirty?.()) confirmingDiscard = true;
 		else onClose();
 	}
 

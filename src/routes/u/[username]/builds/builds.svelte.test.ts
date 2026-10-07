@@ -110,4 +110,18 @@ describe('builds page', () => {
 
 		await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
 	});
+
+	it('asks before closing a new build with unsaved edits', async () => {
+		renderPage();
+		await page.getByRole('button', { name: 'Add build' }).click();
+		await dialog().getByRole('button', { name: 'Choose keyboard…' }).click();
+		await dialog().getByRole('option', { name: /Manta/ }).click();
+
+		await userEvent.keyboard('{Escape}');
+
+		await expect
+			.element(page.getByRole('alert').filter({ hasText: 'Discard your changes?' }))
+			.toBeInTheDocument();
+		expect(builds.createBuild).not.toHaveBeenCalled();
+	});
 });

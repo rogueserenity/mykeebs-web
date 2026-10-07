@@ -13,8 +13,7 @@
 		onSubmit,
 		onCancel,
 		onImageUpload,
-		onImageRemove,
-		dirty = $bindable(false)
+		onImageRemove
 	}: {
 		initial?: SwitchModel;
 		saving: boolean;
@@ -23,7 +22,6 @@
 		onCancel: () => void;
 		onImageUpload?: (file: File) => Promise<void>;
 		onImageRemove?: () => Promise<void>;
-		dirty?: boolean;
 	} = $props();
 
 	// Read once: a form keeps its in-progress edits when `initial` refreshes.
@@ -218,8 +216,8 @@
 	const initialNotes = seed?.notes ?? '';
 	const initialVisibility = seed?.visibility ?? Visibility.Private;
 
-	$effect(() => {
-		dirty =
+	export function isDirty(): boolean {
+		return (
 			brand !== initialBrand ||
 			manufacturer !== initialManufacturer ||
 			name !== initialName ||
@@ -242,8 +240,9 @@
 			quantity != initialQuantity ||
 			notes !== initialNotes ||
 			visibility !== initialVisibility ||
-			stagedImage != null;
-	});
+			stagedImage != null
+		);
+	}
 
 	let validationError = $state<string | null>(null);
 	const validationId = `validation-${uid}`;

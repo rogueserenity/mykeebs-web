@@ -12,8 +12,7 @@
 		onSubmit,
 		onCancel,
 		onImageUpload,
-		onImageRemove,
-		dirty = $bindable(false)
+		onImageRemove
 	}: {
 		initial?: KeycapKit;
 		isPrimary?: boolean;
@@ -23,7 +22,6 @@
 		onCancel: () => void;
 		onImageUpload?: (file: File) => Promise<void>;
 		onImageRemove?: () => Promise<void>;
-		dirty?: boolean;
 	} = $props();
 
 	// Read once: a form keeps its in-progress edits when `initial` refreshes.
@@ -143,8 +141,8 @@
 	const initialOrderStatus = seed?.purchase?.orderStatus ?? '';
 	const initialPrimary = untrack(() => isPrimary);
 
-	$effect(() => {
-		dirty =
+	export function isDirty(): boolean {
+		return (
 			name !== initialName ||
 			vendor !== initialVendor ||
 			price != initialPrice ||
@@ -152,8 +150,9 @@
 			deliveryDate !== initialDeliveryDate ||
 			orderStatus !== initialOrderStatus ||
 			primary !== initialPrimary ||
-			stagedImage != null;
-	});
+			stagedImage != null
+		);
+	}
 
 	let validationError = $state<string | null>(null);
 	const uid = $props.id();
