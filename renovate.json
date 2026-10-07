@@ -1,0 +1,30 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended", "helpers:pinGitHubActionDigestsToSemver", ":semanticCommits"],
+	"automerge": true,
+	"packageRules": [
+		{
+			"description": "Major updates need a human look; everything else merges once CI passes",
+			"matchUpdateTypes": ["major"],
+			"automerge": false
+		},
+		{
+			"description": "mise.toml and .node-version must move together (src/lib/build-config.spec.ts)",
+			"groupName": "node",
+			"matchManagers": ["mise", "nodenv"],
+			"matchPackageNames": ["node"]
+		}
+	],
+	"hostRules": [
+		{
+			"description": "@rogueserenity/kbdb-api-client lives on GitHub Packages; the workflow passes its GITHUB_TOKEN",
+			"matchHost": "npm.pkg.github.com",
+			"hostType": "npm",
+			"token": "{{ secrets.PACKAGES_TOKEN }}"
+		}
+	],
+	"lockFileMaintenance": {
+		"enabled": true,
+		"automerge": true
+	}
+}
