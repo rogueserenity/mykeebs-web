@@ -17,7 +17,7 @@
 	import { kitKey, type StaleBuildRefs } from '$lib/build-refs';
 	import { getUserContext } from '$lib/user-context';
 	import ItemPicker, { type ItemPickerCache } from '$lib/components/ItemPicker.svelte';
-	import { X } from 'lucide-svelte';
+	import { X } from '@lucide/svelte';
 	import { toDateInput, todayDateInput } from '$lib/format';
 	import { limitNotice, MAX_IMAGES, takeWithinLimit } from '$lib/image-limit';
 

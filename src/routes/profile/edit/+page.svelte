@@ -8,7 +8,7 @@
 	import { profile, saveProfile, refreshProfile } from '$lib/profile/profile.svelte';
 	import { profilesApi } from '$lib/api/client';
 	import Avatar from '$lib/components/Avatar.svelte';
-	import { X } from 'lucide-svelte';
+	import { X } from '@lucide/svelte';
 	import { cleanLinks, USERNAME_RULES, usernameLooksValid } from '$lib/profile/profile-input';
 	import { uploadImage } from '$lib/upload';
 

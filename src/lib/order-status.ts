@@ -1,4 +1,4 @@
-import { Ban, ClipboardList, FunnelX, Package, ShoppingBag, Truck } from 'lucide-svelte';
+import { Ban, ClipboardList, FunnelX, Package, ShoppingBag, Truck } from '@lucide/svelte';
 
 export const STATUS_FILTERS = [
 	'all',

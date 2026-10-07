@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Ban, ClipboardList, FunnelX, Package, ShoppingBag, Truck } from 'lucide-svelte';
+import { Ban, ClipboardList, FunnelX, Package, ShoppingBag, Truck } from '@lucide/svelte';
 import {
 	STATUS_FILTERS,
 	orderStatusIcon,

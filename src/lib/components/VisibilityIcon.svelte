@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
-	import { Globe, Layers, Lock, User } from 'lucide-svelte';
+	import { Globe, Layers, Lock, User } from '@lucide/svelte';
 
 	let {
 		visibility,

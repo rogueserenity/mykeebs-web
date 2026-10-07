@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { Menu, X } from 'lucide-svelte';
+	import { Menu, X } from '@lucide/svelte';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { initAuth } from '$lib/auth/auth.svelte';
