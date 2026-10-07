@@ -25,7 +25,7 @@
 	import KeycapKitForm from '$lib/components/KeycapKitForm.svelte';
 	import KeycapKitDetails from '$lib/components/KeycapKitDetails.svelte';
 	import { formatPrice } from '$lib/format';
-	import { ArrowLeft, ArrowRight } from 'lucide-svelte';
+	import { ArrowLeft, ArrowRight } from '@lucide/svelte';
 
 	const userContext = getUserContext();
 	const showPrice = $derived(userContext.showPrice);

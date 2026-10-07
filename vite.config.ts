@@ -20,13 +20,6 @@ export default defineConfig({
 			adapter: adapter({ fallback: 'index.html' })
 		})
 	],
-	ssr: {
-		// lucide-svelte's entry imports './icons/index' without a file
-		// extension, which Node's ESM loader rejects during the SSR pass that
-		// vite dev and svelte-check run. Bundling it through Vite's resolver
-		// sidesteps that.
-		noExternal: ['lucide-svelte']
-	},
 	optimizeDeps: {
 		// Pre-bundling moves the encoder away from its .wasm files.
 		exclude: ['@jsquash/webp']

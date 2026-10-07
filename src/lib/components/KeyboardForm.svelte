@@ -5,7 +5,7 @@
 	import { Visibility } from '@rogueserenity/kbdb-api-client';
 	import VisibilityPicker from './VisibilityPicker.svelte';
 	import { lookupsApi } from '$lib/api/client';
-	import { X } from 'lucide-svelte';
+	import { X } from '@lucide/svelte';
 	import { toDateInput, todayDateInput } from '$lib/format';
 	import { limitNotice, MAX_IMAGES, takeWithinLimit } from '$lib/image-limit';
 

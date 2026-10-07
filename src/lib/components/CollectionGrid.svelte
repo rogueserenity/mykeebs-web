@@ -3,7 +3,7 @@
 	import { fetchAllPages } from '$lib/pagination';
 	import { filterByStatus, searchItems, sortItems } from '$lib/collection-filter';
 	import type { Snippet } from 'svelte';
-	import { ArrowDown, ArrowUp, Plus, Search } from 'lucide-svelte';
+	import { ArrowDown, ArrowUp, Plus, Search } from '@lucide/svelte';
 	import {
 		STATUS_FILTERS,
 		statusFilterIcon,
