@@ -1,0 +1,26 @@
+name: Set up mykeebs-web
+description: Installs Node via mise and the npm dependencies, including the kbdb client from GitHub Packages.
+
+inputs:
+  packages-token:
+    description: Token with read access to the @rogueserenity GitHub Packages registry.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up mise
+      uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+
+    - name: Cache npm downloads
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.npm
+        key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        restore-keys: npm-${{ runner.os }}-
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+      env:
+        GITHUB_PACKAGES_TOKEN: ${{ inputs.packages-token }}
