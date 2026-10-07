@@ -1,14 +1,15 @@
 # mykeebs-web
 
-A read-only browsing UI for [kbdb](https://github.com/rogueserenity/kbdb) — a personal mechanical
-keyboard collection tracker (keyboards, switches, keycap sets, and the builds that combine them).
+The web UI for [kbdb](https://github.com/rogueserenity/kbdb), a personal mechanical keyboard
+collection tracker. Use it to browse, add and edit keyboards, switches, keycap sets and the builds
+that combine them.
 
 Built with SvelteKit as a static SPA, authenticated via Stytch Connected Apps against the same
 identity kbdb's REST API already trusts, and styled with Skeleton UI.
 
 ## Prerequisites
 
-- [mise](https://mise.jdx.dev/) (manages the Node version; see `mise.toml`)
+- [mise](https://mise.jdx.dev/), which installs the pinned Node version from `mise.toml`
 - [gh CLI](https://cli.github.com/), authenticated, with the `read:packages` scope (needed to
   install `@rogueserenity/kbdb-api-client` from GitHub Packages):
 
@@ -20,7 +21,8 @@ identity kbdb's REST API already trusts, and styled with Skeleton UI.
 ## Setup
 
 ```sh
-cp .env.example .env   # fill in PUBLIC_STYTCH_PUBLIC_TOKEN / PUBLIC_STYTCH_CLIENT_ID / PUBLIC_KBDB_API_BASE_PATH
+cp .env.example .env   # fill in PUBLIC_STYTCH_CLIENT_ID / PUBLIC_KBDB_API_BASE_PATH
+mise install
 eval "$(mise env)"
 npm install
 ```
@@ -32,16 +34,19 @@ npm run dev
 # or: npm run dev -- --open
 ```
 
-## Building
+## Building and deploying
 
 ```sh
 npm run build
 ```
 
-Produces a static build in `/build` (adapter-static). Preview it with `npm run preview`. Deploys to
-Cloudflare Pages; `PUBLIC_STYTCH_PUBLIC_TOKEN` and `PUBLIC_STYTCH_CLIENT_ID` are set per-environment
-(Production vs. Preview) in the Cloudflare Pages dashboard rather than committed.
+Produces a static build in `/build` (adapter-static), using the public values committed in
+`.env.production`. Preview it with `npm run preview`.
+
+Every merge to `main` deploys to https://jay.mykeebs.dev. Cloudflare Workers Builds runs the build
+and `wrangler deploy`, serving `build/` as a static-assets Worker (`wrangler.jsonc`).
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the day-to-day workflow (lint, typecheck, tests).
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the day-to-day workflow (branches and PRs, lint,
+typecheck, tests).

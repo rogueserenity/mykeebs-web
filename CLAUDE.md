@@ -21,9 +21,19 @@ npm run test:unit           # vitest in watch mode
 
 To run a single test file: `npx vitest run path/to/file.test.ts` (or `.svelte.test.ts` for a component test). To run tests matching a name: `npx vitest run -t "test name"`.
 
-Env vars (`PUBLIC_STYTCH_CLIENT_ID`, `PUBLIC_KBDB_API_BASE_PATH`) are read via SvelteKit's `$env/static/public`, so any command that boots Vite (dev, build, check, test) needs a `.env` present — copy `.env.example` and fill in values. `npm run check` and `npm run build` will fail with an unhelpful Vite error if `.env` is missing or missing a key.
+Env vars (`PUBLIC_STYTCH_CLIENT_ID`, `PUBLIC_KBDB_API_BASE_PATH`) are read via SvelteKit's `$env/static/public` and baked in at build time. `npm run build` reads the committed `.env.production` (the deployed values, public by design). `dev`, `check` and `test` need a local `.env` — copy `.env.example` and fill in values — and fail with an unhelpful Vite error if it's missing or missing a key. Adding a `PUBLIC_*` var means adding it to `.env.production`, `.env.example` and CI's `env:` block; `src/lib/build-config.spec.ts` fails until all three match the code.
+
+Node is pinned in `mise.toml`, the source of truth. `.node-version` mirrors it only because Cloudflare's build can't read mise; the same spec fails if they differ, and Renovate bumps both in one PR.
 
 Installing/updating `@rogueserenity/kbdb-api-client` requires a GitHub Packages token in the environment. `mise.toml` documents this — the token itself lives in `mise.local.toml` (gitignored, not committed) as `GITHUB_PACKAGES_TOKEN`. Run `eval "$(mise env)"` before `npm install` if the token isn't already in your shell env.
+
+## Workflow
+
+`main` is protected by a ruleset: no direct pushes. Every change goes on a branch (`<type>/<topic>`) and through a PR with a Conventional Commits title (`feat`/`fix`/`chore`/`ci`/`docs`/`test`/`refactor`/`build`), which the `PR Title` check enforces. `Lint`, `Typecheck`, `Test` and `Build` (`.github/workflows/ci.yml`) must pass, plus CodeQL. Merges are squash-only, so the PR title becomes the commit message on `main`; put `Closes #N` in the PR body.
+
+Renovate (`renovate.json`, run nightly by `.github/workflows/renovate.yml`) opens dependency PRs and automerges everything but major updates once checks pass. Majors wait on the Dependency Dashboard issue. It's pinned to npm 11 (`constraints`) because npm 12 wrongly refuses some registry tarballs.
+
+**Deploys**: every merge to `main` deploys. Cloudflare Workers Builds (configured in the Cloudflare dashboard, not this repo) runs `npm run build` and `npx wrangler deploy`, publishing `build/` as the static-assets Worker `mykeebs-dev` (`wrangler.jsonc`) at https://jay.mykeebs.dev. The only build setting left in the dashboard is the `GITHUB_PACKAGES_TOKEN` secret. There are no per-PR previews.
 
 ## Architecture
 
