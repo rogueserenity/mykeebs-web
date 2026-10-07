@@ -62,7 +62,7 @@ describe('labelled badges on their own tint', () => {
 	];
 
 	function badge(selector: string) {
-		const escaped = selector.replace(/[.]/g, '\\.');
+		const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 		const block = css.match(new RegExp(`(?:^|\\n)${escaped}\\s*\\{([^}]*)\\}`))?.[1];
 		if (!block) throw new Error(`no CSS block for ${selector}`);
 		const color = block.match(/(?:^|\n)\s*color:\s*([^;]+);/)?.[1].trim();
