@@ -2,6 +2,22 @@
 
 ## Workflow
 
+`main` only changes through pull requests:
+
+1. Branch off an up-to-date `main`, named `<type>/<topic>` (e.g. `fix/sort-order`).
+2. Open a PR whose title follows [Conventional Commits](https://www.conventionalcommits.org/):
+   `type(scope): subject`, using `feat`, `fix`, `chore`, `ci`, `docs`, `test`, `refactor` or
+   `build`. The `PR Title` check enforces it. Put `Closes #N` in the body to close an issue on merge.
+3. CI must pass: `Lint`, `Typecheck`, `Test`, `Build`, `PR Title` and CodeQL. Commits must be signed.
+4. Squash-merge. The PR title becomes the commit message on `main`, and the branch is deleted.
+
+Every merge to `main` deploys to https://jay.mykeebs.dev.
+
+Renovate opens dependency PRs and automerges non-major updates once CI passes. Major updates wait
+on the Dependency Dashboard issue for a manual merge.
+
+## Commands
+
 ```sh
 npm run check     # typecheck (svelte-kit sync + svelte-check)
 npm run lint       # prettier --check . && eslint .
@@ -9,16 +25,16 @@ npm run format      # prettier --write .
 npm run test       # vitest run
 ```
 
-Run `npm run lint` and `npm run test` before opening a PR. `npm run format` will fix most lint
+Run `npm run lint`, `npm run check` and `npm run test` before opening a PR. `npm run format` will fix most lint
 formatting complaints automatically; ESLint errors need manual fixes.
 
 ## Tests
 
 Two vitest projects share `vite.config.ts`:
 
-- `*.svelte.spec.ts` — component tests, run in real headless Chromium via
+- `*.svelte.test.ts` — component tests, run in real headless Chromium via
   `vitest-browser-svelte`/Playwright.
-- `*.spec.ts` (not matching the above) — plain unit tests, run in Node.
+- `*.spec.ts` — plain unit tests, run in Node.
 
 Name new test files to match whichever project they belong in. Run a single file with
 `npx vitest run path/to/file.spec.ts`, or filter by name with `npx vitest run -t "test name"`.
@@ -29,7 +45,10 @@ Name new test files to match whichever project they belong in. Run a single file
   (`prettier.config.js`); don't hand-format against it.
 - Svelte 5 runes mode is forced project-wide (see `vite.config.ts`'s `compilerOptions.runes`).
 - Env vars are read via `$env/static/public` — anything new needs a `PUBLIC_` prefix to be exposed
-  to client code, and should be added to `.env.example` alongside the real `.env`.
+  to client code. Add it to `.env.example`, `.env.production` (the deployed value) and the `env:`
+  block in `.github/workflows/ci.yml`; `src/lib/build-config.spec.ts` fails until all three match.
+- Node is pinned in `mise.toml`. `.node-version` mirrors it for Cloudflare's build; change both
+  together (the same spec checks they match).
 - This is a pure SPA (`adapter-static`, no server routes) — but `vite dev` and `svelte-check` still
   perform SSR of the initial render. Code that touches `window`/`document` outside of `onMount` (or
   an equivalent client-only guard) will crash server-side even though it never actually runs on a
