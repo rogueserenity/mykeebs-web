@@ -23,7 +23,7 @@ To run a single test file: `npx vitest run path/to/file.test.ts` (or `.svelte.te
 
 Env vars (`PUBLIC_STYTCH_CLIENT_ID`, `PUBLIC_KBDB_API_BASE_PATH`) are read via SvelteKit's `$env/static/public` and baked in at build time. `npm run build` reads the committed `.env.production` (the deployed values, public by design). `dev`, `check` and `test` need a local `.env` — copy `.env.example` and fill in values — and fail with an unhelpful Vite error if it's missing or missing a key. Adding a `PUBLIC_*` var means adding it to `.env.production`, `.env.example` and CI's `env:` block; `src/lib/build-config.spec.ts` fails until all three match the code.
 
-Node is pinned in `mise.toml`, the source of truth. `.node-version` mirrors it only because Cloudflare's build can't read mise; the same spec fails if they differ, and Renovate bumps both in one PR.
+Node is pinned in `mise.toml`, the source of truth. `.node-version` mirrors it only because Cloudflare's build can't read mise. Renovate's `node` group bumps both, plus `@types/node`, in one PR.
 
 Installing/updating `@rogueserenity/kbdb-api-client` requires a GitHub Packages token in the environment. `mise.toml` documents this — the token itself lives in `mise.local.toml` (gitignored, not committed) as `GITHUB_PACKAGES_TOKEN`. Run `eval "$(mise env)"` before `npm install` if the token isn't already in your shell env.
 
