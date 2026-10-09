@@ -12,10 +12,10 @@
 			"automerge": false
 		},
 		{
-			"description": "mise.toml and .node-version must move together (src/lib/build-config.spec.ts)",
+			"description": "Node in mise.toml and .node-version, and its @types/node, always move together",
 			"groupName": "node",
-			"matchManagers": ["mise", "nodenv"],
-			"matchPackageNames": ["node"]
+			"matchManagers": ["mise", "nodenv", "npm"],
+			"matchPackageNames": ["node", "@types/node"]
 		}
 	],
 	"hostRules": [
