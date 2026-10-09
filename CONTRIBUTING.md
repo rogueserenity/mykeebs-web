@@ -47,8 +47,8 @@ Name new test files to match whichever project they belong in. Run a single file
 - Env vars are read via `$env/static/public` — anything new needs a `PUBLIC_` prefix to be exposed
   to client code. Add it to `.env.example`, `.env.production` (the deployed value) and the `env:`
   block in `.github/workflows/ci.yml`; `src/lib/build-config.spec.ts` fails until all three match.
-- Node is pinned in `mise.toml`. `.node-version` mirrors it for Cloudflare's build; change both
-  together (the same spec checks they match).
+- Node is pinned in `mise.toml`. `.node-version` mirrors it for Cloudflare's build, and Renovate
+  updates both, plus `@types/node`, in one grouped PR.
 - This is a pure SPA (`adapter-static`, no server routes) — but `vite dev` and `svelte-check` still
   perform SSR of the initial render. Code that touches `window`/`document` outside of `onMount` (or
   an equivalent client-only guard) will crash server-side even though it never actually runs on a

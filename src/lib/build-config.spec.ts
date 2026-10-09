@@ -19,14 +19,6 @@ function envKeys(source: string): string[] {
 	return [...source.matchAll(/^(PUBLIC_\w+)=/gm)].map(([, key]) => key).sort();
 }
 
-describe('Node version', () => {
-	it('matches between mise.toml and .node-version, which Cloudflare builds read', () => {
-		const mise = read('mise.toml').match(/^node = "([^"]+)"$/m)?.[1];
-		expect(mise).toMatch(/^\d+\.\d+\.\d+$/);
-		expect(read('.node-version').trim()).toBe(mise);
-	});
-});
-
 describe('public env vars', () => {
 	const used = [
 		...new Set(
